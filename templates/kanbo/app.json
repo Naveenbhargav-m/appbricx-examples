@@ -1,0 +1,1466 @@
+{
+  "app": {
+    "name": "Kanbo",
+    "tagline": "Ship together, calmly.",
+    "theme": "cosmic-night",
+    "nav_style": "sidebar",
+    "density": "compact",
+    "brand_icon": "LayoutDashboard",
+    "brand_color": "#7C5CFF",
+    "direction": "brutalist"
+  },
+  "personas": [
+    {
+      "id": "manager",
+      "label": "Manager",
+      "description": "plans projects and edits every card",
+      "kind": "staff"
+    },
+    {
+      "id": "member",
+      "label": "Member",
+      "description": "works the cards assigned to them",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": {
+    "primaryVerb": "manage",
+    "inventoryShape": "records",
+    "moneySurface": "none"
+  },
+  "basket": null,
+  "entities": [
+    {
+      "name": "manager",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "avatar",
+          "type": "image",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": false,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      }
+    },
+    {
+      "name": "member",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "avatar",
+          "type": "image",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": false,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      }
+    },
+    {
+      "name": "project",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "code",
+          "type": "text"
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "cover",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "due",
+          "type": "date",
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "planning",
+            "active",
+            "shipped"
+          ]
+        },
+        {
+          "name": "state",
+          "type": "enum",
+          "enum_values": [
+            "active",
+            "paused",
+            "done"
+          ],
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": false,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      }
+    },
+    {
+      "name": "card",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "project",
+          "type": "ref",
+          "ref": "project"
+        },
+        {
+          "name": "assignee",
+          "type": "ref",
+          "ref": "member",
+          "optional": true
+        },
+        {
+          "name": "stage",
+          "type": "enum",
+          "enum_values": [
+            "backlog",
+            "todo",
+            "in_progress",
+            "review",
+            "done"
+          ]
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "enum_values": [
+            "urgent",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        {
+          "name": "due",
+          "type": "date",
+          "optional": true
+        },
+        {
+          "name": "labels",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "position",
+          "type": "number"
+        },
+        {
+          "name": "overdue",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "backlog",
+            "todo",
+            "in_progress",
+            "review",
+            "done"
+          ],
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": false,
+          "read": "all",
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "assignee"
+      ],
+      "rules": [
+        {
+          "id": "wip-limit",
+          "on": "both",
+          "message": "WIP limit reached: this teammate already has 3 cards in progress.",
+          "check": "if (row.stage !== 'in_progress' || !row.assignee) return true;\nif (ctx.old && ctx.old.stage === 'in_progress' && ctx.old.assignee === row.assignee) return true;\nconst id = (ctx.old && ctx.old.id) || row.id || null;\nconst r = await ctx.db.query(\"select count(*)::int as n from card where assignee = $1 and stage = 'in_progress' and ($2::uuid is null or id <> $2::uuid)\", [row.assignee, id]);\nconst rows = Array.isArray(r) ? r : (r && r.rows) ? r.rows : [];\nconst n = rows.length ? Number(rows[0].n) : 0;\nreturn n >= 3 ? 'WIP limit reached: this teammate already has 3 cards in progress.' : true;"
+        }
+      ]
+    },
+    {
+      "name": "checklist_item",
+      "label_field": "text",
+      "fields": [
+        {
+          "name": "card",
+          "type": "ref",
+          "ref": "card"
+        },
+        {
+          "name": "text",
+          "type": "text"
+        },
+        {
+          "name": "done",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "all",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [
+        "card"
+      ]
+    },
+    {
+      "name": "comment",
+      "label_field": "body",
+      "fields": [
+        {
+          "name": "card",
+          "type": "ref",
+          "ref": "card"
+        },
+        {
+          "name": "assignee",
+          "type": "ref",
+          "ref": "member",
+          "optional": true
+        },
+        {
+          "name": "author",
+          "type": "text"
+        },
+        {
+          "name": "body",
+          "type": "text"
+        }
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": []
+    },
+    {
+      "name": "assignment",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "card",
+          "type": "ref",
+          "ref": "card"
+        },
+        {
+          "name": "assignee",
+          "type": "ref",
+          "ref": "member"
+        },
+        {
+          "name": "by",
+          "type": "text"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        }
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": []
+    }
+  ],
+  "seeds": {
+    "manager": [
+      {
+        "id": "b30f0e52-d42a-594b-9d3f-247f3ba906cc",
+        "name": "Priya Nair",
+        "email": "priya@example.com",
+        "title": "Head of Product",
+        "avatar": "/assets/4de094786d20fd9b.webp"
+      },
+      {
+        "id": "c0dd0242-5494-5193-abda-9f70a136321a",
+        "name": "Daniel Brooks",
+        "email": "daniel@example.com",
+        "title": "Engineering Manager",
+        "avatar": "/assets/4f2fa0d645649676.webp"
+      }
+    ],
+    "member": [
+      {
+        "id": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "name": "Maya Chen",
+        "email": "maya@example.com",
+        "title": "Product Designer",
+        "avatar": "/assets/3c21cfe898878fa6.webp"
+      },
+      {
+        "id": "91aec89e-0941-5a16-817a-6ed655f7f8d5",
+        "name": "Tomás Rivera",
+        "email": "tomas@example.com",
+        "title": "QA Engineer",
+        "avatar": "/assets/b4d4b033a9828e95.webp"
+      },
+      {
+        "id": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "name": "Zoe Adeyemi",
+        "email": "zoe@example.com",
+        "title": "Growth Lead",
+        "avatar": "/assets/713e9a61af135736.webp"
+      },
+      {
+        "id": "5e687d6e-1d64-5905-b458-709d254a0529",
+        "name": "Sam Okafor",
+        "email": "sam@example.com",
+        "title": "Infrastructure Engineer",
+        "avatar": "/assets/f14c07fb4b7754c8.webp"
+      },
+      {
+        "id": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "name": "Lena Fischer",
+        "email": "lena@example.com",
+        "title": "Backend Engineer",
+        "avatar": "/assets/aa46a67f2181356f.webp"
+      },
+      {
+        "id": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "name": "Arjun Mehta",
+        "email": "arjun@example.com",
+        "title": "Frontend Engineer",
+        "avatar": "/assets/ad7488d4e71570c8.webp"
+      }
+    ],
+    "project": [
+      {
+        "id": "8403d453-f88c-5b49-981d-42fe8acd919c",
+        "name": "Mobile app v2",
+        "code": "MOB",
+        "summary": "Native rebuild with offline support and gestures.",
+        "cover": "/assets/64aead7bd670f6ae.webp",
+        "due": "2026-11-20T00:00:00.000Z",
+        "state": "active",
+        "status": "active"
+      },
+      {
+        "id": "18ab3f17-10a1-549d-a2e1-2b654e6f559e",
+        "name": "Onboarding revamp",
+        "code": "ONB",
+        "summary": "First-run experience that gets teams to value in 5 minutes.",
+        "cover": "/assets/b992e5c9b0ab7396.webp",
+        "due": "2026-10-30T00:00:00.000Z",
+        "state": "active",
+        "status": "active"
+      },
+      {
+        "id": "852aaf16-4966-5c34-8a9e-91112dcd9ce2",
+        "name": "Billing & invoices",
+        "code": "BIL",
+        "summary": "Usage-based billing, tax handling and PDF invoices.",
+        "cover": "/assets/bdc191fc4b0f91b0.webp",
+        "due": "2026-11-05T00:00:00.000Z",
+        "state": "active",
+        "status": "active"
+      },
+      {
+        "id": "047923e4-dfeb-5b92-95ae-d68839aa0f3c",
+        "name": "Design system",
+        "code": "DSN",
+        "summary": "Tokens, components and docs shared across products.",
+        "cover": "/assets/37c191a43dd22c84.webp",
+        "due": "2026-12-01T00:00:00.000Z",
+        "state": "active",
+        "status": "active"
+      },
+      {
+        "id": "7f4da6b7-2ec6-53f8-a8f4-40ec47261ad5",
+        "name": "Public API",
+        "code": "API",
+        "summary": "Stable v2 endpoints, docs and developer tooling.",
+        "cover": "/assets/7ce7a2f1bf71961c.webp",
+        "due": "2026-11-14T00:00:00.000Z",
+        "state": "active",
+        "status": "active"
+      },
+      {
+        "id": "da7f3e0d-8ffd-5a89-8c27-f6e467fb9e9c",
+        "name": "Growth experiments",
+        "code": "GRO",
+        "summary": "Landing, referral and lifecycle experiments.",
+        "cover": "/assets/24231e40ef198b40.webp",
+        "due": "2026-11-25T00:00:00.000Z",
+        "state": "active",
+        "status": "planning"
+      },
+      {
+        "id": "3a932542-eb08-5a99-8052-428c33c5b78d",
+        "name": "Infra migration",
+        "code": "INF",
+        "summary": "Postgres 16, Terraform split and CDN rules.",
+        "cover": "/assets/acecf3196af7b1a5.webp",
+        "due": "2026-10-28T00:00:00.000Z",
+        "state": "active",
+        "status": "active"
+      },
+      {
+        "id": "4bf821c1-3a34-5f2e-881b-6aa4981d6b9d",
+        "name": "Customer insights",
+        "code": "INS",
+        "summary": "Interviews and retention analysis for roadmap bets.",
+        "cover": "/assets/850c7bbc90cf3df7.webp",
+        "due": "2026-12-10T00:00:00.000Z",
+        "state": "paused",
+        "status": "planning"
+      }
+    ],
+    "card": [
+      {
+        "id": "1f2a041b-1444-5846-b93e-4c835fd3541c",
+        "title": "Offline mode for task lists",
+        "description": "Queue edits locally and sync when the connection returns. Needs conflict rules for concurrent edits.",
+        "project": "8403d453-f88c-5b49-981d-42fe8acd919c",
+        "status": "backlog",
+        "priority": "medium",
+        "due": "2026-11-06T00:00:00.000Z",
+        "labels": "feature,mobile",
+        "position": 1000,
+        "stage": "backlog"
+      },
+      {
+        "id": "3fe613f3-4019-52c1-9194-ce86df93fc76",
+        "title": "Dark-mode illustration set",
+        "description": "Re-tint the 14 empty-state illustrations for dark surfaces.",
+        "project": "047923e4-dfeb-5b92-95ae-d68839aa0f3c",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "status": "backlog",
+        "priority": "low",
+        "due": "2026-11-12T00:00:00.000Z",
+        "labels": "design",
+        "position": 2000,
+        "stage": "backlog"
+      },
+      {
+        "id": "ece7b876-6f63-5522-b4d8-bf1fb0df83d3",
+        "title": "Webhook retry dashboard",
+        "description": "Show failed deliveries, next retry time and a manual replay button.",
+        "project": "7f4da6b7-2ec6-53f8-a8f4-40ec47261ad5",
+        "status": "backlog",
+        "priority": "medium",
+        "due": "2026-11-04T00:00:00.000Z",
+        "labels": "backend",
+        "position": 3000,
+        "stage": "backlog"
+      },
+      {
+        "id": "d9b5b621-f4da-5fe5-9d63-363605be8ebc",
+        "title": "Cohort retention report",
+        "description": "Weekly cohorts by signup source, 12-week window.",
+        "project": "4bf821c1-3a34-5f2e-881b-6aa4981d6b9d",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "status": "backlog",
+        "priority": "low",
+        "due": "2026-11-15T00:00:00.000Z",
+        "labels": "research,data",
+        "position": 4000,
+        "stage": "backlog"
+      },
+      {
+        "id": "12d90fa1-8e9c-5c69-8fcf-20d0e29c84ef",
+        "title": "Usage-based pricing spike",
+        "description": "Prototype metering pipeline and estimate cost per 1M events.",
+        "project": "852aaf16-4966-5c34-8a9e-91112dcd9ce2",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "backlog",
+        "priority": "high",
+        "due": "2026-10-30T00:00:00.000Z",
+        "labels": "backend,research",
+        "position": 5000,
+        "stage": "backlog"
+      },
+      {
+        "id": "c3a21b65-3b4a-5300-a644-604feb362c2a",
+        "title": "Empty states for the inbox",
+        "description": "Three variants: first run, filtered, and all-caught-up.",
+        "project": "18ab3f17-10a1-549d-a2e1-2b654e6f559e",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "status": "todo",
+        "priority": "medium",
+        "due": "2026-10-16T00:00:00.000Z",
+        "labels": "design",
+        "position": 1000,
+        "stage": "todo"
+      },
+      {
+        "id": "49205ff7-1b58-56c4-8587-5f5748ad06a9",
+        "title": "Referral banner experiment",
+        "description": "In-app banner for teams with 5+ active seats.",
+        "project": "da7f3e0d-8ffd-5a89-8c27-f6e467fb9e9c",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "status": "review",
+        "priority": "low",
+        "due": "2026-10-14T00:00:00.000Z",
+        "labels": "growth",
+        "position": 4000,
+        "stage": "review"
+      },
+      {
+        "id": "18fa06bf-d18e-54f4-b535-922689889db2",
+        "title": "Rate-limit headers on v2 endpoints",
+        "description": "Return X-RateLimit-* headers and document the burst policy.",
+        "project": "7f4da6b7-2ec6-53f8-a8f4-40ec47261ad5",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "todo",
+        "priority": "high",
+        "due": "2026-10-14T00:00:00.000Z",
+        "labels": "backend",
+        "position": 2000,
+        "stage": "todo"
+      },
+      {
+        "id": "5b7b4ff5-d83f-5ce3-b661-b97cd973116c",
+        "title": "Push notification permission flow",
+        "description": "Soft-ask screen before the system prompt, with a later reminder.",
+        "project": "8403d453-f88c-5b49-981d-42fe8acd919c",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "status": "in_progress",
+        "priority": "high",
+        "due": "2026-10-13T00:00:00.000Z",
+        "labels": "mobile,frontend",
+        "position": 3000,
+        "stage": "todo"
+      },
+      {
+        "id": "0bc53639-5604-514d-98bb-c488b73c3bca",
+        "title": "Regression suite for checkout",
+        "description": "Automate the 22 manual checkout cases across cards and invoices.",
+        "project": "852aaf16-4966-5c34-8a9e-91112dcd9ce2",
+        "assignee": "91aec89e-0941-5a16-817a-6ed655f7f8d5",
+        "status": "todo",
+        "priority": "medium",
+        "due": "2026-10-20T00:00:00.000Z",
+        "labels": "qa",
+        "position": 4000,
+        "stage": "todo"
+      },
+      {
+        "id": "30ada42c-03a6-50b1-97b2-0018de1c6168",
+        "title": "Landing page headline test",
+        "description": "Three headline variants, 50/50/50 split, measure signup rate.",
+        "project": "da7f3e0d-8ffd-5a89-8c27-f6e467fb9e9c",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "status": "todo",
+        "priority": "medium",
+        "due": "2026-10-15T00:00:00.000Z",
+        "labels": "growth",
+        "position": 5000,
+        "stage": "todo"
+      },
+      {
+        "id": "cc6866ad-2345-5e6c-9ee0-beaa339b332e",
+        "title": "Terraform state split",
+        "description": "Separate network, data and app stacks into their own state files.",
+        "project": "3a932542-eb08-5a99-8052-428c33c5b78d",
+        "assignee": "5e687d6e-1d64-5905-b458-709d254a0529",
+        "status": "todo",
+        "priority": "low",
+        "due": "2026-10-24T00:00:00.000Z",
+        "labels": "infra",
+        "position": 6000,
+        "stage": "todo"
+      },
+      {
+        "id": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "title": "Welcome checklist redesign",
+        "description": "Replace the modal tour with an inline checklist that remembers progress.",
+        "project": "18ab3f17-10a1-549d-a2e1-2b654e6f559e",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "status": "in_progress",
+        "priority": "high",
+        "due": "2026-10-12T00:00:00.000Z",
+        "labels": "design,frontend",
+        "position": 1000,
+        "stage": "in_progress"
+      },
+      {
+        "id": "ada88fe4-43d6-5276-a0ba-222146639283",
+        "title": "Gesture-driven card reorder",
+        "description": "Long-press to lift, spring physics on drop, haptics on iOS.",
+        "project": "8403d453-f88c-5b49-981d-42fe8acd919c",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "status": "in_progress",
+        "priority": "high",
+        "due": "2026-10-15T00:00:00.000Z",
+        "labels": "mobile,frontend",
+        "position": 4000,
+        "stage": "in_progress"
+      },
+      {
+        "id": "f3421b5f-eaa7-5d59-b7ba-05a16f02ab5f",
+        "title": "Public API docs v2",
+        "description": "Rewrite quickstart and add runnable examples for every endpoint.",
+        "project": "7f4da6b7-2ec6-53f8-a8f4-40ec47261ad5",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "in_progress",
+        "priority": "medium",
+        "due": "2026-10-18T00:00:00.000Z",
+        "labels": "docs",
+        "position": 5000,
+        "stage": "in_progress"
+      },
+      {
+        "id": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "title": "Postgres 16 upgrade rehearsal",
+        "description": "Dry-run on a staging snapshot, record timings and rollback steps.",
+        "project": "3a932542-eb08-5a99-8052-428c33c5b78d",
+        "assignee": "5e687d6e-1d64-5905-b458-709d254a0529",
+        "status": "in_progress",
+        "priority": "urgent",
+        "due": "2026-10-14T00:00:00.000Z",
+        "labels": "infra",
+        "position": 6000,
+        "stage": "in_progress"
+      },
+      {
+        "id": "28b66f13-4f6b-5eef-b20f-3f6fbb69ff9b",
+        "title": "Interview synthesis: SMB admins",
+        "description": "Cluster 14 interviews into themes and pull the top five quotes.",
+        "project": "4bf821c1-3a34-5f2e-881b-6aa4981d6b9d",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "status": "in_progress",
+        "priority": "medium",
+        "due": "2026-10-17T00:00:00.000Z",
+        "labels": "research",
+        "position": 7000,
+        "stage": "in_progress"
+      },
+      {
+        "id": "3f8b19c5-eae9-5699-bce0-5d45feef9e89",
+        "title": "Signup form accessibility pass",
+        "description": "Screen reader labels, focus order and error announcements.",
+        "project": "18ab3f17-10a1-549d-a2e1-2b654e6f559e",
+        "assignee": "91aec89e-0941-5a16-817a-6ed655f7f8d5",
+        "status": "review",
+        "priority": "medium",
+        "due": "2026-10-11T00:00:00.000Z",
+        "labels": "qa",
+        "position": 1000,
+        "stage": "review"
+      },
+      {
+        "id": "7bdd9438-58a4-5b79-a35f-4776b850db0f",
+        "title": "Button & input components",
+        "description": "All states, sizes and keyboard behaviour documented in the system.",
+        "project": "047923e4-dfeb-5b92-95ae-d68839aa0f3c",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "status": "review",
+        "priority": "medium",
+        "due": "2026-10-13T00:00:00.000Z",
+        "labels": "frontend,design",
+        "position": 3000,
+        "stage": "review"
+      },
+      {
+        "id": "13e83950-a2d2-5452-b8aa-1dc44251d363",
+        "title": "Biometric sign-in",
+        "description": "Face ID and fingerprint with secure fallback to passcode.",
+        "project": "8403d453-f88c-5b49-981d-42fe8acd919c",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "status": "done",
+        "priority": "high",
+        "due": "2026-10-05T00:00:00.000Z",
+        "labels": "mobile",
+        "position": 1000,
+        "stage": "done"
+      },
+      {
+        "id": "46aa1270-c358-558f-b01c-c3b61903b03a",
+        "title": "Tax-rate edge cases",
+        "description": "Reverse-charge VAT, zero-rated exports and mid-cycle rate changes.",
+        "project": "852aaf16-4966-5c34-8a9e-91112dcd9ce2",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "done",
+        "priority": "high",
+        "due": "2026-10-08T00:00:00.000Z",
+        "labels": "backend",
+        "position": 2000,
+        "overdue": false,
+        "stage": "review"
+      },
+      {
+        "id": "eea12398-3779-5253-a681-ee4b54ac1263",
+        "title": "Token audit & spacing scale",
+        "description": "Collapse 31 spacing values into a 4px-based scale.",
+        "project": "047923e4-dfeb-5b92-95ae-d68839aa0f3c",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "status": "in_progress",
+        "priority": "medium",
+        "due": "2026-10-09T00:00:00.000Z",
+        "labels": "design",
+        "position": 2000,
+        "overdue": false,
+        "stage": "in_progress"
+      },
+      {
+        "id": "5a92fd44-a7f5-52ea-a8cf-d7a929bd01f0",
+        "title": "CDN cache rules",
+        "description": "Immutable assets cached for a year, HTML revalidated.",
+        "project": "3a932542-eb08-5a99-8052-428c33c5b78d",
+        "assignee": "5e687d6e-1d64-5905-b458-709d254a0529",
+        "status": "done",
+        "priority": "medium",
+        "due": "2026-10-02T00:00:00.000Z",
+        "labels": "infra",
+        "position": 2000,
+        "stage": "done"
+      },
+      {
+        "id": "98a81619-7279-5771-bccc-9d84d91b0154",
+        "title": "Onboarding analytics events",
+        "description": "Funnel events from signup to first shared board.",
+        "project": "18ab3f17-10a1-549d-a2e1-2b654e6f559e",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "status": "done",
+        "priority": "medium",
+        "due": "2026-10-06T00:00:00.000Z",
+        "labels": "growth,data",
+        "position": 3000,
+        "stage": "done"
+      },
+      {
+        "id": "c4ad9c8d-4f05-5a87-bba3-e4b936edecdc",
+        "title": "Stripe webhook signature check",
+        "description": "Reject unsigned and replayed events.",
+        "project": "852aaf16-4966-5c34-8a9e-91112dcd9ce2",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "done",
+        "priority": "urgent",
+        "due": "2026-10-03T00:00:00.000Z",
+        "labels": "backend",
+        "position": 4000,
+        "stage": "done"
+      },
+      {
+        "id": "a000ae54-d5f9-5459-a17a-5a6de1f69aec",
+        "title": "Icon set v3 export",
+        "description": "SVG sprite and React components, 320 icons.",
+        "project": "047923e4-dfeb-5b92-95ae-d68839aa0f3c",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "status": "done",
+        "priority": "low",
+        "due": "2026-10-07T00:00:00.000Z",
+        "labels": "design",
+        "position": 5000,
+        "stage": "done"
+      },
+      {
+        "id": "eb45335a-10b6-58cc-9ce3-50fec21b9a3c",
+        "title": "API key rotation endpoint",
+        "description": "Rotate with overlap window so integrations never break.",
+        "project": "7f4da6b7-2ec6-53f8-a8f4-40ec47261ad5",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "done",
+        "priority": "high",
+        "due": "2026-10-09T00:00:00.000Z",
+        "labels": "backend",
+        "position": 6000,
+        "stage": "done"
+      },
+      {
+        "id": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "title": "Invoice PDF rendering",
+        "description": "Pixel-perfect PDFs with multi-currency totals and tax lines.",
+        "project": "852aaf16-4966-5c34-8a9e-91112dcd9ce2",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "status": "in_progress",
+        "priority": "urgent",
+        "due": "2026-10-10T00:00:00.000Z",
+        "labels": "backend",
+        "position": 3000,
+        "overdue": false,
+        "stage": "in_progress"
+      }
+    ],
+    "checklist_item": [
+      {
+        "id": "68722d70-329f-5ace-b1c8-3e4af43674ef",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "text": "Audit current tour steps",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "defd186a-eecd-5c79-b20e-79c6e85f7ee0",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "text": "Design inline checklist states",
+        "done": true,
+        "position": 2
+      },
+      {
+        "id": "0bd11054-d8bb-5b28-8ae2-eee5093f6d00",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "text": "Persist progress per workspace",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "8a4a497f-a23b-5759-8b0a-4d1a60f8aa41",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "text": "Ship behind a flag",
+        "done": false,
+        "position": 4
+      },
+      {
+        "id": "44c211fe-3062-5228-9f0e-1f35d4f8b594",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "text": "Set up headless renderer",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "27b48d22-a917-5bbb-8c03-f5cb484af14b",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "text": "Multi-currency totals",
+        "done": true,
+        "position": 2
+      },
+      {
+        "id": "a3b33f03-11b9-586d-834f-ddf1afd35462",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "text": "Tax line layout",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "502ddc73-ceb9-5dab-a427-e1d9d9cd8be7",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "text": "Visual regression snapshots",
+        "done": false,
+        "position": 4
+      },
+      {
+        "id": "7bf1b87a-6e9e-5157-81ee-1d7cb132deb0",
+        "card": "ada88fe4-43d6-5276-a0ba-222146639283",
+        "text": "Long-press lift animation",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "e5e6a2f8-e7f3-56e5-a799-f68a5332afa7",
+        "card": "ada88fe4-43d6-5276-a0ba-222146639283",
+        "text": "Spring settle on drop",
+        "done": false,
+        "position": 2
+      },
+      {
+        "id": "40fe9149-15d7-5bed-8ae0-9b301a086308",
+        "card": "ada88fe4-43d6-5276-a0ba-222146639283",
+        "text": "Haptic feedback",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "379c936a-30f5-5443-85c5-8d5e87f5e047",
+        "card": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "text": "Snapshot production to staging",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "8b56123e-c381-5b19-afee-342f4acb2c4b",
+        "card": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "text": "Run pg_upgrade rehearsal",
+        "done": false,
+        "position": 2
+      },
+      {
+        "id": "b0382fb8-6e60-538c-bdf4-12b397c93a2d",
+        "card": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "text": "Record timings",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "0cdacf6b-b1e6-5508-97a0-3f0d37c83b13",
+        "card": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "text": "Write rollback runbook",
+        "done": false,
+        "position": 4
+      },
+      {
+        "id": "d1bd7d29-38f8-508e-a084-7360158034b0",
+        "card": "3f8b19c5-eae9-5699-bce0-5d45feef9e89",
+        "text": "Screen reader labels",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "a2a00f44-b5a1-5ae7-9e7a-dc3b2318b820",
+        "card": "3f8b19c5-eae9-5699-bce0-5d45feef9e89",
+        "text": "Focus order",
+        "done": true,
+        "position": 2
+      },
+      {
+        "id": "994f2385-20d8-5f5b-8af6-08db156fc850",
+        "card": "3f8b19c5-eae9-5699-bce0-5d45feef9e89",
+        "text": "Error announcements",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "7de718c2-6b06-5886-bd78-571c752cfcc5",
+        "card": "5b7b4ff5-d83f-5ce3-b661-b97cd973116c",
+        "text": "Soft-ask screen copy",
+        "done": false,
+        "position": 1
+      },
+      {
+        "id": "1acb198f-d3e7-51ba-890c-09d9a1b7bf1c",
+        "card": "5b7b4ff5-d83f-5ce3-b661-b97cd973116c",
+        "text": "Permission state handling",
+        "done": false,
+        "position": 2
+      },
+      {
+        "id": "590fc399-45de-53e0-a623-83e8abbb8ece",
+        "card": "5b7b4ff5-d83f-5ce3-b661-b97cd973116c",
+        "text": "Reminder after 7 days",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "92aa23d0-1f00-5ed4-9784-da096170f4eb",
+        "card": "7bdd9438-58a4-5b79-a35f-4776b850db0f",
+        "text": "Button states",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "e53a7e37-d834-519c-a1e8-f97b5d581504",
+        "card": "7bdd9438-58a4-5b79-a35f-4776b850db0f",
+        "text": "Input states",
+        "done": true,
+        "position": 2
+      },
+      {
+        "id": "bbfa67f7-f2b4-5b40-b266-c0346797d941",
+        "card": "7bdd9438-58a4-5b79-a35f-4776b850db0f",
+        "text": "Keyboard docs",
+        "done": true,
+        "position": 3
+      },
+      {
+        "id": "ae612ff3-d976-5cba-82ff-9bc8d734715c",
+        "card": "18fa06bf-d18e-54f4-b535-922689889db2",
+        "text": "Add headers middleware",
+        "done": false,
+        "position": 1
+      },
+      {
+        "id": "df10a252-5990-50f1-ac31-1063489c3a3d",
+        "card": "18fa06bf-d18e-54f4-b535-922689889db2",
+        "text": "Document burst policy",
+        "done": false,
+        "position": 2
+      },
+      {
+        "id": "5a2409c2-94bc-5ed8-89af-5ee20ea2e01b",
+        "card": "28b66f13-4f6b-5eef-b20f-3f6fbb69ff9b",
+        "text": "Transcribe interviews",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "26eca656-dbf3-5fe7-9e42-fbf9095f4af1",
+        "card": "28b66f13-4f6b-5eef-b20f-3f6fbb69ff9b",
+        "text": "Cluster themes",
+        "done": true,
+        "position": 2
+      },
+      {
+        "id": "5bfd3a43-e8ed-5f05-a952-8c7bc193a7cd",
+        "card": "28b66f13-4f6b-5eef-b20f-3f6fbb69ff9b",
+        "text": "Pull top five quotes",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "643e533b-5ba2-5507-8db9-c24dfb4a6d5a",
+        "card": "f3421b5f-eaa7-5d59-b7ba-05a16f02ab5f",
+        "text": "Quickstart rewrite",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "ab25cc46-70d2-54ed-8f76-42204bebcd7d",
+        "card": "f3421b5f-eaa7-5d59-b7ba-05a16f02ab5f",
+        "text": "Runnable examples",
+        "done": false,
+        "position": 2
+      },
+      {
+        "id": "68f18a09-3510-51cc-b8b3-1be6d4a8179a",
+        "card": "f3421b5f-eaa7-5d59-b7ba-05a16f02ab5f",
+        "text": "Review with DX team",
+        "done": false,
+        "position": 3
+      },
+      {
+        "id": "d8483b88-aa06-5627-a88b-83aad6f45d46",
+        "card": "eea12398-3779-5253-a681-ee4b54ac1263",
+        "text": "Inventory spacing values",
+        "done": true,
+        "position": 1
+      },
+      {
+        "id": "0ddc0204-6b31-5542-8c33-d79b69e6d25a",
+        "card": "eea12398-3779-5253-a681-ee4b54ac1263",
+        "text": "Propose 4px scale",
+        "done": true,
+        "position": 2
+      },
+      {
+        "id": "bb3c922a-85a6-54ad-a252-177c1d786b8f",
+        "card": "eea12398-3779-5253-a681-ee4b54ac1263",
+        "text": "Migrate components",
+        "done": false,
+        "position": 3
+      }
+    ],
+    "comment": [
+      {
+        "id": "692fe57d-ea90-5c67-91b7-a9b78e476096",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "author": "Priya Nair",
+        "body": "Finance needs this for the October close — can we land the tax lines by Monday?"
+      },
+      {
+        "id": "7b3f1ab0-7636-5178-bc38-469b046f7379",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "author": "Lena Fischer",
+        "body": "Totals are done, tax layout is the last piece. Pairing with Maya on spacing today."
+      },
+      {
+        "id": "e2c95a1e-5e7b-531a-bf17-97952355afa6",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "author": "Daniel Brooks",
+        "body": "Love the inline direction. Can the checklist collapse once it's complete?"
+      },
+      {
+        "id": "e6db998b-8c03-5bb4-a388-af957f7ba326",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "author": "Maya Chen",
+        "body": "Yes — it folds into a single progress pill. Pushing mocks in the next hour."
+      },
+      {
+        "id": "1231bae4-7aad-58b3-8a4c-09765c21469f",
+        "card": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "assignee": "5e687d6e-1d64-5905-b458-709d254a0529",
+        "author": "Daniel Brooks",
+        "body": "Rehearsal window is Thursday 22:00 UTC. Please share the rollback runbook before then."
+      },
+      {
+        "id": "3bcb5d45-cd6f-5168-ba7b-fcafe35c0762",
+        "card": "46aa1270-c358-558f-b01c-c3b61903b03a",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "author": "Tomás Rivera",
+        "body": "Found two failing cases with reverse-charge VAT on mid-cycle changes. Details in the thread."
+      },
+      {
+        "id": "622322ad-fe30-53cc-8112-05ea49ac9fb9",
+        "card": "3f8b19c5-eae9-5699-bce0-5d45feef9e89",
+        "assignee": "91aec89e-0941-5a16-817a-6ed655f7f8d5",
+        "author": "Priya Nair",
+        "body": "Great progress. Error announcements are the only blocker for sign-off."
+      },
+      {
+        "id": "d10c5d8e-3deb-5706-9837-fa1bf7b6d49e",
+        "card": "ada88fe4-43d6-5276-a0ba-222146639283",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "author": "Maya Chen",
+        "body": "The lift scale feels slightly heavy — try 1.04 with a softer shadow."
+      },
+      {
+        "id": "047e8c2e-72c6-5c96-a9a3-4b375e354aa1",
+        "card": "5b7b4ff5-d83f-5ce3-b661-b97cd973116c",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "author": "Zoe Adeyemi",
+        "body": "Growth would love a reminder after 7 days if they decline."
+      },
+      {
+        "id": "4a225447-8329-59f6-a3e3-df0551b326df",
+        "card": "30ada42c-03a6-50b1-97b2-0018de1c6168",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "author": "Priya Nair",
+        "body": "Keep variant C short — under 8 words."
+      },
+      {
+        "id": "85b65ef4-8bfa-5dd6-9943-7f2c7a4d5d68",
+        "card": "7bdd9438-58a4-5b79-a35f-4776b850db0f",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "author": "Maya Chen",
+        "body": "Reviewed in Figma, matches. Merging once the docs page is live."
+      },
+      {
+        "id": "bf8af744-7209-528a-a1e8-a8c7dd645a0e",
+        "card": "12d90fa1-8e9c-5c69-8fcf-20d0e29c84ef",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "author": "Daniel Brooks",
+        "body": "Timebox this spike to two days."
+      }
+    ],
+    "assignment": [
+      {
+        "id": "fe8033b7-11b5-5f91-b62e-091364af891d",
+        "card": "5e8fd88e-6298-50d3-bea9-0761de67634f",
+        "assignee": "66e56955-893e-51c1-86d5-6dab14970a5c",
+        "by": "Priya Nair",
+        "title": "Welcome checklist redesign"
+      },
+      {
+        "id": "f8fe852b-e259-5bce-8e04-107406bbb7c0",
+        "card": "076b8882-5cac-53ab-89a2-cb764ab4d9ff",
+        "assignee": "18d0e9cf-08b4-5d52-b11a-298f4f95a466",
+        "by": "Daniel Brooks",
+        "title": "Invoice PDF rendering"
+      },
+      {
+        "id": "2af5c0c4-54b2-58b0-8466-6681b10b264e",
+        "card": "ada88fe4-43d6-5276-a0ba-222146639283",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "by": "Priya Nair",
+        "title": "Gesture-driven card reorder"
+      },
+      {
+        "id": "676f4f99-f33e-5c95-830f-252cd10e4706",
+        "card": "0bdd4fff-04b1-51fe-82d0-ae331fc9b9f7",
+        "assignee": "5e687d6e-1d64-5905-b458-709d254a0529",
+        "by": "Daniel Brooks",
+        "title": "Postgres 16 upgrade rehearsal"
+      },
+      {
+        "id": "8c24f75c-42c8-5b61-a4c7-5c6cc6defbec",
+        "card": "5b7b4ff5-d83f-5ce3-b661-b97cd973116c",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "by": "Priya Nair",
+        "title": "Push notification permission flow"
+      },
+      {
+        "id": "4024b230-4d88-5e40-b9e9-f1fa3f523ae1",
+        "card": "30ada42c-03a6-50b1-97b2-0018de1c6168",
+        "assignee": "c1082a0e-a8cb-596d-9cd4-07b9498eb2a5",
+        "by": "Priya Nair",
+        "title": "Landing page headline test"
+      },
+      {
+        "id": "b9ab6c77-4c10-50e0-8b0a-2245a8acd36d",
+        "card": "3f8b19c5-eae9-5699-bce0-5d45feef9e89",
+        "assignee": "91aec89e-0941-5a16-817a-6ed655f7f8d5",
+        "by": "Daniel Brooks",
+        "title": "Signup form accessibility pass"
+      },
+      {
+        "id": "58feff84-c30f-5aac-9045-a5c7ca1b94b0",
+        "card": "7bdd9438-58a4-5b79-a35f-4776b850db0f",
+        "assignee": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+        "by": "Priya Nair",
+        "title": "Button & input components"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "board",
+      "route": "/board",
+      "title": "Board",
+      "icon": "LayoutGrid",
+      "personas": [
+        "manager",
+        "member"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "KanboBoard"
+      }
+    },
+    {
+      "name": "my-work",
+      "route": "/my-work",
+      "title": "My work",
+      "icon": "ListChecks",
+      "personas": [
+        "manager",
+        "member"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "KanboWork",
+        "props": {
+          "view": "work"
+        }
+      }
+    },
+    {
+      "name": "projects",
+      "route": "/projects",
+      "title": "Projects",
+      "icon": "Layers",
+      "personas": [
+        "manager"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "KanboWork",
+        "props": {
+          "view": "projects"
+        }
+      }
+    },
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "manager"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "custom",
+            "custom": "KanboNavBar"
+          },
+          {
+            "kind": "header",
+            "title": "Team & access",
+            "subtitle": "Who can sign in, and what they can do."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It's just you so far — add the people who work in the app and pick their role."
+            }
+          }
+        ]
+      },
+      "chrome": "none"
+    }
+  ],
+  "auth": {
+    "screen": "KanboLogin",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "KanboLogin",
+      "kind": "code",
+      "purpose": "Minimal keyboard-first sign-in: animated board illustration above a narrow form",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useState } from \"react\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { ArrowRight, RefreshCw } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype Props = { app?: AppHandle };\n\nconst COLS = [\n  { name: \"To do\", color: \"#B4B8C0\", w: 0.7 },\n  { name: \"Doing\", color: \"#F2B94B\", w: 0.45 },\n  { name: \"Done\", color: \"#4CC38A\", w: 0.9 },\n];\n\nfunction Mark({ size = 28 }: { size?: number }) {\n  return (\n    <span style={{ width: size, height: size }} className=\"grid shrink-0 place-items-center rounded-[9px] bg-primary shadow-[0_6px_16px_-4px_hsl(var(--primary)/0.6)]\">\n      <svg width={size / 2} height={size / 2} viewBox=\"0 0 18 18\" fill=\"none\"><rect x=\"2\" y=\"2\" width=\"4\" height=\"14\" rx=\"1.4\" fill=\"#fff\" /><rect x=\"7\" y=\"2\" width=\"4\" height=\"9\" rx=\"1.4\" fill=\"#fff\" fillOpacity=\".85\" /><rect x=\"12\" y=\"2\" width=\"4\" height=\"6\" rx=\"1.4\" fill=\"#fff\" fillOpacity=\".7\" /></svg>\n    </span>\n  );\n}\n\nfunction GoogleG() {\n  return (\n    <svg width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" aria-hidden=\"true\">\n      <path fill=\"#EA4335\" d=\"M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z\" />\n      <path fill=\"#4285F4\" d=\"M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z\" />\n      <path fill=\"#FBBC05\" d=\"M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z\" />\n      <path fill=\"#34A853\" d=\"M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z\" />\n    </svg>\n  );\n}\n\n/* Three cards slide into three columns, then the loop resets. */\nfunction Slides({ reduce }: { reduce: boolean }) {\n  const T = 7;\n  return (\n    <div aria-hidden=\"true\" className=\"mx-auto grid w-full max-w-[300px] grid-cols-3 gap-2.5\">\n      {COLS.map((col, i) => {\n        const start = 0.1 + i * 0.16;\n        return (\n          <div key={col.name} className=\"flex flex-col gap-1.5\">\n            <div className=\"flex items-center gap-1 px-0.5 text-[10px] font-medium text-neutral-500\">\n              <span className=\"h-1.5 w-1.5 rounded-full\" style={{ background: col.color }} />{col.name}\n            </div>\n            <div className=\"relative h-[64px] rounded-lg border border-dashed border-neutral-200 bg-neutral-50/70\">\n              <motion.div\n                initial={reduce ? false : { opacity: 0, x: (1 - i) * 80, y: -44, rotate: (i - 1) * 8 }}\n                animate={reduce ? { opacity: 1, x: 0, y: 0, rotate: 0 } : {\n                  opacity: [0, 1, 1, 1, 0],\n                  x: [(1 - i) * 80, 0, 0, 0, 0],\n                  y: [-44, 0, 0, 0, 0],\n                  rotate: [(i - 1) * 8, 0, 0, 0, 0],\n                }}\n                transition={reduce ? { duration: 0 } : { duration: T, times: [start * 0.6, start * 0.6 + 0.1, 0.8, 0.92, 1], repeat: Infinity, ease: \"easeOut\" }}\n                className=\"absolute inset-1 rounded-md border border-neutral-200 bg-white p-1.5 shadow-[0_6px_14px_-8px_rgba(20,20,40,0.35)]\"\n              >\n                <div className=\"h-1.5 rounded-full bg-neutral-200\" style={{ width: col.w * 100 + \"%\" }} />\n                <div className=\"mt-1.5 h-1.5 w-1/2 rounded-full bg-neutral-100\" />\n                <div className=\"mt-2 h-1 w-5 rounded-full\" style={{ background: col.color }} />\n              </motion.div>\n            </div>\n          </div>\n        );\n      })}\n    </div>\n  );\n}\n\nexport default function KanboLogin({ app }: Props) {\n  const reduce = !!useReducedMotion();\n  const auth = app?.auth;\n  const mode = auth?.mode === \"signup\" ? \"up\" : \"in\";\n  const canSignUp = !!auth?.canSignUp;\n  const providers = auth?.providers ?? [];\n  const [name, setName] = useState(\"\");\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n\n  const submit = async () => {\n    if (!app || busy) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      if (mode === \"in\") await app.auth.signIn(email.trim(), password);\n      else await app.auth.signUp({ email: email.trim(), password, name: name.trim() });\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Something went wrong. Try again.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n  const provider = async (p: string) => {\n    if (!app) return;\n    setErr(\"\");\n    try { await app.auth.startProvider(p); } catch (e) { setErr(e instanceof Error ? e.message : \"Couldn't start that sign-in. Try again.\"); }\n  };\n  const flip = () => {\n    setErr(\"\");\n    auth?.setMode(mode === \"in\" ? \"signup\" : \"login\");\n  };\n  const onKey = (e: React.KeyboardEvent) => { if (e.key === \"Enter\") void submit(); };\n\n  const inputCls = \"mt-1.5 h-11 w-full rounded-lg border border-neutral-200 bg-white px-3.5 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-primary focus:ring-4 focus:ring-primary/15\";\n\n  return (\n    <div className=\"flex min-h-[100dvh] w-full flex-col items-center justify-center bg-white px-6 py-10 text-neutral-900\">\n      <motion.div\n        initial={reduce ? false : { opacity: 0, y: 14 }}\n        animate={{ opacity: 1, y: 0 }}\n        transition={{ type: \"spring\", stiffness: 140, damping: 20 }}\n        className=\"w-full max-w-[340px]\"\n      >\n        <div className=\"flex items-center justify-center gap-2\"><Mark /><span className=\"text-[15px] font-semibold tracking-tight\">Kanbo</span></div>\n        <div className=\"mt-9\"><Slides reduce={reduce} /></div>\n\n        <h1 className=\"mt-9 text-center text-[22px] font-semibold tracking-tight\">{mode === \"in\" ? \"Sign in to Kanbo\" : \"Create your account\"}</h1>\n        <p className=\"mt-1 text-center text-[13px] text-neutral-500\">Ship together, calmly.</p>\n\n        <div className=\"mt-7 space-y-3.5\">\n          <AnimatePresence initial={false}>\n            {mode === \"up\" && (\n              <motion.div key=\"name\" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"overflow-hidden\">\n                <label className=\"block text-xs font-medium text-neutral-500\">\n                  Name\n                  <input className={inputCls} aria-label=\"Name\" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onKey} placeholder=\"Your name\" />\n                </label>\n              </motion.div>\n            )}\n          </AnimatePresence>\n          <label className=\"block text-xs font-medium text-neutral-500\">\n            Email\n            <input className={inputCls} type=\"email\" aria-label=\"Email\" autoComplete=\"email\" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={onKey} placeholder=\"you@company.com\" />\n          </label>\n          <label className=\"block text-xs font-medium text-neutral-500\">\n            Password\n            <input className={inputCls} type=\"password\" aria-label=\"Password\" autoComplete={mode === \"in\" ? \"current-password\" : \"new-password\"} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={onKey} placeholder=\"••••••••\" />\n          </label>\n        </div>\n\n        <AnimatePresence>\n          {err && (\n            <motion.div role=\"alert\" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700\">{err}</motion.div>\n          )}\n        </AnimatePresence>\n\n        <motion.button\n          whileTap={reduce ? undefined : { scale: 0.98 }}\n          onClick={() => void submit()}\n          disabled={busy}\n          className=\"mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-[0_8px_20px_-8px_hsl(var(--primary)/0.8)] disabled:opacity-70\"\n        >\n          {busy ? <RefreshCw className=\"h-4 w-4 animate-spin\" /> : null}\n          {mode === \"in\" ? \"Sign in\" : \"Create account\"}\n          {!busy && <ArrowRight className=\"h-4 w-4\" />}\n        </motion.button>\n        <p className=\"mt-2.5 text-center text-[11px] text-neutral-400\">\n          Press <kbd className=\"rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500\">Enter</kbd> to {mode === \"in\" ? \"sign in\" : \"create your account\"}\n        </p>\n\n        {providers.length > 0 && (\n          <div className=\"mt-5\">\n            <div className=\"flex items-center gap-3 text-[11px] uppercase tracking-wider text-neutral-400\"><span className=\"h-px flex-1 bg-neutral-200\" />or<span className=\"h-px flex-1 bg-neutral-200\" /></div>\n            <div className=\"mt-4 space-y-2\">\n              {providers.map((p) => (\n                <motion.button\n                  key={p.name}\n                  whileTap={reduce ? undefined : { scale: 0.98 }}\n                  onClick={() => void provider(p.name)}\n                  className=\"flex h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-neutral-200 bg-white text-sm font-medium text-neutral-800 transition hover:bg-neutral-50\"\n                >\n                  {p.name === \"google\" ? <GoogleG /> : null}\n                  Continue with {p.label}\n                </motion.button>\n              ))}\n            </div>\n          </div>\n        )}\n\n        {canSignUp && (\n          <p className=\"mt-6 text-center text-xs text-neutral-500\">\n            {mode === \"in\" ? \"New to Kanbo?\" : \"Already have an account?\"}{\" \"}\n            <button className=\"font-medium text-primary hover:underline\" onClick={flip}>\n              {mode === \"in\" ? \"Create an account\" : \"Sign in instead\"}\n            </button>\n          </p>\n        )}\n      </motion.div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "KanboBoard",
+      "kind": "code",
+      "purpose": "Kanban board with drag-and-drop, live updates, card sheet (checklist, comments, AI breakdown)",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useCallback, useEffect, useMemo, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, LayoutGroup, useDragControls, useReducedMotion } from \"motion/react\";\nimport type { PanInfo } from \"motion/react\";\nimport { Users, LayoutGrid, ListChecks, Layers, Plus, Search, X, Sparkles, MessageSquare, CalendarDays, Check, LogOut, Send, Zap, RefreshCw, AlertCircle } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\ntype Props = { app?: AppHandle; openId?: string };\n\nconst s = (v: unknown): string => (v == null ? \"\" : String(v));\nconst n = (v: unknown): number => Number(v) || 0;\nconst STAGES = [\"backlog\", \"todo\", \"in_progress\", \"review\", \"done\"];\nconst ST_LABEL: Record<string, string> = { backlog: \"Backlog\", todo: \"To do\", in_progress: \"In progress\", review: \"Review\", done: \"Done\" };\nconst ST_COLOR: Record<string, string> = { backlog: \"#8A8F98\", todo: \"#B4B8C0\", in_progress: \"#F2B94B\", review: \"#5EA2FF\", done: \"#4CC38A\" };\nconst PRI: Record<string, { label: string; color: string; bars: number }> = {\n  urgent: { label: \"Urgent\", color: \"#FF6B6B\", bars: 4 },\n  high: { label: \"High\", color: \"#FFA94D\", bars: 3 },\n  medium: { label: \"Medium\", color: \"#FFD43B\", bars: 2 },\n  low: { label: \"Low\", color: \"#8A8F98\", bars: 1 },\n};\nconst LCOL = [\"#F472B6\", \"#60A5FA\", \"#34D399\", \"#A78BFA\", \"#FBBF24\", \"#2DD4BF\", \"#FB923C\", \"#93C5FD\"];\nconst GRADS = [[\"#7C5CFF\", \"#B39BFF\"], [\"#14B8A6\", \"#38BDF8\"], [\"#EC4899\", \"#FB923C\"], [\"#3B82F6\", \"#818CF8\"], [\"#10B981\", \"#A3E635\"], [\"#F59E0B\", \"#EF4444\"]];\nconst SPRING = { type: \"spring\" as const, stiffness: 420, damping: 34 };\nconst hash = (t: string): number => { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0; return h; };\nconst msg = (e: unknown): string => {\n  const m = e instanceof Error ? e.message : s(e);\n  return /WIP/i.test(m) ? \"WIP limit reached: this teammate already has 3 cards in progress.\" : m || \"Something went wrong\";\n};\n\nfunction Av({ name, size = 24 }: { name: string; size?: number }) {\n  const g = GRADS[hash(name) % GRADS.length];\n  const p = name.trim().split(/\\s+/);\n  const ini = ((p[0] || \"?\")[0] + (p.length > 1 ? p[p.length - 1][0] : \"\")).toUpperCase();\n  return (\n    <span title={name} style={{ width: size, height: size, fontSize: Math.max(8, size * 0.38), background: `linear-gradient(135deg, ${g[0]}, ${g[1]})` }} className=\"inline-grid shrink-0 place-items-center rounded-full font-semibold text-white ring-2 ring-card\">{ini}</span>\n  );\n}\nfunction StageIcon({ st, size = 14 }: { st: string; size?: number }) {\n  const c = ST_COLOR[st] || \"#8A8F98\";\n  return (\n    <svg width={size} height={size} viewBox=\"0 0 14 14\" fill=\"none\">\n      <circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke={c} strokeWidth=\"1.5\" strokeDasharray={st === \"backlog\" ? \"2.2 2.2\" : undefined} fill={st === \"done\" ? c : \"none\"} />\n      {st === \"in_progress\" && <path d=\"M7 7V3A4 4 0 0 1 7 11Z\" fill={c} />}\n      {st === \"review\" && <path d=\"M7 7V3A4 4 0 1 1 3 7Z\" fill={c} />}\n      {st === \"done\" && <path d=\"M4.6 7.2l1.7 1.7 3.2-3.4\" stroke=\"#0b0b10\" strokeWidth=\"1.5\" strokeLinecap=\"round\" strokeLinejoin=\"round\" />}\n    </svg>\n  );\n}\nfunction PriIcon({ p, size = 14 }: { p: string; size?: number }) {\n  const m = PRI[p] || PRI.low;\n  return (\n    <svg width={size} height={size} viewBox=\"0 0 14 14\">\n      {[0, 1, 2, 3].map((i) => (<rect key={i} x={1 + i * 3.3} y={13 - (3 + i * 2.5)} width=\"2.3\" height={3 + i * 2.5} rx=\"0.8\" fill={m.color} fillOpacity={i < m.bars ? 1 : 0.22} />))}\n    </svg>\n  );\n}\nfunction dueInfo(due: string, today: string, done: boolean) {\n  if (!due) return null;\n  const d = due.slice(0, 10);\n  const diff = today ? Math.round((Date.parse(d) - Date.parse(today)) / 86400000) : 99;\n  const label = diff === 0 ? \"Today\" : diff === 1 ? \"Tomorrow\" : new Date(d + \"T00:00:00\").toLocaleDateString(\"en-US\", { month: \"short\", day: \"numeric\" });\n  return { label, tone: done ? \"ok\" : diff < 0 ? \"late\" : diff <= 2 ? \"soon\" : \"ok\" };\n}\nconst TONE_CLS: Record<string, string> = { late: \"text-[#FF7B7B]\", soon: \"text-[#FFB86B]\", ok: \"text-muted-foreground\" };\nfunction ago(iso: string, nowMs: number): string {\n  const m = Math.max(0, Math.round((nowMs - Date.parse(iso)) / 60000));\n  return !nowMs || isNaN(m) ? \"\" : m < 1 ? \"just now\" : m < 60 ? m + \"m ago\" : m < 1440 ? Math.round(m / 60) + \"h ago\" : Math.round(m / 1440) + \"d ago\";\n}\n\n/* shell */\nfunction Mark({ size = 30 }: { size?: number }) {\n  return (\n    <span style={{ width: size, height: size }} className=\"grid shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-primary to-[#B39BFF] shadow-[0_6px_18px_-4px_hsl(var(--primary)/0.7)]\">\n      <svg width={size / 2} height={size / 2} viewBox=\"0 0 18 18\" fill=\"none\"><rect x=\"2\" y=\"2\" width=\"4\" height=\"14\" rx=\"1.4\" fill=\"#fff\" /><rect x=\"7\" y=\"2\" width=\"4\" height=\"9\" rx=\"1.4\" fill=\"#fff\" fillOpacity=\".85\" /><rect x=\"12\" y=\"2\" width=\"4\" height=\"6\" rx=\"1.4\" fill=\"#fff\" fillOpacity=\".7\" /></svg>\n    </span>\n  );\n}\nconst NAV = [\n  { id: \"board\", label: \"Board\", to: \"/board\", Icon: LayoutGrid, mgr: false },\n  { id: \"work\", label: \"My work\", to: \"/my-work\", Icon: ListChecks, mgr: false },\n  { id: \"projects\", label: \"Projects\", to: \"/projects\", Icon: Layers, mgr: true },\n  { id: \"team\", label: \"Team\", to: \"/team\", Icon: Users, mgr: true },\n];\nfunction Shell({ app, view, title, actions, children }: { app: AppHandle; view: string; title: string; actions?: React.ReactNode; children: React.ReactNode }) {\n  const items = NAV.filter((i) => !i.mgr || app.user.role === \"manager\");\n  const out = () => void app.auth.signOut();\n  return (\n    <div className=\"flex h-[100dvh] w-full overflow-hidden bg-background text-foreground\">\n      <aside className=\"hidden w-60 shrink-0 flex-col border-r border-border bg-card/30 p-4 lg:flex\">\n        <div className=\"flex items-center gap-2.5 px-1\"><Mark /><span className=\"text-[15px] font-semibold tracking-tight\">Kanbo</span></div>\n        <nav className=\"mt-6 flex flex-col gap-0.5\">\n          {items.map((it) => (\n            <button key={it.id} onClick={() => app.navigate(it.to)} className={\"relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium \" + (view === it.id ? \"text-foreground\" : \"text-muted-foreground hover:text-foreground\")}>\n              {view === it.id && <motion.span layoutId=\"nav-pill\" transition={SPRING} className=\"absolute inset-0 rounded-lg bg-primary/15 ring-1 ring-primary/30\" />}\n              <it.Icon className={\"relative h-4 w-4 \" + (view === it.id ? \"text-primary\" : \"\")} /><span className=\"relative\">{it.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className=\"mt-auto flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground\"><Zap className=\"h-3.5 w-3.5 text-[#F2B94B]\" />WIP limit: 3 each</div>\n        <div className=\"mt-3 flex items-center gap-2.5 rounded-xl border border-border bg-card/60 p-2.5\">\n          <Av name={app.user.name || \"You\"} size={30} />\n          <div className=\"min-w-0 flex-1\"><div className=\"truncate text-[12px] font-medium\">{app.user.name}</div><div className=\"text-[10px] capitalize text-muted-foreground\">{app.user.role}</div></div>\n          <button aria-label=\"Sign out\" onClick={out} className=\"rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground\"><LogOut className=\"h-4 w-4\" /></button>\n        </div>\n      </aside>\n      <div className=\"flex min-w-0 flex-1 flex-col\">\n        <header className=\"flex h-14 shrink-0 items-center gap-3 border-b border-border px-4 lg:px-6\">\n          <span className=\"lg:hidden\"><Mark size={28} /></span>\n          <h1 className=\"text-[15px] font-semibold tracking-tight\">{title}</h1>\n          <div className=\"ml-auto flex items-center gap-2\">{actions}<button aria-label=\"Sign out\" onClick={out} className=\"rounded-md p-2 text-muted-foreground hover:bg-muted lg:hidden\"><LogOut className=\"h-4 w-4\" /></button></div>\n        </header>\n        <main className=\"min-h-0 flex-1 overflow-y-auto pb-[84px] lg:pb-0\">{children}</main>\n        <nav className=\"fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-background/80 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur-xl lg:hidden\">\n          {items.map((it) => (\n            <button key={it.id} onClick={() => app.navigate(it.to)} className={\"relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium \" + (view === it.id ? \"text-primary\" : \"text-muted-foreground\")}>\n              {view === it.id && <motion.span layoutId=\"tab-dot\" transition={SPRING} className=\"absolute -top-1.5 h-0.5 w-8 rounded-full bg-primary\" />}\n              <it.Icon className=\"h-5 w-5\" />{it.label}\n            </button>\n          ))}\n        </nav>\n      </div>\n    </div>\n  );\n}\n\n/* card */\ntype CardProps = { c: R; code: string; who: string; items: R[]; flash: boolean; today: string; mobile: boolean; canDrag: boolean; reduce: boolean; open: () => void; onStart: () => void; onMove: (x: number, y: number) => void; onDrop: (x: number, y: number) => void; reg: (el: HTMLElement | null) => void };\nfunction KCard({ c, code, who, items, flash, today, mobile, canDrag, reduce, open, onStart, onMove, onDrop, reg }: CardProps) {\n  const controls = useDragControls();\n  const labels = s(c.labels).split(\",\").map((x) => x.trim()).filter(Boolean).slice(0, 2);\n  const done = items.filter((i) => !!i.done).length;\n  const di = dueInfo(s(c.due), today, s(c.stage) === \"done\");\n  const late = s(c.stage) !== \"done\" && (di?.tone === \"late\" || !!c.overdue);\n  return (\n    <motion.div\n      ref={reg}\n      layout\n      layoutId={\"card-\" + s(c.id)}\n      transition={reduce ? { duration: 0 } : SPRING}\n      initial={reduce ? false : { opacity: 0, y: 8 }}\n      animate={{ opacity: 1, y: 0 }}\n      drag={canDrag}\n      dragControls={controls}\n      dragListener={!mobile}\n      dragSnapToOrigin\n      dragMomentum={false}\n      dragElastic={0.06}\n      onDragStart={onStart}\n      onDrag={(_e: unknown, info: PanInfo) => onMove(info.point.x, info.point.y)}\n      onDragEnd={(_e: unknown, info: PanInfo) => onDrop(info.point.x, info.point.y)}\n      onTap={open}\n      whileHover={reduce ? undefined : { y: -1 }}\n      whileDrag={reduce ? { zIndex: 60 } : { scale: 1.035, rotate: 1.2, zIndex: 60, boxShadow: \"0 24px 48px -12px rgba(0,0,0,0.6), 0 0 0 1px hsl(var(--primary)/0.5)\" }}\n      whileTap={reduce ? undefined : { scale: 0.985 }}\n      style={{ touchAction: mobile ? \"pan-y\" : \"none\" }}\n      className={\"relative cursor-grab select-none rounded-xl border bg-card p-3 shadow-[0_1px_0_hsl(var(--foreground)/0.04),0_6px_16px_-8px_rgba(0,0,0,0.5)] active:cursor-grabbing \" + (flash ? \"border-primary ring-2 ring-primary/40\" : \"border-border hover:border-foreground/20\")}\n    >\n      <div className=\"flex items-center gap-2 text-[10px] font-medium tracking-wide text-muted-foreground\">\n        <span className=\"rounded bg-muted px-1.5 py-0.5 font-mono\">{code}</span>\n        {late && <span className=\"flex items-center gap-1 text-[#FF7B7B]\"><AlertCircle className=\"h-3 w-3\" />Overdue</span>}\n        <span className=\"ml-auto flex items-center gap-1.5\"><PriIcon p={s(c.priority)} />\n          {mobile && canDrag && <span onPointerDown={(e) => { e.stopPropagation(); controls.start(e); }} style={{ touchAction: \"none\" }} className=\"-mr-1 grid h-7 w-6 place-items-center rounded-md text-muted-foreground/70 active:bg-muted\"><svg width=\"10\" height=\"14\" viewBox=\"0 0 10 14\" fill=\"currentColor\"><circle cx=\"2\" cy=\"2\" r=\"1.3\" /><circle cx=\"8\" cy=\"2\" r=\"1.3\" /><circle cx=\"2\" cy=\"7\" r=\"1.3\" /><circle cx=\"8\" cy=\"7\" r=\"1.3\" /><circle cx=\"2\" cy=\"12\" r=\"1.3\" /><circle cx=\"8\" cy=\"12\" r=\"1.3\" /></svg></span>}\n        </span>\n      </div>\n      <div className=\"mt-1.5 text-[13px] font-medium leading-snug text-foreground\">{s(c.title)}</div>\n      {labels.length > 0 && (\n        <div className=\"mt-2 flex flex-wrap gap-1\">\n          {labels.map((l) => (<span key={l} className=\"inline-flex items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground\"><span className=\"h-1.5 w-1.5 rounded-full\" style={{ background: LCOL[hash(l) % LCOL.length] }} />{l}</span>))}\n        </div>\n      )}\n      <div className=\"mt-2.5 flex items-center gap-2.5 text-[11px]\">\n        {di && <span className={\"flex items-center gap-1 \" + TONE_CLS[late ? \"late\" : di.tone]}><CalendarDays className=\"h-3 w-3\" />{di.label}</span>}\n        {items.length > 0 && <span className=\"flex items-center gap-1 text-muted-foreground\"><Check className=\"h-3 w-3\" />{done}/{items.length}</span>}\n        <span className=\"ml-auto\">{who ? <Av name={who} size={22} /> : <span className=\"grid h-[22px] w-[22px] place-items-center rounded-full border border-dashed border-border text-[9px] text-muted-foreground\">?</span>}</span>\n      </div>\n    </motion.div>\n  );\n}\n\n/* sheet */\ntype SheetProps = { app: AppHandle; card: R; projects: R[]; members: R[]; wip: Record<string, number>; items: R[]; comments: R[]; canEdit: boolean; isMgr: boolean; today: string; nowMs: number; desk: boolean; reduce: boolean; onClose: () => void; onStage: (st: string) => void; toast: (t: string, tone?: string) => void };\nfunction Sheet({ app, card, projects, members, wip, items, comments, canEdit, isMgr, today, nowMs, desk, reduce, onClose, onStage, toast }: SheetProps) {\n  const id = s(card.id);\n  const project = projects.find((p) => s(p.id) === s(card.project));\n  const [title, setTitle] = useState(s(card.title));\n  const [desc, setDesc] = useState(s(card.description));\n  const [newItem, setNewItem] = useState(\"\");\n  const [body, setBody] = useState(\"\");\n  const [ai, setAi] = useState(false);\n  const [sugg, setSugg] = useState<string[]>([]);\n  const [aiErr, setAiErr] = useState(\"\");\n  useEffect(() => { setTitle(s(card.title)); setDesc(s(card.description)); }, [id, card.title, card.description]);\n  const sorted = [...items].sort((a, b) => n(a.position) - n(b.position));\n  const doneN = sorted.filter((i) => !!i.done).length;\n  const pct = sorted.length ? Math.round((doneN / sorted.length) * 100) : 0;\n  const nextPos = () => sorted.reduce((m, i) => Math.max(m, n(i.position)), 0) + 1;\n  const save = async (patch: R) => { try { await app.update(\"card\", id, patch); } catch (e) { toast(msg(e), \"error\"); } };\n  const assign = async (mid: string) => {\n    try {\n      await app.update(\"card\", id, { assignee: mid || null });\n      if (mid) await app.create(\"assignment\", { card: id, assignee: mid, by: app.user.name, title: s(card.title) });\n      toast(mid ? \"Assigned — they've been notified\" : \"Unassigned\");\n    } catch (e) { toast(msg(e), \"error\"); }\n  };\n  const addItem = async (text: string, pos: number) => { await app.create(\"checklist_item\", { card: id, text, done: false, position: pos }); };\n  const breakDown = async () => {\n    if (ai) return;\n    setAi(true); setAiErr(\"\"); setSugg([]);\n    let steps: string[] = [];\n    try {\n      const raw = await app.ai.ask(\"Break this task into 3 to 6 concrete checklist steps.\\nTask: \" + s(card.title) + \"\\nContext: \" + s(card.description) + \"\\nReply with one short imperative step per line. No numbering, no bullets, no extra text.\", { system: \"You are a concise engineering project assistant.\", maxTokens: 220 });\n      steps = raw.split(\"\\n\").map((l) => l.replace(/^[\\s\\-*\\d.)]+/, \"\").trim()).filter((l) => l.length > 2).slice(0, 6);\n    } catch { steps = []; }\n    if (steps.length < 3) setAiErr(\"AI is resting right now, try again soon.\"); else setSugg(steps);\n    setAi(false);\n  };\n  const addSteps = async (list: string[]) => {\n    try {\n      const base = nextPos();\n      for (let i = 0; i < list.length; i++) await addItem(list[i], base + i);\n      setSugg((p) => p.filter((x) => !list.includes(x)));\n    } catch (e) { toast(msg(e), \"error\"); }\n  };\n  const send = async () => {\n    const t = body.trim(); if (!t) return; setBody(\"\");\n    try { await app.create(\"comment\", { card: id, assignee: s(card.assignee) || null, author: app.user.name, body: t }); } catch (e) { toast(msg(e), \"error\"); setBody(t); }\n  };\n  const cm = [...comments].sort((a, b) => Date.parse(s(a.created_at)) - Date.parse(s(b.created_at)));\n  const di = dueInfo(s(card.due), today, s(card.stage) === \"done\");\n  const row = \"flex items-start gap-3 py-2\";\n  const lbl = \"w-[72px] shrink-0 pt-1 text-[12px] text-muted-foreground\";\n  const pill = (on: boolean) => \"flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-medium transition disabled:opacity-60 \" + (on ? \"border-primary/50 bg-primary/10 text-foreground\" : \"border-transparent text-muted-foreground hover:text-foreground\");\n  const h = \"text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground\";\n  const panel = desk ? { initial: { x: 48, opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: 48, opacity: 0 } } : { initial: { y: \"100%\" }, animate: { y: 0 }, exit: { y: \"100%\" } };\n  return (\n    <>\n      <motion.div className=\"fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />\n      <motion.aside {...panel} transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 380, damping: 38 }} className={\"fixed z-50 flex flex-col overflow-hidden border-border bg-card \" + (desk ? \"bottom-0 right-0 top-0 w-[520px] border-l\" : \"inset-x-0 bottom-0 top-8 rounded-t-3xl border-t\")}>\n        {!desk && <div className=\"mx-auto mt-2 h-1 w-10 rounded-full bg-border\" />}\n        <div className=\"flex items-center gap-2 px-5 pb-1 pt-4 text-[11px] text-muted-foreground\">\n          <span className=\"rounded bg-muted px-1.5 py-0.5 font-mono\">{s(project?.code)}</span><span className=\"truncate\">{s(project?.name)}</span>\n          <button onClick={onClose} aria-label=\"Close\" className=\"ml-auto rounded-md p-1.5 hover:bg-muted\"><X className=\"h-4 w-4\" /></button>\n        </div>\n        <div className=\"min-h-0 flex-1 overflow-y-auto px-5 pb-8\">\n          <input value={title} readOnly={!canEdit} onChange={(e) => setTitle(e.target.value)} onBlur={() => { if (canEdit && title.trim() && title !== s(card.title)) void save({ title: title.trim() }); }} className=\"w-full bg-transparent text-[20px] font-semibold leading-tight tracking-tight outline-none\" />\n          {!canEdit && <div className=\"mt-1 text-[11px] text-muted-foreground\">Read-only. You can still comment.</div>}\n          <div className=\"mt-4 divide-y divide-border/60 rounded-xl border border-border bg-background/40 px-3.5\">\n            <div className={row}><span className={lbl}>Stage</span>\n              <div className=\"flex flex-wrap gap-0.5\">{STAGES.map((st) => (\n                <button key={st} disabled={!canEdit} onClick={() => onStage(st)} className={\"relative \" + pill(false)}>\n                  {s(card.stage) === st && <motion.span layoutId=\"stage-pill\" transition={SPRING} className=\"absolute inset-0 rounded-full bg-muted ring-1 ring-border\" />}\n                  <span className={\"relative flex items-center gap-1.5 \" + (s(card.stage) === st ? \"text-foreground\" : \"\")}><StageIcon st={st} size={12} />{ST_LABEL[st]}</span>\n                </button>))}</div></div>\n            <div className={row}><span className={lbl}>Priority</span>\n              <div className=\"flex flex-wrap gap-0.5\">{Object.keys(PRI).map((p) => (<button key={p} disabled={!canEdit} onClick={() => void save({ priority: p })} className={pill(s(card.priority) === p)}><PriIcon p={p} size={12} />{PRI[p].label}</button>))}</div></div>\n            <div className={row}><span className={lbl}>Assignee</span>\n              <div className=\"flex flex-wrap gap-0.5\">\n                <button disabled={!canEdit} onClick={() => void assign(\"\")} className={pill(!s(card.assignee))}>Unassigned</button>\n                {members.map((m) => { const mid = s(m.id); const w = wip[mid] || 0; return (\n                  <button key={mid} disabled={!canEdit} onClick={() => void assign(mid)} className={pill(s(card.assignee) === mid) + \" !py-0.5 !pl-0.5\"}><Av name={s(m.name)} size={18} />{s(m.name).split(\" \")[0]}<span className={\"text-[9px] \" + (w >= 3 ? \"text-[#FF8A5B]\" : \"text-muted-foreground/70\")}>{w}/3</span></button>); })}\n              </div></div>\n            {isMgr && <div className={row}><span className={lbl}>Project</span>\n              <div className=\"flex flex-wrap gap-0.5\">{projects.map((p) => (<button key={s(p.id)} onClick={() => void save({ project: s(p.id) })} className={pill(s(card.project) === s(p.id)) + \" font-mono\"}>{s(p.code)}</button>))}</div></div>}\n            <div className={row + \" items-center\"}><span className={lbl + \" pt-0\"}>Due</span>\n              <input type=\"date\" disabled={!canEdit} value={s(card.due).slice(0, 10)} onChange={(e) => void save({ due: e.target.value || null })} className={\"rounded-md border border-border bg-transparent px-2 py-1 text-[12px] outline-none focus:border-primary \" + (di ? TONE_CLS[di.tone] : \"\")} /></div>\n          </div>\n          <div className={\"mt-5 \" + h}>Description</div>\n          <textarea value={desc} readOnly={!canEdit} rows={3} placeholder=\"Add context, links, acceptance criteria…\" onChange={(e) => setDesc(e.target.value)} onBlur={() => { if (canEdit && desc !== s(card.description)) void save({ description: desc }); }} className=\"-ml-2 mt-1.5 w-full resize-none rounded-xl border border-transparent bg-transparent p-2 text-[13px] leading-relaxed text-foreground/90 outline-none hover:border-border focus:border-primary\" />\n          <div className=\"mt-5 flex items-center gap-2\">\n            <span className={h}>Checklist</span><span className=\"text-[11px] text-muted-foreground\">{doneN}/{sorted.length}</span>\n            <motion.button whileTap={reduce ? undefined : { scale: 0.95 }} disabled={ai || !canEdit} onClick={() => void breakDown()} className=\"ml-auto flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary/25 to-[#B39BFF]/20 px-3 py-1.5 text-[11px] font-medium text-foreground ring-1 ring-primary/40 disabled:opacity-60\">\n              {ai ? <RefreshCw className=\"h-3.5 w-3.5 animate-spin\" /> : <Sparkles className=\"h-3.5 w-3.5 text-primary\" />}{ai ? \"Thinking…\" : \"Break it down\"}\n            </motion.button>\n          </div>\n          <div className=\"mt-2 h-1.5 overflow-hidden rounded-full bg-muted\"><motion.div className=\"h-full rounded-full bg-gradient-to-r from-primary to-[#B39BFF]\" animate={{ width: pct + \"%\" }} transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 140, damping: 22 }} /></div>\n          {(sugg.length > 0 || aiErr) && (\n            <div className=\"mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3 text-[13px]\">\n              {aiErr ? <div className=\"text-[12px] text-muted-foreground\">{aiErr}</div> : (<>\n                <div className=\"flex items-center gap-2 text-[11px] font-medium\"><Sparkles className=\"h-3.5 w-3.5 text-primary\" />Suggested steps<button onClick={() => void addSteps(sugg)} className=\"ml-auto rounded-full bg-primary px-2.5 py-1 font-semibold text-primary-foreground\">Add all</button></div>\n                {sugg.map((st) => (<button key={st} onClick={() => void addSteps([st])} className=\"mt-1 flex w-full items-center gap-2 rounded-lg bg-background/60 px-2.5 py-1.5 text-left hover:bg-primary/10\"><Plus className=\"h-3.5 w-3.5 shrink-0 text-primary\" />{st}</button>))}\n              </>)}\n            </div>\n          )}\n          <div className=\"mt-2 flex flex-col\">\n            <AnimatePresence initial={false}>\n              {sorted.map((it) => { const k = s(it.id); const d = !!it.done; return (\n                <motion.div key={k} layout=\"position\" initial={reduce ? false : { opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, height: 0 }} className=\"flex items-center gap-2.5 rounded-lg px-1 py-1.5 hover:bg-muted/50\">\n                  <motion.button whileTap={reduce ? undefined : { scale: 0.8 }} disabled={!canEdit} onClick={() => void app.update(\"checklist_item\", k, { done: !d }).catch((e) => toast(msg(e), \"error\"))} aria-label=\"Toggle\" className={\"grid h-[18px] w-[18px] shrink-0 place-items-center rounded-md border transition \" + (d ? \"border-primary bg-primary text-primary-foreground\" : \"border-border\")}>{d && <Check className=\"h-3 w-3\" />}</motion.button>\n                  <span className={\"flex-1 text-[13px] \" + (d ? \"text-muted-foreground line-through\" : \"\")}>{s(it.text)}</span>\n                </motion.div>); })}\n            </AnimatePresence>\n            {canEdit && (\n              <div className=\"mt-1 flex items-center gap-2 px-1\"><Plus className=\"h-4 w-4 text-muted-foreground\" />\n                <input value={newItem} onChange={(e) => setNewItem(e.target.value)} onKeyDown={(e) => { if (e.key === \"Enter\" && newItem.trim()) { const t = newItem.trim(); setNewItem(\"\"); void addItem(t, nextPos()).catch((er) => toast(msg(er), \"error\")); } }} placeholder=\"Add an item\" className=\"h-8 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/60\" /></div>)}\n          </div>\n          <div className={\"mt-6 flex items-center gap-2 \" + h}><MessageSquare className=\"h-3.5 w-3.5\" />Comments<span className=\"font-normal\">{cm.length}</span></div>\n          <div className=\"mt-3 flex flex-col gap-3\">\n            <AnimatePresence initial={false}>\n              {cm.map((c) => (\n                <motion.div key={s(c.id)} layout initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className=\"flex gap-2.5\">\n                  <Av name={s(c.author)} size={26} />\n                  <div className=\"min-w-0 flex-1 rounded-xl rounded-tl-sm bg-muted/60 px-3 py-2\"><div className=\"flex items-baseline gap-2\"><span className=\"text-[12px] font-medium\">{s(c.author)}</span><span className=\"text-[10px] text-muted-foreground\">{ago(s(c.created_at), nowMs)}</span></div><div className=\"mt-0.5 text-[13px] leading-snug text-foreground/90\">{s(c.body)}</div></div>\n                </motion.div>))}\n            </AnimatePresence>\n            {cm.length === 0 && <div className=\"rounded-xl border border-dashed border-border px-3 py-4 text-center text-[12px] text-muted-foreground\">No comments yet.</div>}\n          </div>\n          <div className=\"mt-3 flex items-center gap-2 rounded-xl border border-border bg-background/50 py-1.5 pl-3 pr-1.5 focus-within:border-primary\">\n            <input value={body} onChange={(e) => setBody(e.target.value)} onKeyDown={(e) => { if (e.key === \"Enter\") void send(); }} placeholder=\"Write a comment…\" className=\"h-8 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/60\" />\n            <motion.button whileTap={reduce ? undefined : { scale: 0.88 }} onClick={() => void send()} aria-label=\"Send\" className=\"grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground\"><Send className=\"h-4 w-4\" /></motion.button>\n          </div>\n        </div>\n      </motion.aside>\n    </>\n  );\n}\n\n/* board */\ntype Toast = { id: number; text: string; tone: string };\nexport default function KanboBoard({ app, openId }: Props) {\n  const reduce = !!useReducedMotion();\n  if (!app) return <div className=\"p-6 text-sm text-muted-foreground\">Loading…</div>;\n  return <BoardInner app={app} openId={openId} reduce={reduce} />;\n}\nfunction BoardInner({ app, openId, reduce }: { app: AppHandle; openId?: string; reduce: boolean }) {\n  const cardsRaw = app.rows(\"card\") as R[];\n  const members = app.rows(\"member\") as R[];\n  const projects = app.rows(\"project\") as R[];\n  const itemsAll = app.rows(\"checklist_item\") as R[];\n  const commentsAll = app.rows(\"comment\") as R[];\n  const isMgr = app.user.role === \"manager\";\n  const mineId = app.me(\"member\") || \"\";\n  const [ovr, setOvr] = useState<Record<string, { stage: string; position: number }>>({});\n  const [q, setQ] = useState(\"\");\n  const [proj, setProj] = useState(\"all\");\n  const [onlyMine, setOnlyMine] = useState(false);\n  const [openCard, setOpenCard] = useState<string>(openId || app.params.id || \"\");\n  const [desk, setDesk] = useState(true);\n  const [tab, setTab] = useState(\"in_progress\");\n  const [hover, setHover] = useState(\"\");\n  const [dragId, setDragId] = useState(\"\");\n  const [flash, setFlash] = useState<Record<string, boolean>>({});\n  const [toasts, setToasts] = useState<Toast[]>([]);\n  const [today, setToday] = useState(\"\");\n  const [nowMs, setNowMs] = useState(0);\n  const targets = useRef<Record<string, HTMLElement | null>>({});\n  const cardEls = useRef<Record<string, HTMLElement | null>>({});\n  const prev = useRef<Record<string, string> | null>(null);\n  const tid = useRef(0);\n\n  useEffect(() => {\n    const d = new Date();\n    setToday(d.getFullYear() + \"-\" + String(d.getMonth() + 1).padStart(2, \"0\") + \"-\" + String(d.getDate()).padStart(2, \"0\"));\n    setNowMs(d.getTime());\n    const mq = window.matchMedia(\"(min-width: 1024px)\");\n    const f = () => setDesk(mq.matches);\n    f();\n    mq.addEventListener(\"change\", f);\n    return () => mq.removeEventListener(\"change\", f);\n  }, []);\n  useEffect(() => {\n    const offs = [\"card\", \"checklist_item\", \"comment\", \"member\", \"project\"].map((e) => app.live(e));\n    return () => offs.forEach((o) => o());\n  }, []);\n\n  const toast = useCallback((text: string, tone = \"ok\") => {\n    const id = ++tid.current;\n    setToasts((t) => [...t.slice(-2), { id, text, tone }]);\n    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3600);\n  }, []);\n\n  const cards = useMemo(() => cardsRaw.map((c) => (ovr[s(c.id)] ? { ...c, ...ovr[s(c.id)] } : c)), [cardsRaw, ovr]);\n  useEffect(() => {\n    const done = Object.keys(ovr).filter((id) => { const c = cardsRaw.find((x) => s(x.id) === id); return c && s(c.stage) === ovr[id].stage && n(c.position) === ovr[id].position; });\n    if (done.length) setOvr((o) => { const r = { ...o }; done.forEach((d) => delete r[d]); return r; });\n  }, [cardsRaw, ovr]);\n  useEffect(() => {\n    const cur: Record<string, string> = {};\n    cardsRaw.forEach((c) => { cur[s(c.id)] = s(c.stage); });\n    const p = prev.current;\n    if (p && cardsRaw.length) {\n      const ch = Object.keys(cur).filter((id) => p[id] && p[id] !== cur[id] && !ovr[id]);\n      if (ch.length) {\n        setFlash((f) => { const r = { ...f }; ch.forEach((i) => (r[i] = true)); return r; });\n        toast(\"Live: “\" + s(cardsRaw.find((x) => s(x.id) === ch[0])?.title) + \"” moved to \" + ST_LABEL[cur[ch[0]]], \"live\");\n        setTimeout(() => setFlash((f) => { const r = { ...f }; ch.forEach((i) => delete r[i]); return r; }), 2200);\n      }\n    }\n    if (cardsRaw.length) prev.current = cur;\n  }, [cardsRaw]);\n\n  const mById = useMemo(() => { const m: Record<string, R> = {}; members.forEach((x) => (m[s(x.id)] = x)); return m; }, [members]);\n  const pById = useMemo(() => { const m: Record<string, R> = {}; projects.forEach((x) => (m[s(x.id)] = x)); return m; }, [projects]);\n  const itemsBy = useMemo(() => { const m: Record<string, R[]> = {}; itemsAll.forEach((x) => { (m[s(x.card)] = m[s(x.card)] || []).push(x); }); return m; }, [itemsAll]);\n  const wip = useMemo(() => { const m: Record<string, number> = {}; cards.forEach((c) => { if (s(c.stage) === \"in_progress\" && s(c.assignee)) m[s(c.assignee)] = (m[s(c.assignee)] || 0) + 1; }); return m; }, [cards]);\n  const byStage = useMemo(() => {\n    const m: Record<string, R[]> = {}; STAGES.forEach((st) => (m[st] = []));\n    cards.filter((c) => (proj === \"all\" || s(c.project) === proj) && (!onlyMine || s(c.assignee) === mineId) && (!q || s(c.title).toLowerCase().includes(q.toLowerCase()))).forEach((c) => { (m[s(c.stage)] || (m[s(c.stage)] = [])).push(c); });\n    STAGES.forEach((st) => m[st].sort((a, b) => n(a.position) - n(b.position)));\n    return m;\n  }, [cards, proj, onlyMine, q, mineId]);\n\n  const canEdit = (c: R) => isMgr || (!!mineId && s(c.assignee) === mineId);\n  const hit = (x: number, y: number): string => {\n    let best = \"\"; let bd = 1e9;\n    for (const st of STAGES) {\n      const el = targets.current[st]; if (!el) continue;\n      const r = el.getBoundingClientRect(); if (r.width === 0) continue;\n      if (desk) { const d = x < r.left ? r.left - x : x > r.right ? x - r.right : 0; if (y > r.top - 60 && d < bd) { bd = d; best = st; } }\n      else if (x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4) best = st;\n    }\n    return best;\n  };\n  const commit = async (c: R, st: string, pos: number) => {\n    const id = s(c.id); const from = s(c.stage);\n    if (from === st && Math.abs(pos - n(c.position)) < 0.001) return;\n    setOvr((o) => ({ ...o, [id]: { stage: st, position: pos } }));\n    try {\n      await app.update(\"card\", id, { stage: st, position: pos });\n      if (st !== from) toast(\"Moved to \" + ST_LABEL[st]);\n    } catch (e) {\n      setOvr((o) => { const r = { ...o }; delete r[id]; return r; });\n      toast(msg(e), \"error\");\n    }\n    setTimeout(() => setOvr((o) => { const r = { ...o }; delete r[id]; return r; }), 4000);\n  };\n  const drop = (c: R, x: number, y: number) => {\n    setDragId(\"\"); setHover(\"\");\n    const id = s(c.id);\n    const target = hit(x, y);\n    const st = target || (desk ? \"\" : tab);\n    if (!st) return;\n    if (!canEdit(c)) { toast(\"Only the assignee or a manager can move this card\", \"error\"); return; }\n    const list = (byStage[st] || []).filter((o) => s(o.id) !== id);\n    let idx = list.length;\n    if (desk || !target || target === tab) {\n      idx = 0;\n      for (const o of list) { const el = cardEls.current[s(o.id)]; if (!el) continue; const r = el.getBoundingClientRect(); if (y > r.top + r.height / 2) idx++; else break; }\n    }\n    const a = idx > 0 ? n(list[idx - 1].position) : null; const b = idx < list.length ? n(list[idx].position) : null;\n    void commit(c, st, a !== null && b !== null ? (a + b) / 2 : a !== null ? a + 1000 : b !== null ? b / 2 : 1000);\n  };\n  const stageFromSheet = (c: R, st: string) => {\n    if (s(c.stage) === st) return;\n    const l = (byStage[st] || []).filter((o) => s(o.id) !== s(c.id));\n    void commit(c, st, l.length ? n(l[l.length - 1].position) + 1000 : 1000);\n  };\n  const createCard = async () => {\n    try {\n      const row = await app.create(\"card\", { title: \"Untitled card\", project: s(projects[0]?.id), stage: \"backlog\", priority: \"medium\", position: (cards.length + 2) * 1000 + (nowMs % 997) });\n      setOpenCard(s(row.id));\n    } catch (e) { toast(msg(e), \"error\"); }\n  };\n\n  const sel = cards.find((c) => s(c.id) === openCard);\n  const close = () => { setOpenCard(\"\"); if (app.params.id) app.navigate(\"/board\"); };\n\n  const actions = isMgr ? (\n    <motion.button whileTap={reduce ? undefined : { scale: 0.95 }} whileHover={reduce ? undefined : { y: -1 }} onClick={() => void createCard()} className=\"flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-[12px] font-semibold text-primary-foreground shadow-[0_6px_18px_-6px_hsl(var(--primary)/0.9),inset_0_1px_0_rgba(255,255,255,0.25)]\">\n      <Plus className=\"h-3.5 w-3.5\" />New card\n    </motion.button>\n  ) : null;\n  const colCard = (c: R) => (\n    <KCard key={s(c.id)} c={c} code={s(pById[s(c.project)]?.code)} who={s(mById[s(c.assignee)]?.name)} items={itemsBy[s(c.id)] || []} flash={!!flash[s(c.id)]} today={today} mobile={!desk} canDrag={canEdit(c)} reduce={reduce}\n      open={() => setOpenCard(s(c.id))} onStart={() => setDragId(s(c.id))} onMove={(x, y) => { const h = hit(x, y); setHover((p) => (p === h ? p : h)); }} onDrop={(x, y) => drop(c, x, y)} reg={(el) => { cardEls.current[s(c.id)] = el; }} />\n  );\n\n  return (\n    <Shell app={app} view=\"board\" title=\"Board\" actions={actions}>\n      <div className=\"flex flex-col gap-3 px-4 pb-3 pt-3 lg:px-6\">\n        <div className=\"flex flex-wrap items-center gap-2\">\n          <div className=\"flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card/60 px-3 focus-within:border-primary lg:max-w-xs\"><Search className=\"h-4 w-4 text-muted-foreground\" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder=\"Filter cards\" className=\"h-full min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/60\" /></div>\n          <button onClick={() => setOnlyMine((v) => !v)} className={\"flex h-9 items-center rounded-xl border px-3 text-[12px] font-medium transition \" + (onlyMine ? \"border-primary/50 bg-primary/15 text-foreground\" : \"border-border bg-card/60 text-muted-foreground\")}>Only mine</button>\n        </div>\n        <div className=\"-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5 lg:mx-0 lg:px-0 [scrollbar-width:none]\">\n          {[{ id: \"all\", code: \"All projects\" }, ...projects.map((p) => ({ id: s(p.id), code: s(p.code) }))].map((p) => (\n            <button key={p.id} onClick={() => setProj(p.id)} className={\"relative shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition \" + (proj === p.id ? \"text-foreground\" : \"text-muted-foreground hover:text-foreground\")}>\n              {proj === p.id && <motion.span layoutId=\"proj-chip\" transition={SPRING} className=\"absolute inset-0 rounded-full bg-muted ring-1 ring-border\" />}<span className=\"relative\">{p.code}</span>\n            </button>))}\n        </div>\n      </div>\n\n      {!desk && (\n        <div className=\"sticky top-0 z-20 flex gap-1 overflow-x-auto bg-background/90 px-4 pb-2 pt-1 backdrop-blur-xl [scrollbar-width:none]\">\n          {STAGES.map((st) => (\n            <button key={st} ref={(el) => { targets.current[st] = el; }} onClick={() => setTab(st)} className={\"relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition \" + (tab === st ? \"text-foreground\" : \"text-muted-foreground\") + (dragId && hover === st ? \" bg-primary/20 ring-2 ring-primary\" : \"\")}>\n              {tab === st && <motion.span layoutId=\"tab-pill\" transition={SPRING} className=\"absolute inset-0 rounded-full bg-muted ring-1 ring-border\" />}\n              <span className=\"relative flex items-center gap-1.5\"><StageIcon st={st} size={13} />{ST_LABEL[st]}<span className=\"text-[10px] text-muted-foreground\">{(byStage[st] || []).length}</span></span>\n            </button>))}\n        </div>\n      )}\n\n      <LayoutGroup>\n        {desk ? (\n          <div className=\"flex items-start gap-3 px-6 pb-8\">\n            {STAGES.map((st) => { const list = byStage[st] || []; return (\n              <div key={st} ref={(el) => { targets.current[st] = el; }} className={\"min-w-[200px] flex-1 rounded-2xl border p-2 transition-colors \" + (dragId && hover === st ? \"border-primary/60 bg-primary/10\" : \"border-border/60 bg-muted/20\")}>\n                <div className=\"flex items-center gap-2 px-1.5 pb-2 pt-1 text-[12px] font-medium\"><StageIcon st={st} />{ST_LABEL[st]}<span className=\"text-muted-foreground\">{list.length}</span></div>\n                <div className=\"flex min-h-[72px] flex-col gap-2\">\n                  {list.map((c) => colCard(c))}\n                  {list.length === 0 && <div className=\"grid h-[72px] place-items-center rounded-xl border border-dashed border-border text-[11px] text-muted-foreground\">Drop a card here</div>}\n                </div>\n              </div>); })}\n          </div>\n        ) : (\n          <div className=\"flex flex-col gap-2 px-4 pb-6\">\n            {(byStage[tab] || []).map((c) => colCard(c))}\n            {(byStage[tab] || []).length === 0 && <div className=\"grid h-40 place-items-center rounded-2xl border border-dashed border-border text-center text-[12px] text-muted-foreground\"><div><StageIcon st={tab} size={22} /><div className=\"mt-2\">Nothing in {ST_LABEL[tab]}</div></div></div>}\n          </div>\n        )}\n      </LayoutGroup>\n\n      <AnimatePresence>\n        {sel && <Sheet key=\"sheet\" app={app} card={sel} projects={projects} members={members} wip={wip} items={itemsBy[s(sel.id)] || []} comments={commentsAll.filter((c) => s(c.card) === s(sel.id))} canEdit={canEdit(sel)} isMgr={isMgr} today={today} nowMs={nowMs} desk={desk} reduce={reduce} onClose={close} onStage={(st) => stageFromSheet(sel, st)} toast={toast} />}\n      </AnimatePresence>\n\n      <div className=\"pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex flex-col items-center gap-2 lg:bottom-6\">\n        <AnimatePresence>\n          {toasts.map((t) => (\n            <motion.div key={t.id} layout initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={SPRING} className={\"pointer-events-auto flex max-w-[92vw] items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[12px] font-medium shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] \" + (t.tone === \"error\" ? \"border-[#FF6B6B]/40 bg-[#2a1215] text-[#FFB4B4]\" : t.tone === \"live\" ? \"border-primary/50 bg-card text-foreground\" : \"border-border bg-card text-foreground\")}>\n              {t.tone === \"error\" ? <AlertCircle className=\"h-4 w-4 shrink-0\" /> : t.tone === \"live\" ? <Zap className=\"h-4 w-4 shrink-0 text-primary\" /> : <Check className=\"h-4 w-4 shrink-0 text-[#4CC38A]\" />}{t.text}\n            </motion.div>))}\n        </AnimatePresence>\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "KanboWork",
+      "kind": "code",
+      "purpose": "My work (tasks by due date, inline checklist + stage moves) and Projects overview with progress and lifecycle",
+      "props": {
+        "view": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "view": "work"
+      },
+      "source": "import React, { useEffect, useMemo, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, animate, useReducedMotion } from \"motion/react\";\nimport { Users, LayoutGrid, ListChecks, Layers, Check, LogOut, Zap, AlertCircle, CalendarDays, ChevronDown, Rocket, Flame, Target, Trophy } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\ntype Props = { app?: AppHandle; view?: string };\n\nconst s = (v: unknown): string => (v == null ? \"\" : String(v));\nconst n = (v: unknown): number => Number(v) || 0;\nconst STAGES = [\"backlog\", \"todo\", \"in_progress\", \"review\", \"done\"];\nconst ST_LABEL: Record<string, string> = { backlog: \"Backlog\", todo: \"To do\", in_progress: \"In progress\", review: \"Review\", done: \"Done\" };\nconst ST_COLOR: Record<string, string> = { backlog: \"#8A8F98\", todo: \"#B4B8C0\", in_progress: \"#F2B94B\", review: \"#5EA2FF\", done: \"#4CC38A\" };\nconst PRI: Record<string, { label: string; color: string; bars: number }> = {\n  urgent: { label: \"Urgent\", color: \"#FF6B6B\", bars: 4 },\n  high: { label: \"High\", color: \"#FFA94D\", bars: 3 },\n  medium: { label: \"Medium\", color: \"#FFD43B\", bars: 2 },\n  low: { label: \"Low\", color: \"#8A8F98\", bars: 1 },\n};\nconst GRADS = [[\"#7C5CFF\", \"#B39BFF\"], [\"#14B8A6\", \"#38BDF8\"], [\"#EC4899\", \"#FB923C\"], [\"#3B82F6\", \"#818CF8\"], [\"#10B981\", \"#A3E635\"], [\"#F59E0B\", \"#EF4444\"]];\nconst SPRING = { type: \"spring\" as const, stiffness: 420, damping: 34 };\nconst hash = (t: string): number => { let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0; return h; };\nconst msg = (e: unknown): string => {\n  const m = e instanceof Error ? e.message : s(e);\n  return /WIP/i.test(m) ? \"WIP limit reached: this teammate already has 3 cards in progress.\" : m || \"Something went wrong\";\n};\n\nfunction Av({ name, size = 24 }: { name: string; size?: number }) {\n  const g = GRADS[hash(name) % GRADS.length];\n  const p = name.trim().split(/\\s+/);\n  const ini = ((p[0] || \"?\")[0] + (p.length > 1 ? p[p.length - 1][0] : \"\")).toUpperCase();\n  return (\n    <span title={name} style={{ width: size, height: size, fontSize: Math.max(8, size * 0.38), background: `linear-gradient(135deg, ${g[0]}, ${g[1]})` }} className=\"inline-grid shrink-0 place-items-center rounded-full font-semibold text-white ring-2 ring-card\">{ini}</span>\n  );\n}\nfunction StageIcon({ st, size = 14 }: { st: string; size?: number }) {\n  const c = ST_COLOR[st] || \"#8A8F98\";\n  return (\n    <svg width={size} height={size} viewBox=\"0 0 14 14\" fill=\"none\">\n      <circle cx=\"7\" cy=\"7\" r=\"5.5\" stroke={c} strokeWidth=\"1.5\" strokeDasharray={st === \"backlog\" ? \"2.2 2.2\" : undefined} fill={st === \"done\" ? c : \"none\"} />\n      {st === \"in_progress\" && <path d=\"M7 7V3A4 4 0 0 1 7 11Z\" fill={c} />}\n      {st === \"review\" && <path d=\"M7 7V3A4 4 0 1 1 3 7Z\" fill={c} />}\n      {st === \"done\" && <path d=\"M4.6 7.2l1.7 1.7 3.2-3.4\" stroke=\"#0b0b10\" strokeWidth=\"1.5\" strokeLinecap=\"round\" strokeLinejoin=\"round\" />}\n    </svg>\n  );\n}\nfunction PriIcon({ p, size = 14 }: { p: string; size?: number }) {\n  const m = PRI[p] || PRI.low;\n  return (\n    <svg width={size} height={size} viewBox=\"0 0 14 14\">\n      {[0, 1, 2, 3].map((i) => (<rect key={i} x={1 + i * 3.3} y={13 - (3 + i * 2.5)} width=\"2.3\" height={3 + i * 2.5} rx=\"0.8\" fill={m.color} fillOpacity={i < m.bars ? 1 : 0.22} />))}\n    </svg>\n  );\n}\nconst fmtDate = (d: string): string => new Date(d.slice(0, 10) + \"T00:00:00\").toLocaleDateString(\"en-US\", { month: \"short\", day: \"numeric\" });\nfunction Count({ v, suffix = \"\" }: { v: number; suffix?: string }) {\n  const reduce = useReducedMotion();\n  const [x, setX] = useState(0);\n  const last = useRef(0);\n  useEffect(() => {\n    if (reduce) { setX(v); last.current = v; return; }\n    const c = animate(last.current, v, { duration: 0.9, ease: \"easeOut\", onUpdate: (t: number) => { last.current = t; setX(Math.round(t)); } });\n    return () => c.stop();\n  }, [v, reduce]);\n  return <>{x}{suffix}</>;\n}\n\n/* shell */\nfunction Mark({ size = 30 }: { size?: number }) {\n  return (\n    <span style={{ width: size, height: size }} className=\"grid shrink-0 place-items-center rounded-[10px] bg-gradient-to-br from-primary to-[#B39BFF] shadow-[0_6px_18px_-4px_hsl(var(--primary)/0.7)]\">\n      <svg width={size / 2} height={size / 2} viewBox=\"0 0 18 18\" fill=\"none\"><rect x=\"2\" y=\"2\" width=\"4\" height=\"14\" rx=\"1.4\" fill=\"#fff\" /><rect x=\"7\" y=\"2\" width=\"4\" height=\"9\" rx=\"1.4\" fill=\"#fff\" fillOpacity=\".85\" /><rect x=\"12\" y=\"2\" width=\"4\" height=\"6\" rx=\"1.4\" fill=\"#fff\" fillOpacity=\".7\" /></svg>\n    </span>\n  );\n}\nconst NAV = [\n  { id: \"board\", label: \"Board\", to: \"/board\", Icon: LayoutGrid, mgr: false },\n  { id: \"work\", label: \"My work\", to: \"/my-work\", Icon: ListChecks, mgr: false },\n  { id: \"projects\", label: \"Projects\", to: \"/projects\", Icon: Layers, mgr: true },\n  { id: \"team\", label: \"Team\", to: \"/team\", Icon: Users, mgr: true },\n];\nfunction Shell({ app, view, title, children }: { app: AppHandle; view: string; title: string; children: React.ReactNode }) {\n  const items = NAV.filter((i) => !i.mgr || app.user.role === \"manager\");\n  const out = () => void app.auth.signOut();\n  return (\n    <div className=\"flex h-[100dvh] w-full overflow-hidden bg-background text-foreground\">\n      <aside className=\"hidden w-60 shrink-0 flex-col border-r border-border bg-card/30 p-4 lg:flex\">\n        <div className=\"flex items-center gap-2.5 px-1\"><Mark /><span className=\"text-[15px] font-semibold tracking-tight\">Kanbo</span></div>\n        <nav className=\"mt-6 flex flex-col gap-0.5\">\n          {items.map((it) => (\n            <button key={it.id} onClick={() => app.navigate(it.to)} className={\"relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium \" + (view === it.id ? \"text-foreground\" : \"text-muted-foreground hover:text-foreground\")}>\n              {view === it.id && <motion.span layoutId=\"nav-pill\" transition={SPRING} className=\"absolute inset-0 rounded-lg bg-primary/15 ring-1 ring-primary/30\" />}\n              <it.Icon className={\"relative h-4 w-4 \" + (view === it.id ? \"text-primary\" : \"\")} /><span className=\"relative\">{it.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className=\"mt-auto rounded-xl border border-border bg-gradient-to-br from-primary/10 to-transparent p-3 text-[11px] leading-relaxed text-muted-foreground\"><div className=\"mb-1 flex items-center gap-1.5 font-medium text-foreground\"><Zap className=\"h-3.5 w-3.5 text-[#F2B94B]\" />WIP limit: 3</div>Nobody carries more than three cards in progress. Finish one to start the next.</div>\n        <div className=\"mt-3 flex items-center gap-2.5 rounded-xl border border-border bg-card/60 p-2.5\">\n          <Av name={app.user.name || \"You\"} size={30} />\n          <div className=\"min-w-0 flex-1\"><div className=\"truncate text-[12px] font-medium\">{app.user.name}</div><div className=\"text-[10px] capitalize text-muted-foreground\">{app.user.role}</div></div>\n          <button aria-label=\"Sign out\" onClick={out} className=\"rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground\"><LogOut className=\"h-4 w-4\" /></button>\n        </div>\n      </aside>\n      <div className=\"flex min-w-0 flex-1 flex-col\">\n        <header className=\"flex h-14 shrink-0 items-center gap-3 border-b border-border px-4 lg:px-6\">\n          <span className=\"lg:hidden\"><Mark size={28} /></span>\n          <h1 className=\"text-[15px] font-semibold tracking-tight\">{title}</h1>\n          <span className=\"inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground\"><span className=\"relative flex h-1.5 w-1.5\"><span className=\"absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4CC38A] opacity-70\" /><span className=\"relative inline-flex h-1.5 w-1.5 rounded-full bg-[#4CC38A]\" /></span>Live</span>\n          <button aria-label=\"Sign out\" onClick={out} className=\"ml-auto rounded-md p-2 text-muted-foreground hover:bg-muted lg:hidden\"><LogOut className=\"h-4 w-4\" /></button>\n        </header>\n        <main className=\"min-h-0 flex-1 overflow-y-auto pb-[84px] lg:pb-0\">{children}</main>\n        <nav className=\"fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-background/80 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur-xl lg:hidden\">\n          {items.map((it) => (\n            <button key={it.id} onClick={() => app.navigate(it.to)} className={\"relative flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium \" + (view === it.id ? \"text-primary\" : \"text-muted-foreground\")}>\n              {view === it.id && <motion.span layoutId=\"tab-dot\" transition={SPRING} className=\"absolute -top-1.5 h-0.5 w-8 rounded-full bg-primary\" />}\n              <it.Icon className=\"h-5 w-5\" />{it.label}\n            </button>\n          ))}\n        </nav>\n      </div>\n    </div>\n  );\n}\n\n/* page */\nexport default function KanboWork({ app, view }: Props) {\n  const reduce = !!useReducedMotion();\n  if (!app) return <div className=\"p-6 text-sm text-muted-foreground\">Loading…</div>;\n  return <WorkInner app={app} view={view === \"projects\" ? \"projects\" : \"work\"} reduce={reduce} />;\n}\n\nfunction WorkInner({ app, view, reduce }: { app: AppHandle; view: string; reduce: boolean }) {\n  const cardsRaw = app.rows(\"card\") as R[];\n  const projects = app.rows(\"project\") as R[];\n  const members = app.rows(\"member\") as R[];\n  const itemsAll = app.rows(\"checklist_item\") as R[];\n  const isMgr = app.user.role === \"manager\";\n  const mineId = app.me(\"member\") || \"\";\n  const [today, setToday] = useState(\"\");\n  const [hour, setHour] = useState(9);\n  const [open, setOpen] = useState(\"\");\n  const [toast, setToast] = useState<{ id: number; text: string; err: boolean } | null>(null);\n  const tid = useRef(0);\n  useEffect(() => {\n    const d = new Date();\n    setToday(d.getFullYear() + \"-\" + String(d.getMonth() + 1).padStart(2, \"0\") + \"-\" + String(d.getDate()).padStart(2, \"0\"));\n    setHour(d.getHours());\n  }, []);\n  useEffect(() => {\n    const offs = [\"card\", \"checklist_item\", \"project\", \"member\"].map((e) => app.live(e));\n    return () => offs.forEach((o) => o());\n  }, []);\n  const say = (text: string, err = false) => { const id = ++tid.current; setToast({ id, text, err }); setTimeout(() => setToast((t) => (t && t.id === id ? null : t)), 3400); };\n\n  const pById = useMemo(() => { const m: Record<string, R> = {}; projects.forEach((p) => (m[s(p.id)] = p)); return m; }, [projects]);\n  const mById = useMemo(() => { const m: Record<string, R> = {}; members.forEach((p) => (m[s(p.id)] = p)); return m; }, [members]);\n  const itemsBy = useMemo(() => { const m: Record<string, R[]> = {}; itemsAll.forEach((x) => { (m[s(x.card)] = m[s(x.card)] || []).push(x); }); return m; }, [itemsAll]);\n  const late = (c: R) => !!today && !!s(c.due) && s(c.due).slice(0, 10) < today && s(c.stage) !== \"done\";\n\n  const move = async (c: R, st: string) => {\n    if (s(c.stage) === st) return;\n    const top = cardsRaw.filter((x) => s(x.stage) === st).reduce((m, x) => Math.max(m, n(x.position)), 0) + 1000;\n    try { await app.update(\"card\", s(c.id), { stage: st, position: top }); say(\"Moved to \" + ST_LABEL[st]); } catch (e) { say(msg(e), true); }\n  };\n  const toggleItem = async (it: R) => { try { await app.update(\"checklist_item\", s(it.id), { done: !it.done }); } catch (e) { say(msg(e), true); } };\n\n  const greeting = hour < 12 ? \"Good morning\" : hour < 18 ? \"Good afternoon\" : \"Good evening\";\n  const first = s(app.user.name).split(\" \")[0] || \"there\";\n  const toastEl = (\n    <div className=\"pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex justify-center lg:bottom-6\">\n      <AnimatePresence>\n        {toast && (\n          <motion.div key={toast.id} initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8 }} transition={SPRING} className={\"pointer-events-auto flex max-w-[92vw] items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[12px] font-medium shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] \" + (toast.err ? \"border-[#FF6B6B]/40 bg-[#2a1215] text-[#FFB4B4]\" : \"border-border bg-card text-foreground\")}>\n            {toast.err ? <AlertCircle className=\"h-4 w-4 shrink-0\" /> : <Check className=\"h-4 w-4 shrink-0 text-[#4CC38A]\" />}{toast.text}\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n\n  if (view === \"projects\") {\n    const nextSt: Record<string, string> = { planning: \"active\", active: \"shipped\" };\n    const stLabel: Record<string, string> = { planning: \"Planning\", active: \"Active\", shipped: \"Shipped\" };\n    const stCol: Record<string, string> = { planning: \"#8A8F98\", active: \"#F2B94B\", shipped: \"#4CC38A\" };\n    const total = cardsRaw.length;\n    const done = cardsRaw.filter((c) => s(c.stage) === \"done\").length;\n    const overdue = cardsRaw.filter(late).length;\n    const kpis = [\n      { label: \"Active projects\", v: projects.filter((p) => s(p.status) === \"active\").length, Icon: Rocket, tone: \"#7C5CFF\", suffix: \"\" },\n      { label: \"Open cards\", v: total - done, Icon: Target, tone: \"#5EA2FF\", suffix: \"\" },\n      { label: \"Completed\", v: total ? Math.round((done / total) * 100) : 0, Icon: Trophy, tone: \"#4CC38A\", suffix: \"%\" },\n      { label: \"Overdue\", v: overdue, Icon: Flame, tone: \"#FF7B7B\", suffix: \"\" },\n    ];\n    const advance = async (p: R) => {\n      const to = nextSt[s(p.status)]; if (!to) return;\n      try { await app.transition(\"project\", s(p.id), \"status\", to); say(s(p.name) + \" is now \" + stLabel[to]); } catch (e) { say(msg(e), true); }\n    };\n    return (\n      <Shell app={app} view=\"projects\" title=\"Projects\">\n        <div className=\"mx-auto max-w-[1180px] px-4 pb-10 pt-5 lg:px-8 lg:pt-8\">\n          <motion.div initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>\n            <div className=\"text-[11px] font-semibold uppercase tracking-[0.14em] text-primary\">Portfolio</div>\n            <h2 className=\"mt-1 text-[26px] font-semibold tracking-tight lg:text-[32px]\">Where every project stands</h2>\n          </motion.div>\n          <div className=\"mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4\">\n            {kpis.map((k, i) => (\n              <motion.div key={k.label} initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i, ...SPRING }} className=\"relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_hsl(var(--foreground)/0.04),0_10px_30px_-18px_rgba(0,0,0,0.7)]\">\n                <span className=\"pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-20 blur-2xl\" style={{ background: k.tone }} />\n                <k.Icon className=\"h-4 w-4\" style={{ color: k.tone }} />\n                <div className=\"mt-3 text-[28px] font-semibold leading-none tracking-tight\"><Count v={k.v} suffix={k.suffix} /></div>\n                <div className=\"mt-1.5 text-[12px] text-muted-foreground\">{k.label}</div>\n              </motion.div>\n            ))}\n          </div>\n          <div className=\"mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3\">\n            {projects.map((p, i) => {\n              const pc = cardsRaw.filter((c) => s(c.project) === s(p.id));\n              const pd = pc.filter((c) => s(c.stage) === \"done\").length;\n              const pct = pc.length ? Math.round((pd / pc.length) * 100) : 0;\n              const people = Array.from(new Set(pc.map((c) => s(c.assignee)).filter(Boolean))).slice(0, 5);\n              const od = pc.filter(late).length;\n              const st = s(p.status);\n              return (\n                <motion.div key={s(p.id)} layout initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 * i, ...SPRING }} whileHover={reduce ? undefined : { y: -3 }} className=\"group overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_0_hsl(var(--foreground)/0.04),0_16px_40px_-24px_rgba(0,0,0,0.8)]\">\n                  <div className=\"relative h-32 overflow-hidden bg-muted\">\n                    {s(p.cover) && <img src={s(p.cover)} alt={s(p.name)} className=\"h-full w-full object-cover transition duration-500 group-hover:scale-105\" />}\n                    <div className=\"absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent\" />\n                    <span className=\"absolute left-3 top-3 rounded-md bg-black/50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white backdrop-blur\">{s(p.code)}</span>\n                    <span className=\"absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur\"><span className=\"h-1.5 w-1.5 rounded-full\" style={{ background: stCol[st] || \"#8A8F98\" }} />{stLabel[st] || st}</span>\n                  </div>\n                  <div className=\"p-4 pt-2\">\n                    <div className=\"text-[15px] font-semibold tracking-tight\">{s(p.name)}</div>\n                    <div className=\"mt-0.5 line-clamp-2 min-h-[32px] text-[12px] leading-snug text-muted-foreground\">{s(p.summary)}</div>\n                    <div className=\"mt-3 flex items-end justify-between text-[11px] text-muted-foreground\"><span><span className=\"text-[18px] font-semibold text-foreground\">{pct}%</span> complete</span><span>{pd}/{pc.length} cards</span></div>\n                    <div className=\"mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted\"><motion.div className=\"h-full rounded-full bg-gradient-to-r from-primary to-[#B39BFF]\" initial={{ width: 0 }} animate={{ width: pct + \"%\" }} transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 90, damping: 20, delay: 0.2 + 0.05 * i }} /></div>\n                    <div className=\"mt-3 flex gap-0.5\">{STAGES.map((sg) => { const c = pc.filter((x) => s(x.stage) === sg).length; return <div key={sg} title={ST_LABEL[sg] + \": \" + c} className=\"h-1 rounded-full\" style={{ flex: Math.max(c, 0.15), background: ST_COLOR[sg], opacity: c ? 0.9 : 0.25 }} />; })}</div>\n                    <div className=\"mt-4 flex items-center gap-3\">\n                      <div className=\"flex -space-x-1.5\">{people.map((id) => <Av key={id} name={s(mById[id]?.name)} size={24} />)}</div>\n                      {p.due ? <span className=\"flex items-center gap-1 text-[11px] text-muted-foreground\"><CalendarDays className=\"h-3 w-3\" />{fmtDate(s(p.due))}</span> : null}\n                      {od > 0 && <span className=\"flex items-center gap-1 text-[11px] text-[#FF7B7B]\"><AlertCircle className=\"h-3 w-3\" />{od} overdue</span>}\n                      {nextSt[st] && isMgr && <motion.button whileTap={reduce ? undefined : { scale: 0.93 }} onClick={() => void advance(p)} className=\"ml-auto rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-primary/20\">{st === \"planning\" ? \"Start\" : \"Mark shipped\"} →</motion.button>}\n                    </div>\n                  </div>\n                </motion.div>\n              );\n            })}\n          </div>\n        </div>\n        {toastEl}\n      </Shell>\n    );\n  }\n\n  const mine = cardsRaw.filter((c) => (isMgr || (mineId && s(c.assignee) === mineId)) && s(c.stage) !== \"done\").sort((a, b) => (s(a.due) || \"9999\").localeCompare(s(b.due) || \"9999\"));\n  const doneMine = cardsRaw.filter((c) => (isMgr || (mineId && s(c.assignee) === mineId)) && s(c.stage) === \"done\").length;\n  const weekEnd = today ? new Date(Date.parse(today) + 7 * 86400000).toISOString().slice(0, 10) : \"\";\n  const groups = [\n    { key: \"late\", label: \"Overdue\", tone: \"#FF7B7B\", rows: mine.filter(late) },\n    { key: \"today\", label: \"Today\", tone: \"#FFB86B\", rows: mine.filter((c) => !late(c) && s(c.due).slice(0, 10) === today) },\n    { key: \"week\", label: \"This week\", tone: \"#5EA2FF\", rows: mine.filter((c) => s(c.due) && s(c.due).slice(0, 10) > today && s(c.due).slice(0, 10) <= weekEnd) },\n    { key: \"later\", label: \"Later\", tone: \"#8A8F98\", rows: mine.filter((c) => s(c.due) && s(c.due).slice(0, 10) > weekEnd) },\n    { key: \"none\", label: \"No due date\", tone: \"#8A8F98\", rows: mine.filter((c) => !s(c.due)) },\n  ].filter((g) => g.rows.length > 0);\n  const inProg = mine.filter((c) => s(c.stage) === \"in_progress\").length;\n  const stats = [\n    { label: \"Open\", v: mine.length, tone: \"#7C5CFF\" },\n    { label: \"Due this week\", v: mine.filter((c) => s(c.due) && s(c.due).slice(0, 10) <= weekEnd && !late(c)).length, tone: \"#5EA2FF\" },\n    { label: \"Overdue\", v: mine.filter(late).length, tone: \"#FF7B7B\" },\n    { label: \"Done\", v: doneMine, tone: \"#4CC38A\" },\n  ];\n  let rowIdx = 0;\n  return (\n    <Shell app={app} view=\"work\" title=\"My work\">\n      <div className=\"mx-auto max-w-[860px] px-4 pb-10 pt-5 lg:px-8 lg:pt-8\">\n        <motion.div initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>\n          <div className=\"text-[11px] font-semibold uppercase tracking-[0.14em] text-primary\">{today ? new Date(today + \"T00:00:00\").toLocaleDateString(\"en-US\", { weekday: \"long\", month: \"long\", day: \"numeric\" }) : \"Today\"}</div>\n          <h2 className=\"mt-1 text-[26px] font-semibold tracking-tight lg:text-[32px]\">{greeting}, {first}</h2>\n          <p className=\"mt-1 text-[13px] text-muted-foreground\">{isMgr ? \"Everything open across the team, soonest due first.\" : mine.length ? `You have ${mine.length} open card${mine.length === 1 ? \"\" : \"s\"}, ${inProg} in progress (limit 3).` : \"Nothing assigned to you right now.\"}</p>\n        </motion.div>\n        <div className=\"mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4\">\n          {stats.map((k, i) => (\n            <motion.div key={k.label} initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i, ...SPRING }} className=\"relative overflow-hidden rounded-2xl border border-border bg-card p-4\">\n              <span className=\"pointer-events-none absolute -right-5 -top-5 h-16 w-16 rounded-full opacity-20 blur-2xl\" style={{ background: k.tone }} />\n              <div className=\"text-[26px] font-semibold leading-none tracking-tight\" style={{ color: k.label === \"Overdue\" && k.v > 0 ? k.tone : undefined }}><Count v={k.v} /></div>\n              <div className=\"mt-1.5 text-[12px] text-muted-foreground\">{k.label}</div>\n            </motion.div>\n          ))}\n        </div>\n        {groups.length === 0 && (\n          <motion.div initial={reduce ? false : { opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className=\"mt-8 grid place-items-center rounded-3xl border border-dashed border-border px-6 py-14 text-center\">\n            <span className=\"grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-primary\"><Trophy className=\"h-6 w-6\" /></span>\n            <div className=\"mt-4 text-[16px] font-semibold\">You're all caught up</div>\n            <div className=\"mt-1 max-w-xs text-[13px] text-muted-foreground\">New assignments will show up here the moment a manager gives you a card.</div>\n          </motion.div>\n        )}\n        {groups.map((g) => (\n          <div key={g.key} className=\"mt-7\">\n            <div className=\"mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em]\" style={{ color: g.tone }}><span className=\"h-1.5 w-1.5 rounded-full\" style={{ background: g.tone }} />{g.label}<span className=\"font-normal text-muted-foreground\">{g.rows.length}</span></div>\n            <div className=\"flex flex-col gap-2\">\n              {g.rows.map((c) => {\n                const id = s(c.id); const its = (itemsBy[id] || []).slice().sort((a, b) => n(a.position) - n(b.position)); const dn = its.filter((i) => !!i.done).length; const isOpen = open === id; const idx = rowIdx++;\n                const who = s(mById[s(c.assignee)]?.name);\n                return (\n                  <motion.div key={id} layout initial={reduce ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(idx, 10) * 0.04, ...SPRING }} className={\"overflow-hidden rounded-2xl border bg-card shadow-[0_1px_0_hsl(var(--foreground)/0.04),0_10px_28px_-20px_rgba(0,0,0,0.8)] \" + (isOpen ? \"border-primary/40\" : \"border-border\")}>\n                    <button onClick={() => setOpen(isOpen ? \"\" : id)} className=\"flex w-full items-center gap-3 p-3.5 text-left\">\n                      <StageIcon st={s(c.stage)} size={18} />\n                      <div className=\"min-w-0 flex-1\">\n                        <div className=\"truncate text-[14px] font-medium\">{s(c.title)}</div>\n                        <div className=\"mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground\">\n                          <span className=\"rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]\">{s(pById[s(c.project)]?.code)}</span>\n                          {s(c.due) && <span className={\"flex items-center gap-1 \" + (late(c) ? \"text-[#FF7B7B]\" : \"\")}><CalendarDays className=\"h-3 w-3\" />{fmtDate(s(c.due))}</span>}\n                          {its.length > 0 && <span className=\"flex items-center gap-1\"><Check className=\"h-3 w-3\" />{dn}/{its.length}</span>}\n                          {isMgr && who && <span className=\"flex items-center gap-1\"><Av name={who} size={14} />{who.split(\" \")[0]}</span>}\n                        </div>\n                      </div>\n                      <PriIcon p={s(c.priority)} size={16} />\n                      <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className=\"text-muted-foreground\"><ChevronDown className=\"h-4 w-4\" /></motion.span>\n                    </button>\n                    <AnimatePresence initial={false}>\n                      {isOpen && (\n                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: \"auto\", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reduce ? 0 : 0.25 }} className=\"overflow-hidden\">\n                          <div className=\"border-t border-border/60 px-3.5 pb-4 pt-3\">\n                            {s(c.description) && <p className=\"text-[12.5px] leading-relaxed text-muted-foreground\">{s(c.description)}</p>}\n                            <div className=\"mt-3 flex flex-wrap gap-1\">\n                              {STAGES.map((sg) => (<button key={sg} onClick={() => void move(c, sg)} className={\"flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition \" + (s(c.stage) === sg ? \"border-primary/50 bg-primary/10 text-foreground\" : \"border-border text-muted-foreground hover:text-foreground\")}><StageIcon st={sg} size={12} />{ST_LABEL[sg]}</button>))}\n                            </div>\n                            {its.length > 0 && (\n                              <div className=\"mt-3 flex flex-col\">\n                                {its.map((it) => (\n                                  <button key={s(it.id)} onClick={() => void toggleItem(it)} className=\"flex items-center gap-2.5 rounded-lg px-1 py-1.5 text-left hover:bg-muted/50\">\n                                    <span className={\"grid h-[18px] w-[18px] shrink-0 place-items-center rounded-md border transition \" + (it.done ? \"border-primary bg-primary text-primary-foreground\" : \"border-border\")}>{it.done ? <Check className=\"h-3 w-3\" /> : null}</span>\n                                    <span className={\"text-[13px] \" + (it.done ? \"text-muted-foreground line-through\" : \"\")}>{s(it.text)}</span>\n                                  </button>\n                                ))}\n                              </div>\n                            )}\n                            <button onClick={() => app.navigate(\"/board\")} className=\"mt-3 text-[12px] font-medium text-primary hover:underline\">Open on the board →</button>\n                          </div>\n                        </motion.div>\n                      )}\n                    </AnimatePresence>\n                  </motion.div>\n                );\n              })}\n            </div>\n          </div>\n        ))}\n      </div>\n      {toastEl}\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "KanboNavBar",
+      "kind": "code",
+      "purpose": "Top nav bar for the Team page with links to every manager screen",
+      "props": {},
+      "sample": {},
+      "source": "import type { AppHandle } from \"@app/kit/primitives\";\nimport { LayoutGrid, ListChecks, Layers, Users } from \"lucide-react\";\n\nconst ITEMS = [\n  { to: \"/board\", label: \"Board\", Icon: LayoutGrid },\n  { to: \"/my-work\", label: \"My work\", Icon: ListChecks },\n  { to: \"/projects\", label: \"Projects\", Icon: Layers },\n  { to: \"/team\", label: \"Team\", Icon: Users },\n];\n\nexport default function KanboNavBar({ app }: { app?: AppHandle }) {\n  return (\n    <nav aria-label=\"Main\" className=\"flex items-center gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2\">\n      <span className=\"mr-3 pl-1 text-sm font-semibold text-foreground\">Kanbo</span>\n      {ITEMS.map(({ to, label, Icon }) => (\n        <button\n          key={to}\n          onClick={() => app?.navigate(to)}\n          className={\"flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm \" + (to === \"/team\" ? \"bg-primary/15 text-foreground\" : \"text-muted-foreground hover:bg-muted hover:text-foreground\")}\n        >\n          <Icon className=\"h-4 w-4\" />\n          {label}\n        </button>\n      ))}\n    </nav>\n  );\n}\n"
+    }
+  ],
+  "demo_logins": [
+    {
+      "persona": "manager",
+      "row": "b30f0e52-d42a-594b-9d3f-247f3ba906cc",
+      "name": "Priya Nair"
+    },
+    {
+      "persona": "member",
+      "row": "66e56955-893e-51c1-86d5-6dab14970a5c",
+      "name": "Maya Chen"
+    },
+    {
+      "persona": "member",
+      "row": "643a6c3b-b3aa-5f6a-af35-560c3d5cbd3a",
+      "name": "Arjun Mehta"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "assign-notify",
+      "title": "Tell people when a card is assigned to them",
+      "on": {
+        "entity": "assignment",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "role": "member",
+          "to": {
+            "ref": "assignee",
+            "entity": "member"
+          },
+          "title": "Assigned to you: {{title}}",
+          "body": "{{by}} assigned you this card."
+        }
+      ]
+    },
+    {
+      "id": "comment-notify",
+      "title": "Tell the assignee about new comments",
+      "on": {
+        "entity": "comment",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "role": "member",
+          "to": {
+            "ref": "assignee",
+            "entity": "member"
+          },
+          "title": "New comment from {{author}}",
+          "body": "{{body}}"
+        }
+      ]
+    },
+    {
+      "id": "overdue-flag",
+      "title": "Flag overdue cards every morning",
+      "on": {
+        "schedule": "daily 09:00",
+        "entity": "card"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const today = ctx.now().toISOString().slice(0, 10);\nconst cards = await ctx.db.list('card');\nlet flagged = 0;\nfor (const c of cards) {\n  const late = !!c.due && String(c.due).slice(0, 10) < today && String(c.stage) !== 'done';\n  if (late && !c.overdue) { await ctx.db.update('card', String(c.id), { overdue: true }); flagged++; }\n  if (!late && c.overdue) { await ctx.db.update('card', String(c.id), { overdue: false }); }\n}\nctx.notify({ title: 'Overdue sweep: ' + flagged + ' newly flagged', body: 'Open the board to see cards past their due date.', role: 'manager' });\nctx.log('flagged ' + flagged);",
+          "checked": "c4e0cb1007c7e9f8"
+        }
+      ]
+    }
+  ]
+}

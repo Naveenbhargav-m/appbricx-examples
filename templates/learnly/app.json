@@ -1,0 +1,1812 @@
+{
+  "app": {
+    "name": "Learnly",
+    "tagline": "Learn a little, every day",
+    "theme": "modern-minimal",
+    "nav_style": "topbar",
+    "density": "comfortable",
+    "brand_icon": "GraduationCap",
+    "brand_color": "#FFB020",
+    "direction": "playful"
+  },
+  "personas": [
+    {
+      "id": "student",
+      "label": "Student",
+      "description": "learns through courses and quizzes",
+      "kind": "consumer"
+    },
+    {
+      "id": "instructor",
+      "label": "Instructor",
+      "description": "creates courses and tracks students",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": null,
+  "basket": null,
+  "entities": [
+    {
+      "name": "student",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "avatar",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "xp",
+          "type": "number"
+        },
+        {
+          "name": "streak",
+          "type": "number"
+        },
+        {
+          "name": "last_active",
+          "type": "date",
+          "optional": true
+        }
+      ],
+      "access": {
+        "student": {
+          "read": "own",
+          "update": "own"
+        },
+        "instructor": {
+          "read": "all"
+        }
+      }
+    },
+    {
+      "name": "instructor",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "avatar",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "bio",
+          "type": "text",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "course",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "summary",
+          "type": "text"
+        },
+        {
+          "name": "cover",
+          "type": "image"
+        },
+        {
+          "name": "category",
+          "type": "text"
+        },
+        {
+          "name": "level",
+          "type": "enum",
+          "enum_values": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        }
+      ],
+      "access": {
+        "instructor": {
+          "create": true,
+          "read": "all",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [
+        "instructor_id"
+      ]
+    },
+    {
+      "name": "lesson",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "course_id",
+          "type": "ref",
+          "ref": "course"
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        },
+        {
+          "name": "position",
+          "type": "number"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "body",
+          "type": "text"
+        },
+        {
+          "name": "thumb",
+          "type": "image"
+        },
+        {
+          "name": "minutes",
+          "type": "number"
+        }
+      ],
+      "access": {
+        "instructor": {
+          "create": true,
+          "read": "all",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [
+        "instructor_id"
+      ]
+    },
+    {
+      "name": "quiz_question",
+      "label_field": "prompt",
+      "fields": [
+        {
+          "name": "lesson_id",
+          "type": "ref",
+          "ref": "lesson"
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        },
+        {
+          "name": "prompt",
+          "type": "text"
+        },
+        {
+          "name": "option_a",
+          "type": "text"
+        },
+        {
+          "name": "option_b",
+          "type": "text"
+        },
+        {
+          "name": "option_c",
+          "type": "text"
+        },
+        {
+          "name": "option_d",
+          "type": "text"
+        },
+        {
+          "name": "correct",
+          "type": "enum",
+          "enum_values": [
+            "a",
+            "b",
+            "c",
+            "d"
+          ]
+        },
+        {
+          "name": "explanation",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "instructor": {
+          "create": true,
+          "read": "all",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [
+        "instructor_id"
+      ]
+    },
+    {
+      "name": "enrollment",
+      "label_field": "status",
+      "fields": [
+        {
+          "name": "student_id",
+          "type": "ref",
+          "ref": "student"
+        },
+        {
+          "name": "course_id",
+          "type": "ref",
+          "ref": "course"
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "enrolled",
+            "in_progress",
+            "completed"
+          ]
+        },
+        {
+          "name": "done_lessons",
+          "type": "number"
+        },
+        {
+          "name": "total_lessons",
+          "type": "number"
+        }
+      ],
+      "access": {
+        "student": {
+          "create": true,
+          "read": "own",
+          "update": "own"
+        },
+        "instructor": {
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "student_id",
+        "instructor_id"
+      ],
+      "actor_ref": "student_id"
+    },
+    {
+      "name": "lesson_progress",
+      "label_field": "lesson_id",
+      "fields": [
+        {
+          "name": "student_id",
+          "type": "ref",
+          "ref": "student"
+        },
+        {
+          "name": "lesson_id",
+          "type": "ref",
+          "ref": "lesson"
+        },
+        {
+          "name": "course_id",
+          "type": "ref",
+          "ref": "course"
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        }
+      ],
+      "unique": [
+        [
+          "student_id",
+          "lesson_id"
+        ]
+      ],
+      "access": {
+        "student": {
+          "create": true,
+          "read": "own",
+          "update": "none"
+        },
+        "instructor": {
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "student_id",
+        "instructor_id"
+      ],
+      "actor_ref": "student_id"
+    },
+    {
+      "name": "quiz_attempt",
+      "label_field": "result",
+      "fields": [
+        {
+          "name": "student_id",
+          "type": "ref",
+          "ref": "student"
+        },
+        {
+          "name": "lesson_id",
+          "type": "ref",
+          "ref": "lesson"
+        },
+        {
+          "name": "course_id",
+          "type": "ref",
+          "ref": "course"
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        },
+        {
+          "name": "score",
+          "type": "number"
+        },
+        {
+          "name": "total",
+          "type": "number"
+        },
+        {
+          "name": "result",
+          "type": "enum",
+          "enum_values": [
+            "passed",
+            "failed"
+          ]
+        }
+      ],
+      "access": {
+        "student": {
+          "create": true,
+          "read": "own",
+          "update": "none"
+        },
+        "instructor": {
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "student_id",
+        "instructor_id"
+      ],
+      "actor_ref": "student_id",
+      "rules": [
+        {
+          "id": "max-3-attempts",
+          "on": "create",
+          "message": "You have used all 3 attempts for this quiz.",
+          "check": "const r = await ctx.db.query('select count(*)::int as n from quiz_attempt where student_id = $1 and lesson_id = $2', [row.student_id, row.lesson_id]); const first = Array.isArray(r) ? r[0] : r.rows[0]; return Number(first.n) < 3;"
+        }
+      ]
+    }
+  ],
+  "seeds": {
+    "student": [
+      {
+        "id": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f",
+        "name": "Kenji Watanabe",
+        "email": "kenji@example.com",
+        "avatar": "/assets/114ab1783a026652.svg",
+        "xp": 2210,
+        "streak": 14,
+        "last_active": "2026-10-11T00:00:00.000Z"
+      },
+      {
+        "id": "9afb6704-ffa9-5080-b655-96a6575a64eb",
+        "name": "Sofia Alvarez",
+        "email": "sofia@example.com",
+        "avatar": "/assets/b3dfd67befcb4738.svg",
+        "xp": 410,
+        "streak": 2,
+        "last_active": "2026-10-09T00:00:00.000Z"
+      },
+      {
+        "id": "286cf779-774c-5908-9227-7dce3886fd2f",
+        "name": "Amara Diallo",
+        "email": "amara@example.com",
+        "avatar": "/assets/0e6cb8ce80ebbec8.svg",
+        "xp": 930,
+        "streak": 5,
+        "last_active": "2026-10-10T00:00:00.000Z"
+      },
+      {
+        "id": "925abbc5-e86a-565e-9e43-2267a5b47398",
+        "name": "Tom Becker",
+        "email": "tom@example.com",
+        "avatar": "/assets/f8e5d08fb7db045b.svg",
+        "xp": 300,
+        "streak": 1,
+        "last_active": "2026-10-08T00:00:00.000Z"
+      },
+      {
+        "id": "d78936d7-046f-5aec-a5fb-4fb4b8415c18",
+        "name": "Ines Costa",
+        "email": "ines@example.com",
+        "avatar": "/assets/809487cbe33577c2.svg",
+        "xp": 1580,
+        "streak": 9,
+        "last_active": "2026-10-11T00:00:00.000Z"
+      },
+      {
+        "id": "3531944f-015b-54ab-a643-6b9649134b77",
+        "name": "Ravi Patel",
+        "email": "ravi@example.com",
+        "avatar": "/assets/90c1b6e5b5c40df7.svg",
+        "xp": 520,
+        "streak": 4,
+        "last_active": "2026-10-10T00:00:00.000Z"
+      },
+      {
+        "id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "name": "Priya Nair",
+        "email": "priya@example.com",
+        "avatar": "/assets/af2a6c08de53bb5d.svg",
+        "xp": 1240,
+        "streak": 6,
+        "last_active": "2026-10-11T00:00:00.000Z"
+      },
+      {
+        "id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "name": "Leo Martin",
+        "email": "leo@example.com",
+        "avatar": "/assets/53030dc6ab25ef51.svg",
+        "xp": 680,
+        "streak": 3,
+        "last_active": "2026-10-10T00:00:00.000Z"
+      }
+    ],
+    "instructor": [
+      {
+        "id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "name": "Daniel Reyes",
+        "email": "daniel@example.com",
+        "avatar": "/assets/163e240f15c963f3.svg",
+        "bio": "Engineer turned teacher. Loves making hard things feel easy."
+      },
+      {
+        "id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "name": "Maya Okafor",
+        "email": "maya@example.com",
+        "avatar": "/assets/e71d0ba77e7c6d3d.svg",
+        "bio": "Artist, baker and plant parent. Teaches the cosy stuff."
+      }
+    ],
+    "course": [
+      {
+        "id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "title": "Watercolour Basics",
+        "summary": "Pick up a brush and paint your first luminous landscape in three gentle lessons.",
+        "cover": "/assets/0e586f3a86ee18c1.webp",
+        "category": "Art",
+        "level": "beginner",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "title": "Python for Curious Minds",
+        "summary": "Variables, loops and functions explained with zero jargon and lots of tiny wins.",
+        "cover": "/assets/bdc191fc4b0f91b0.webp",
+        "category": "Code",
+        "level": "beginner",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "title": "Sourdough from Scratch",
+        "summary": "Grow a starter, shape a loaf and bake the crackly crust you have been dreaming of.",
+        "cover": "/assets/38560c5c6f62d32c.webp",
+        "category": "Cooking",
+        "level": "beginner",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "182b1f1e-a4a4-5c56-807b-4385b31fe2f9",
+        "title": "Pocket Photography",
+        "summary": "Make your phone photos look professional with light, framing and a light edit.",
+        "cover": "/assets/f7c9fe911c50a11b.webp",
+        "category": "Photo",
+        "level": "intermediate",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "4b58ca17-c5bb-5f51-8e0a-59bb8a3f6cb4",
+        "title": "Spanish in 30 Days",
+        "summary": "Greetings, food and directions: the phrases you will actually use on your trip.",
+        "cover": "/assets/c3a620a41618e431.webp",
+        "category": "Languages",
+        "level": "beginner",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "baf07108-adee-5520-8dc5-7af387052796",
+        "title": "Money Basics",
+        "summary": "Budgets, safety nets and compound growth, finally explained like a friend would.",
+        "cover": "/assets/850c7bbc90cf3df7.webp",
+        "category": "Finance",
+        "level": "beginner",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "title": "Intro to UX Design",
+        "summary": "Understand people, sketch fast and test ideas before you build anything.",
+        "cover": "/assets/1107866fc5ed130e.webp",
+        "category": "Design",
+        "level": "intermediate",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "009e7549-a33d-5b23-9b90-c073ea1b5110",
+        "title": "Houseplants 101",
+        "summary": "Light, water and repotting: keep every green friend happy and thriving.",
+        "cover": "/assets/a1787d89aee88152.webp",
+        "category": "Lifestyle",
+        "level": "beginner",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      }
+    ],
+    "lesson": [
+      {
+        "id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 1,
+        "title": "Meet your paints",
+        "body": "Watercolour comes in pans or tubes. Pans are great for beginners: just add a drop of water and the pigment wakes up.\n\nStart with three colours: a warm and a cool of each primary. You can mix almost anything from them.",
+        "thumb": "/assets/542f591dfd78ce43.webp",
+        "minutes": 6
+      },
+      {
+        "id": "a98b1137-d871-5b83-9b51-af603c1bbaf6",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 2,
+        "title": "Wet-on-wet washes",
+        "body": "Wet the paper first, then touch in colour and watch it bloom. This is how you get soft skies and dreamy backgrounds.\n\nTilt the paper gently to guide the pigment. Let happy accidents happen.",
+        "thumb": "/assets/b206f52053f7c148.webp",
+        "minutes": 8
+      },
+      {
+        "id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 3,
+        "title": "Layering light to dark",
+        "body": "Always paint the lightest tones first. Once a layer dries completely, glaze a darker one on top.\n\nWatercolour is transparent, so you cannot paint white back over dark. Plan your highlights by leaving paper bare.",
+        "thumb": "/assets/ae4046b141b1f5fc.webp",
+        "minutes": 9
+      },
+      {
+        "id": "be102d42-591c-553e-b78c-5a0278adc687",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 1,
+        "title": "Variables are labelled boxes",
+        "body": "A variable is a name that points at a value. Write age = 12 and Python remembers it for you.\n\nNames should say what is inside: price is better than p.",
+        "thumb": "/assets/0ffa3f8d30e2aaf0.webp",
+        "minutes": 7
+      },
+      {
+        "id": "d5cd57b0-4176-51cf-b21f-76eeb8a9704b",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 2,
+        "title": "Loops that repeat",
+        "body": "A for loop runs the same steps for each item in a list. Instead of ten print lines, write one loop.\n\nPython uses indentation to know what is inside the loop.",
+        "thumb": "/assets/a9c1638107bab50f.webp",
+        "minutes": 9
+      },
+      {
+        "id": "e1204770-a131-504d-a548-6208706455aa",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 3,
+        "title": "Functions you can reuse",
+        "body": "A function packages steps under a name. Define it once with def, then call it whenever you need it.\n\nFunctions can take inputs and give back a result with return.",
+        "thumb": "/assets/9262bb4deb86269c.webp",
+        "minutes": 10
+      },
+      {
+        "id": "55473250-30fe-5365-85a3-c4e35ebb96b4",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 1,
+        "title": "Feeding your starter",
+        "body": "Your starter is a living mix of flour and water. Feed it equal weights daily and it will bubble up within hours.\n\nA ripe starter doubles in size and smells pleasantly sour.",
+        "thumb": "/assets/5d1558e8f79249cb.webp",
+        "minutes": 6
+      },
+      {
+        "id": "9bda58b5-5367-5d9a-9e7e-ff8342d3cfba",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 2,
+        "title": "Stretch and fold",
+        "body": "Instead of heavy kneading, wet your hands and gently stretch the dough then fold it over itself every 30 minutes.\n\nThis builds strength and gives an open, airy crumb.",
+        "thumb": "/assets/2e1e6f21a7358932.webp",
+        "minutes": 8
+      },
+      {
+        "id": "8ca58825-ffe5-56ec-8e93-b7b32a6c88ad",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 3,
+        "title": "Scoring and baking",
+        "body": "Score the loaf with a sharp blade so it can expand. Bake in a very hot, lidded pot for steam.\n\nRemove the lid for the last 15 minutes to get a deep golden crust.",
+        "thumb": "/assets/6201e32392b35227.webp",
+        "minutes": 9
+      },
+      {
+        "id": "d76bce6e-486e-5030-a8fe-6e5acc920d6f",
+        "course_id": "182b1f1e-a4a4-5c56-807b-4385b31fe2f9",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 1,
+        "title": "Chasing golden hour",
+        "body": "The hour after sunrise and before sunset gives warm, soft light that flatters everything.\n\nPlace your subject so the light grazes it from the side for gentle depth.",
+        "thumb": "/assets/96971c35767f2f38.webp",
+        "minutes": 7
+      },
+      {
+        "id": "b34e345b-098c-54c7-81fc-fa695e0c8413",
+        "course_id": "182b1f1e-a4a4-5c56-807b-4385b31fe2f9",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 2,
+        "title": "Composition: thirds and lines",
+        "body": "Turn on your grid. Put the subject on an intersection instead of the centre.\n\nLeading lines like roads or fences pull the eye through the frame.",
+        "thumb": "/assets/5ef49897ba7573cc.webp",
+        "minutes": 8
+      },
+      {
+        "id": "990d2008-07a1-5a7b-acd9-ed5f144aee8f",
+        "course_id": "182b1f1e-a4a4-5c56-807b-4385b31fe2f9",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 3,
+        "title": "Editing with a light touch",
+        "body": "Nudge exposure, lift shadows and add a touch of warmth. Stop before it looks edited.\n\nCompare with the original often to keep your edit honest.",
+        "thumb": "/assets/0915c7c4c2c849e6.webp",
+        "minutes": 6
+      },
+      {
+        "id": "05f22bfd-c6fc-56b5-b4b5-bfccd786933e",
+        "course_id": "4b58ca17-c5bb-5f51-8e0a-59bb8a3f6cb4",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 1,
+        "title": "Greetings and manners",
+        "body": "Hola means hello and gracias means thank you. Add por favor and you are already polite.\n\nUse buenos dias until noon and buenas tardes after.",
+        "thumb": "/assets/ad88f09e9204e3d1.webp",
+        "minutes": 5
+      },
+      {
+        "id": "81219581-3f87-5c70-bfc6-b28b0b07f0f9",
+        "course_id": "4b58ca17-c5bb-5f51-8e0a-59bb8a3f6cb4",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 2,
+        "title": "Ordering food",
+        "body": "Say Quisiera and the dish you want. Quisiera una paella, por favor.\n\nLa cuenta, por favor asks for the bill.",
+        "thumb": "/assets/de9cc432195f0c34.webp",
+        "minutes": 7
+      },
+      {
+        "id": "629d79ea-f8ce-5206-8538-03123d5f661d",
+        "course_id": "4b58ca17-c5bb-5f51-8e0a-59bb8a3f6cb4",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 3,
+        "title": "Asking directions",
+        "body": "Donde esta... means where is. Donde esta la estacion?\n\nListen for derecha (right), izquierda (left) and todo recto (straight on).",
+        "thumb": "/assets/30714f77db8eb24b.webp",
+        "minutes": 7
+      },
+      {
+        "id": "8f901741-5fde-5f9f-9405-ad7f59ac8d5c",
+        "course_id": "baf07108-adee-5520-8dc5-7af387052796",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 1,
+        "title": "The 50/30/20 budget",
+        "body": "Split take-home pay: 50% needs, 30% wants, 20% savings and debt repayment.\n\nIt is a starting point, not a rule. Adjust it to your life.",
+        "thumb": "/assets/d46a6cf382f377d8.webp",
+        "minutes": 6
+      },
+      {
+        "id": "52770842-3612-5f6c-b8a9-1f35873daf8a",
+        "course_id": "baf07108-adee-5520-8dc5-7af387052796",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 2,
+        "title": "Your emergency fund",
+        "body": "Aim to save three to six months of essential expenses in an easy-access account.\n\nStart tiny: even a small automatic transfer builds the habit.",
+        "thumb": "/assets/f6b9bf1ca86ff783.webp",
+        "minutes": 6
+      },
+      {
+        "id": "0ddd301e-0bdc-51a8-9c12-981af6ebfcb6",
+        "course_id": "baf07108-adee-5520-8dc5-7af387052796",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 3,
+        "title": "Compound interest",
+        "body": "Interest earns interest. Money left alone grows faster every year.\n\nThe earlier you start, the more time does the heavy lifting.",
+        "thumb": "/assets/175525cf0233f12e.webp",
+        "minutes": 8
+      },
+      {
+        "id": "c8cb3c19-d5fb-53a1-b426-584346678487",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 1,
+        "title": "What users really want",
+        "body": "People rarely want your product; they want a job done. Ask about the last time they tried.\n\nListen for frustrations and workarounds, not feature requests.",
+        "thumb": "/assets/243255a17063bb79.webp",
+        "minutes": 8
+      },
+      {
+        "id": "c73fc560-0e47-50c6-97ec-4243a9055ff0",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 2,
+        "title": "Sketch before pixels",
+        "body": "Paper is fast and cheap. Sketch ten rough ideas before opening any design tool.\n\nRough sketches invite honest feedback because nobody is attached yet.",
+        "thumb": "/assets/54c84aed33b3d870.svg",
+        "minutes": 7
+      },
+      {
+        "id": "848470d1-c0d6-5d43-9146-6284e7ee61fb",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "position": 3,
+        "title": "Test with five people",
+        "body": "Five test users uncover most usability problems. Give them a task and stay quiet.\n\nWatch where they hesitate. That is where your design needs work.",
+        "thumb": "/assets/c5f3d626b92cf5f3.webp",
+        "minutes": 9
+      },
+      {
+        "id": "ff347f7f-aff3-5b87-b822-e0ad7fb49f36",
+        "course_id": "009e7549-a33d-5b23-9b90-c073ea1b5110",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 1,
+        "title": "Light and placement",
+        "body": "Most houseplants love bright, indirect light. A spot near an east or north window is a safe bet.\n\nPale, leggy growth means a plant is reaching for more light.",
+        "thumb": "/assets/399939a38acab716.webp",
+        "minutes": 5
+      },
+      {
+        "id": "c685cb21-7f4e-5344-a669-43d786134e43",
+        "course_id": "009e7549-a33d-5b23-9b90-c073ea1b5110",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 2,
+        "title": "Watering rhythm",
+        "body": "Check the soil with a finger. If the top inch is dry, water thoroughly; if not, wait.\n\nOverwatering kills far more plants than forgetting.",
+        "thumb": "/assets/70e14506c35e7c99.webp",
+        "minutes": 6
+      },
+      {
+        "id": "e3794c67-9c73-5b70-92c3-e6392fab28c7",
+        "course_id": "009e7549-a33d-5b23-9b90-c073ea1b5110",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "position": 3,
+        "title": "Repotting with confidence",
+        "body": "Repot when roots circle the pot or poke out of the bottom, ideally in spring.\n\nChoose a pot only one size up with drainage holes.",
+        "thumb": "/assets/eb6250f19883e271.webp",
+        "minutes": 7
+      }
+    ],
+    "quiz_question": [
+      {
+        "id": "35f36ece-317d-50f8-bc3d-542cd4ff6113",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "Which paints are best for beginners starting out?",
+        "option_a": "Pans you wake with water",
+        "option_b": "Oil sticks",
+        "option_c": "Spray paint",
+        "option_d": "Wall emulsion",
+        "correct": "a",
+        "explanation": "Pans are simple, tidy and need just a drop of water."
+      },
+      {
+        "id": "f6d73e20-eb72-575a-b986-e19debe7b0f5",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "How many colours do you need to start mixing?",
+        "option_a": "Twelve",
+        "option_b": "Three (warm and cool primaries)",
+        "option_c": "One",
+        "option_d": "Twenty",
+        "correct": "b",
+        "explanation": "Warm and cool primaries mix almost anything."
+      },
+      {
+        "id": "104b9b5d-b743-52ff-80e5-435db5bfdd45",
+        "lesson_id": "a98b1137-d871-5b83-9b51-af603c1bbaf6",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "In wet-on-wet, what do you do first?",
+        "option_a": "Dry the paper",
+        "option_b": "Draw in pen",
+        "option_c": "Wet the paper",
+        "option_d": "Add salt",
+        "correct": "c",
+        "explanation": "A wet surface lets colour bloom and blend."
+      },
+      {
+        "id": "980546a8-a781-52ad-b4d3-02f13d445944",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "Which tones go down first?",
+        "option_a": "Darkest",
+        "option_b": "Lightest",
+        "option_c": "Black",
+        "option_d": "Any",
+        "correct": "b",
+        "explanation": "Watercolour is transparent, so light comes first."
+      },
+      {
+        "id": "84858d2b-bff2-5768-a4c6-8f5df266a38c",
+        "lesson_id": "be102d42-591c-553e-b78c-5a0278adc687",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "What does age = 12 do in Python?",
+        "option_a": "Stores 12 under the name age",
+        "option_b": "Prints 12",
+        "option_c": "Deletes age",
+        "option_d": "Compares age to 12",
+        "correct": "a",
+        "explanation": "Assignment stores a value under a name."
+      },
+      {
+        "id": "7eb6e528-c999-5a26-af01-bfb93666dd10",
+        "lesson_id": "d5cd57b0-4176-51cf-b21f-76eeb8a9704b",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "What marks the code inside a Python loop?",
+        "option_a": "Curly braces",
+        "option_b": "Semicolons",
+        "option_c": "Indentation",
+        "option_d": "Brackets",
+        "correct": "c",
+        "explanation": "Python uses indentation to group code."
+      },
+      {
+        "id": "ce0a59e7-b910-51c7-ac15-9140ad5f0c87",
+        "lesson_id": "e1204770-a131-504d-a548-6208706455aa",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "Which keyword gives a result back from a function?",
+        "option_a": "give",
+        "option_b": "send",
+        "option_c": "out",
+        "option_d": "return",
+        "correct": "d",
+        "explanation": "return hands a value back to the caller."
+      },
+      {
+        "id": "0971a3ac-74d9-5875-aaac-1be6d382868b",
+        "lesson_id": "55473250-30fe-5365-85a3-c4e35ebb96b4",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "A ripe starter usually...",
+        "option_a": "Doubles in size",
+        "option_b": "Turns blue",
+        "option_c": "Smells of soap",
+        "option_d": "Goes flat",
+        "correct": "a",
+        "explanation": "Doubling shows lots of active yeast."
+      },
+      {
+        "id": "3eb2cb21-64ef-52ad-a432-40a6daf4acae",
+        "lesson_id": "9bda58b5-5367-5d9a-9e7e-ff8342d3cfba",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "Why stretch and fold instead of kneading?",
+        "option_a": "It is faster",
+        "option_b": "It builds strength gently",
+        "option_c": "It adds flavour",
+        "option_d": "It cools dough",
+        "correct": "b",
+        "explanation": "Gentle folds build gluten and an open crumb."
+      },
+      {
+        "id": "87bb23f7-64ce-52c7-b2ee-69204b27040f",
+        "lesson_id": "8ca58825-ffe5-56ec-8e93-b7b32a6c88ad",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "Why bake in a lidded pot?",
+        "option_a": "To trap steam",
+        "option_b": "To save energy",
+        "option_c": "To brown the base",
+        "option_d": "To avoid scoring",
+        "correct": "a",
+        "explanation": "Steam keeps the crust soft so the loaf can rise."
+      },
+      {
+        "id": "af683fa1-1f7b-5d05-845a-8719fd400f90",
+        "lesson_id": "d76bce6e-486e-5030-a8fe-6e5acc920d6f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "When is golden hour?",
+        "option_a": "Midday",
+        "option_b": "Midnight",
+        "option_c": "Just after sunrise and before sunset",
+        "option_d": "Any cloudy day",
+        "correct": "c",
+        "explanation": "Low sun means warm, soft light."
+      },
+      {
+        "id": "9b2fdcf3-44cd-50d3-aa91-f359ededde32",
+        "lesson_id": "b34e345b-098c-54c7-81fc-fa695e0c8413",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "Where might you place your subject by the rule of thirds?",
+        "option_a": "Dead centre",
+        "option_b": "On a grid intersection",
+        "option_c": "Out of frame",
+        "option_d": "In a corner",
+        "correct": "b",
+        "explanation": "Intersections feel balanced and dynamic."
+      },
+      {
+        "id": "fbfcb028-accc-5856-8369-018a53529500",
+        "lesson_id": "990d2008-07a1-5a7b-acd9-ed5f144aee8f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "What is a good editing approach?",
+        "option_a": "Max every slider",
+        "option_b": "Never edit",
+        "option_c": "Apply five filters",
+        "option_d": "Subtle tweaks",
+        "correct": "d",
+        "explanation": "Light edits keep photos natural."
+      },
+      {
+        "id": "ea2acc7d-e266-5cdb-90eb-139f004ea834",
+        "lesson_id": "05f22bfd-c6fc-56b5-b4b5-bfccd786933e",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "What does gracias mean?",
+        "option_a": "Thank you",
+        "option_b": "Please",
+        "option_c": "Goodbye",
+        "option_d": "Sorry",
+        "correct": "a",
+        "explanation": "Gracias = thank you."
+      },
+      {
+        "id": "89f75650-a838-59f3-9cec-de2d14818bbf",
+        "lesson_id": "81219581-3f87-5c70-bfc6-b28b0b07f0f9",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "How do you ask for the bill?",
+        "option_a": "La puerta",
+        "option_b": "La cuenta, por favor",
+        "option_c": "Buenas noches",
+        "option_d": "El menu",
+        "correct": "b",
+        "explanation": "La cuenta is the bill."
+      },
+      {
+        "id": "20289d06-83c2-5242-8143-538ce81c2140",
+        "lesson_id": "629d79ea-f8ce-5206-8538-03123d5f661d",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "What does derecha mean?",
+        "option_a": "Left",
+        "option_b": "Straight on",
+        "option_c": "Right",
+        "option_d": "Back",
+        "correct": "c",
+        "explanation": "Derecha = right."
+      },
+      {
+        "id": "95335056-473e-5612-8007-7f6f22ce42b1",
+        "lesson_id": "8f901741-5fde-5f9f-9405-ad7f59ac8d5c",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "In 50/30/20, what is the 20% for?",
+        "option_a": "Savings and debt",
+        "option_b": "Rent",
+        "option_c": "Holidays only",
+        "option_d": "Gifts",
+        "correct": "a",
+        "explanation": "20% goes to your future self."
+      },
+      {
+        "id": "f4247d68-1ae8-5e5c-b3be-155ffe89bb2d",
+        "lesson_id": "52770842-3612-5f6c-b8a9-1f35873daf8a",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "How big should an emergency fund be?",
+        "option_a": "One week of pay",
+        "option_b": "3 to 6 months of expenses",
+        "option_c": "A year of luxuries",
+        "option_d": "Nothing",
+        "correct": "b",
+        "explanation": "It covers essentials if income stops."
+      },
+      {
+        "id": "729c9f53-6c15-5898-a43d-d1a7ff8fc371",
+        "lesson_id": "0ddd301e-0bdc-51a8-9c12-981af6ebfcb6",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "Compound interest means...",
+        "option_a": "Fixed yearly fee",
+        "option_b": "Interest only on the start sum",
+        "option_c": "Interest earning interest",
+        "option_d": "A loan penalty",
+        "correct": "c",
+        "explanation": "Growth builds on past growth."
+      },
+      {
+        "id": "a194781b-455f-5c3d-8fd3-f8cfe9847d22",
+        "lesson_id": "c8cb3c19-d5fb-53a1-b426-584346678487",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "What should you listen for in interviews?",
+        "option_a": "Feature requests",
+        "option_b": "Compliments",
+        "option_c": "Opinions on colour",
+        "option_d": "Frustrations and workarounds",
+        "correct": "d",
+        "explanation": "Pain points reveal real needs."
+      },
+      {
+        "id": "4171b158-8051-5c90-86b8-52a1c8b7bf64",
+        "lesson_id": "c73fc560-0e47-50c6-97ec-4243a9055ff0",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "Why sketch on paper first?",
+        "option_a": "Fast, cheap and invites feedback",
+        "option_b": "It looks polished",
+        "option_c": "Tools are banned",
+        "option_d": "Clients demand it",
+        "correct": "a",
+        "explanation": "Low effort keeps ideas flexible."
+      },
+      {
+        "id": "defa526d-cce1-5340-89ed-13f64c78df38",
+        "lesson_id": "848470d1-c0d6-5d43-9146-6284e7ee61fb",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "prompt": "How many users find most usability issues?",
+        "option_a": "One",
+        "option_b": "Five",
+        "option_c": "Five hundred",
+        "option_d": "Fifty",
+        "correct": "b",
+        "explanation": "Five is usually enough to spot patterns."
+      },
+      {
+        "id": "a9758423-4c98-589d-9658-6cbe75ef9e85",
+        "lesson_id": "ff347f7f-aff3-5b87-b822-e0ad7fb49f36",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "Pale, leggy growth means a plant needs...",
+        "option_a": "More water",
+        "option_b": "A bigger pot",
+        "option_c": "More light",
+        "option_d": "Less soil",
+        "correct": "c",
+        "explanation": "It is stretching toward light."
+      },
+      {
+        "id": "218cb556-50f7-5d3b-8582-0f63f496554e",
+        "lesson_id": "c685cb21-7f4e-5344-a669-43d786134e43",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "When should you water?",
+        "option_a": "Every day",
+        "option_b": "On Sundays",
+        "option_c": "When leaves droop",
+        "option_d": "When the top inch is dry",
+        "correct": "d",
+        "explanation": "Check the soil first."
+      },
+      {
+        "id": "a05a1feb-c850-5963-b577-5345a88403ff",
+        "lesson_id": "e3794c67-9c73-5b70-92c3-e6392fab28c7",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "prompt": "How much bigger should the new pot be?",
+        "option_a": "One size up",
+        "option_b": "Three sizes up",
+        "option_c": "Same size",
+        "option_d": "Much smaller",
+        "correct": "a",
+        "explanation": "Too much soil stays wet and rots roots."
+      }
+    ],
+    "enrollment": [
+      {
+        "id": "1a679f9a-2b49-5f15-b0dc-a060a2d6086c",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "status": "completed",
+        "done_lessons": 3,
+        "total_lessons": 3
+      },
+      {
+        "id": "b198756b-e91b-5280-9f5f-482b68583d73",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "status": "in_progress",
+        "done_lessons": 1,
+        "total_lessons": 3
+      },
+      {
+        "id": "bf92bf96-8ae1-542c-a529-9eabc37f4db0",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "status": "enrolled",
+        "done_lessons": 0,
+        "total_lessons": 3
+      },
+      {
+        "id": "63a660d6-bfbe-5a51-9feb-00b14e62c7d9",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "course_id": "182b1f1e-a4a4-5c56-807b-4385b31fe2f9",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "status": "in_progress",
+        "done_lessons": 1,
+        "total_lessons": 3
+      },
+      {
+        "id": "56934c05-5fee-534f-9b6c-d654b18a39ab",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "course_id": "baf07108-adee-5520-8dc5-7af387052796",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "status": "enrolled",
+        "done_lessons": 0,
+        "total_lessons": 3
+      },
+      {
+        "id": "a38627c0-04e0-5f5f-864d-dba9014c9ffe",
+        "student_id": "9afb6704-ffa9-5080-b655-96a6575a64eb",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "status": "in_progress",
+        "done_lessons": 1,
+        "total_lessons": 3
+      },
+      {
+        "id": "3255024e-8dca-54ea-9415-595ddb16b82d",
+        "student_id": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "status": "completed",
+        "done_lessons": 3,
+        "total_lessons": 3
+      },
+      {
+        "id": "92c8b188-a5fd-5f61-88d6-8ad735286985",
+        "student_id": "286cf779-774c-5908-9227-7dce3886fd2f",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "status": "in_progress",
+        "done_lessons": 2,
+        "total_lessons": 3
+      },
+      {
+        "id": "1353d805-c169-5c86-ad7d-34fe4ae5730c",
+        "student_id": "925abbc5-e86a-565e-9e43-2267a5b47398",
+        "course_id": "4b58ca17-c5bb-5f51-8e0a-59bb8a3f6cb4",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "status": "in_progress",
+        "done_lessons": 1,
+        "total_lessons": 3
+      },
+      {
+        "id": "e98dafbb-dee9-55d8-a95d-fdcf45e61c92",
+        "student_id": "d78936d7-046f-5aec-a5fb-4fb4b8415c18",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "status": "completed",
+        "done_lessons": 3,
+        "total_lessons": 3
+      },
+      {
+        "id": "3155fc33-9094-52ae-9e87-343d417ba315",
+        "student_id": "3531944f-015b-54ab-a643-6b9649134b77",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "status": "in_progress",
+        "done_lessons": 2,
+        "total_lessons": 3
+      },
+      {
+        "id": "3f4b9750-3b21-55d8-9ef8-d3f2a59f7a2d",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "status": "completed",
+        "done_lessons": 3,
+        "total_lessons": 3
+      }
+    ],
+    "lesson_progress": [
+      {
+        "id": "9752c2c1-b485-4d7b-a992-dd6583ac4c65",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "72e08c23-a73b-57e8-8464-5c8bd11a5533",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "a98b1137-d871-5b83-9b51-af603c1bbaf6",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "09cafc74-3909-5fd5-8427-3b69a9600d38",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "9f2369e0-38d4-5552-9fb0-89bd95df0285",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "be102d42-591c-553e-b78c-5a0278adc687",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "7525da86-0b4d-536b-aa45-fcac53205374",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "f4abb6df-a6f2-5208-8c1c-f728ad0c2b14",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "a98b1137-d871-5b83-9b51-af603c1bbaf6",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "291c47a5-af65-58f8-a8dc-7c965b10c120",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "d76bce6e-486e-5030-a8fe-6e5acc920d6f",
+        "course_id": "182b1f1e-a4a4-5c56-807b-4385b31fe2f9",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "dc96a62d-0c9e-5b9e-a102-9f47ecf9a9ac",
+        "student_id": "9afb6704-ffa9-5080-b655-96a6575a64eb",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "97f038c3-0cf1-5563-a4f6-c349b029a7eb",
+        "student_id": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f",
+        "lesson_id": "be102d42-591c-553e-b78c-5a0278adc687",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "20401cad-a0b7-5adf-a013-91ea1118ab3a",
+        "student_id": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f",
+        "lesson_id": "d5cd57b0-4176-51cf-b21f-76eeb8a9704b",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "c9afff86-dfb5-5a32-a11a-36c018b7c76d",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "7b4b361f-7392-588c-b0f1-384945d5c8a7",
+        "student_id": "286cf779-774c-5908-9227-7dce3886fd2f",
+        "lesson_id": "be102d42-591c-553e-b78c-5a0278adc687",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "bcecb882-226a-5c18-a795-613089488262",
+        "student_id": "286cf779-774c-5908-9227-7dce3886fd2f",
+        "lesson_id": "d5cd57b0-4176-51cf-b21f-76eeb8a9704b",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "8d753cf4-e60c-5d52-b598-f6eb0c34f66e",
+        "student_id": "925abbc5-e86a-565e-9e43-2267a5b47398",
+        "lesson_id": "05f22bfd-c6fc-56b5-b4b5-bfccd786933e",
+        "course_id": "4b58ca17-c5bb-5f51-8e0a-59bb8a3f6cb4",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "7ec14e26-0d27-5f66-b633-32a444a07928",
+        "student_id": "d78936d7-046f-5aec-a5fb-4fb4b8415c18",
+        "lesson_id": "c8cb3c19-d5fb-53a1-b426-584346678487",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "09095fee-ba21-5025-b33f-e01e70ef8e8a",
+        "student_id": "d78936d7-046f-5aec-a5fb-4fb4b8415c18",
+        "lesson_id": "c73fc560-0e47-50c6-97ec-4243a9055ff0",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "1bd08548-9b29-575a-bfe3-855ccafdbc94",
+        "student_id": "d78936d7-046f-5aec-a5fb-4fb4b8415c18",
+        "lesson_id": "848470d1-c0d6-5d43-9146-6284e7ee61fb",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      },
+      {
+        "id": "c5db22a3-28c0-5b52-a9f0-960a29cee583",
+        "student_id": "3531944f-015b-54ab-a643-6b9649134b77",
+        "lesson_id": "55473250-30fe-5365-85a3-c4e35ebb96b4",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "b59fb667-1cd1-5636-a26b-0b130b0b111d",
+        "student_id": "3531944f-015b-54ab-a643-6b9649134b77",
+        "lesson_id": "9bda58b5-5367-5d9a-9e7e-ff8342d3cfba",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a"
+      },
+      {
+        "id": "a4c2be64-526d-53a2-bcb4-ee24c306d85c",
+        "student_id": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f",
+        "lesson_id": "e1204770-a131-504d-a548-6208706455aa",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe"
+      }
+    ],
+    "quiz_attempt": [
+      {
+        "id": "f1b85cff-e65a-41cc-b61c-2909a178df81",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 0,
+        "total": 1,
+        "result": "failed"
+      },
+      {
+        "id": "46d16a0a-d473-54a1-8943-f48f0141e5d6",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "a98b1137-d871-5b83-9b51-af603c1bbaf6",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "fef2c35a-fc64-5b2e-a3ce-c07fa69b6aa6",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "c45a384a-876e-5647-aa70-064501d2ecb8",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "be102d42-591c-553e-b78c-5a0278adc687",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "3b45ae30-a72f-589d-bdaa-9c211b1fdf51",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 1,
+        "total": 2,
+        "result": "failed"
+      },
+      {
+        "id": "b1575d56-df92-52d7-8d9b-64559c253e39",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 2,
+        "total": 2,
+        "result": "passed"
+      },
+      {
+        "id": "187ae0ec-8e41-5940-81af-cdfbdb71bb55",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "a98b1137-d871-5b83-9b51-af603c1bbaf6",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "e26adbcf-652e-575f-ad55-f2878508a260",
+        "student_id": "265ec819-75b1-5f28-bae8-7eae5bb5f6c1",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 2,
+        "total": 2,
+        "result": "passed"
+      },
+      {
+        "id": "a619ef4d-4206-5f00-8e84-88f7f0b087ee",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 0,
+        "total": 1,
+        "result": "failed"
+      },
+      {
+        "id": "7a2d27ef-8769-5723-a8fd-589e44317b03",
+        "student_id": "9afb6704-ffa9-5080-b655-96a6575a64eb",
+        "lesson_id": "7de638ad-0e49-5339-befc-6e3680388094",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 1,
+        "total": 2,
+        "result": "failed"
+      },
+      {
+        "id": "2ba49480-6889-5c8d-9a3c-e1bc48d88095",
+        "student_id": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f",
+        "lesson_id": "e1204770-a131-504d-a548-6208706455aa",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "e6647eab-42cc-5d31-a45c-f8fcc215cf84",
+        "student_id": "286cf779-774c-5908-9227-7dce3886fd2f",
+        "lesson_id": "d5cd57b0-4176-51cf-b21f-76eeb8a9704b",
+        "course_id": "cada30b4-cc8c-5f84-9bca-254377571027",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "score": 0,
+        "total": 1,
+        "result": "failed"
+      },
+      {
+        "id": "f6711063-1a59-578c-9593-004541026609",
+        "student_id": "d78936d7-046f-5aec-a5fb-4fb4b8415c18",
+        "lesson_id": "848470d1-c0d6-5d43-9146-6284e7ee61fb",
+        "course_id": "20698e40-fd0f-56d5-b055-43b515ce21a5",
+        "instructor_id": "a15a613d-39ac-5981-8a79-4ff95c293bfe",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "9dd87f59-f189-5b58-b1bf-e64c0b857681",
+        "student_id": "3531944f-015b-54ab-a643-6b9649134b77",
+        "lesson_id": "9bda58b5-5367-5d9a-9e7e-ff8342d3cfba",
+        "course_id": "7908b0fe-15a2-5dc5-8182-b65bf80dd33f",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 1,
+        "total": 1,
+        "result": "passed"
+      },
+      {
+        "id": "a1b35ade-f6e1-57e4-8f03-d2fd6a09e150",
+        "student_id": "512e3641-003b-594b-a37b-d80f86d3c0ef",
+        "lesson_id": "440f8c47-b815-527c-a789-31ea1bf23a7b",
+        "course_id": "09dc31ba-9daa-5d95-95f8-3e5337e4e334",
+        "instructor_id": "eff2bf41-acd9-59d8-952a-8239ef32613a",
+        "score": 0,
+        "total": 1,
+        "result": "failed"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "home",
+      "route": "/home",
+      "title": "My courses",
+      "icon": "Home",
+      "personas": [
+        "student"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "StudentHome",
+        "props": {
+          "tab": "mine"
+        }
+      }
+    },
+    {
+      "name": "explore",
+      "route": "/explore",
+      "title": "Explore",
+      "icon": "LayoutGrid",
+      "personas": [
+        "student"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "StudentHome",
+        "props": {
+          "tab": "explore"
+        }
+      }
+    },
+    {
+      "name": "course-view",
+      "route": "/courses/:id",
+      "title": "Course",
+      "icon": "Book",
+      "personas": [
+        "student"
+      ],
+      "chrome": "none",
+      "detailOf": "course",
+      "layout": {
+        "kind": "custom",
+        "custom": "CourseView"
+      }
+    },
+    {
+      "name": "lesson-view",
+      "route": "/lessons/:id",
+      "title": "Lesson",
+      "icon": "Book",
+      "personas": [
+        "student"
+      ],
+      "chrome": "none",
+      "detailOf": "lesson",
+      "layout": {
+        "kind": "custom",
+        "custom": "LessonView"
+      }
+    },
+    {
+      "name": "certificate",
+      "route": "/certificate/:id",
+      "title": "Certificate",
+      "icon": "Award",
+      "personas": [
+        "student"
+      ],
+      "chrome": "none",
+      "detailOf": "course",
+      "layout": {
+        "kind": "custom",
+        "custom": "Certificate"
+      }
+    },
+    {
+      "name": "teach",
+      "route": "/teach",
+      "title": "My courses",
+      "icon": "Book",
+      "personas": [
+        "instructor"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "InstructorHome"
+      }
+    },
+    {
+      "name": "teach-course",
+      "route": "/teach/:id",
+      "title": "Course",
+      "icon": "Book",
+      "personas": [
+        "instructor"
+      ],
+      "chrome": "none",
+      "detailOf": "course",
+      "layout": {
+        "kind": "custom",
+        "custom": "InstructorCourse"
+      }
+    },
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "instructor"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Team & access",
+            "subtitle": "Who can sign in, and what they can do."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It's just you so far — add the people who work in the app and pick their role."
+            }
+          }
+        ]
+      },
+      "chrome": "none"
+    }
+  ],
+  "auth": {
+    "screen": "LearnlyLogin",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "StudentHome",
+      "kind": "code",
+      "purpose": "Student home: streak, XP, continue hero, my courses with progress rings, explore catalogue",
+      "props": {
+        "tab": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "tab": "mine"
+      },
+      "source": "import React, { useEffect, useMemo, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion, animate } from \"motion/react\";\nimport { Flame, Zap, Home, LayoutGrid, LogOut, Play, GraduationCap, ArrowRight, Check, Sparkles, Clock, Trophy } from \"lucide-react\";\n\ntype R = Record<string, any>;\nconst COV: Record<string, { u: string; e: string; a: string; b: string }> = {\n  Art: { u: \"1513364776144-60967b0f800f\", e: \"🎨\", a: \"#FF7A59\", b: \"#FFB020\" }, Code: { u: \"1555066931-4365d14bab8c\", e: \"💻\", a: \"#8E6CF0\", b: \"#3FA7FF\" },\n  Cooking: { u: \"1509440159596-0249088772ff\", e: \"🍞\", a: \"#FFB020\", b: \"#FF7A59\" }, Photo: { u: \"1516035069371-29a1b244cc32\", e: \"📸\", a: \"#3FA7FF\", b: \"#8E6CF0\" },\n  Languages: { u: \"1543783207-ec64e4d95325\", e: \"🗣️\", a: \"#1FBF9A\", b: \"#3FA7FF\" }, Finance: { u: \"1579621970563-ebec7560ff3e\", e: \"💰\", a: \"#1FBF9A\", b: \"#FFB020\" },\n  Design: { u: \"1561070791-2526d30994b5\", e: \"✏️\", a: \"#8E6CF0\", b: \"#FF7A59\" }, Lifestyle: { u: \"1485955900006-10f4d324d411\", e: \"🪴\", a: \"#1FBF9A\", b: \"#FFB020\" },\n};\nfunction Cover({ c, className }: { c: R; className?: string }) {\n  const [bad, setBad] = useState(false);\n  const k = COV[String(c.category)] || COV.Art;\n  if (bad) return <div className={(className || \"\") + \" grid place-items-center text-6xl\"} style={{ background: \"linear-gradient(135deg,\" + k.a + \",\" + k.b + \")\" }}>{k.e}</div>;\n  return <img src={\"https://images.unsplash.com/photo-\" + k.u + \"?auto=format&fit=crop&w=900&q=70\"} alt={String(c.title)} className={className} onError={() => setBad(true)} />;\n}\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst TINT: Record<string, string> = { Art: C.coral, Code: C.grape, Cooking: C.sun, Photo: C.sky, Languages: C.mint, Finance: C.mint, Design: C.grape, Lifestyle: C.mint };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\nconst SHADOW = \"0 1px 2px rgba(42,31,77,.06), 0 8px 24px -8px rgba(42,31,77,.14), 0 24px 48px -24px rgba(42,31,77,.12)\";\n\nfunction Ring({ value, size = 64, stroke = 8, color = C.sun, children }: { value: number; size?: number; stroke?: number; color?: string; children?: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  const r = (size - stroke) / 2;\n  const c = 2 * Math.PI * r;\n  const v = Math.max(0, Math.min(100, value));\n  return (\n    <div className=\"relative shrink-0\" style={{ width: size, height: size }}>\n      <svg width={size} height={size} className=\"-rotate-90\">\n        <circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke=\"rgba(42,31,77,.09)\" strokeWidth={stroke} />\n        <motion.circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke={color} strokeWidth={stroke} strokeLinecap=\"round\" strokeDasharray={c}\n          initial={{ strokeDashoffset: reduce ? c * (1 - v / 100) : c }} animate={{ strokeDashoffset: c * (1 - v / 100) }} transition={{ duration: reduce ? 0 : 1.2, ease: \"easeOut\" }} />\n      </svg>\n      <div className=\"absolute inset-0 grid place-items-center text-center font-extrabold\" style={{ color: C.ink, fontSize: size * 0.26 }}>{children}</div>\n    </div>\n  );\n}\n\nfunction useCount(to: number) {\n  const [v, setV] = useState(0);\n  const reduce = useReducedMotion();\n  useEffect(() => {\n    if (reduce) { setV(to); return; }\n    const a = animate(0, to, { duration: 1, ease: \"easeOut\", onUpdate: (x) => setV(Math.round(x)) });\n    return () => a.stop();\n  }, [to, reduce]);\n  return v;\n}\n\nfunction Shell({ app, active, children }: { app: AppHandle; active: \"home\" | \"explore\"; children: React.ReactNode }) {\n  const items = [\n    { k: \"home\", label: \"My courses\", Icon: Home, to: \"/home\" },\n    { k: \"explore\", label: \"Explore\", Icon: LayoutGrid, to: \"/explore\" },\n  ];\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <aside className=\"hidden lg:flex fixed inset-y-0 left-0 w-[250px] flex-col p-6 gap-8\" style={{ background: \"#FFFDF7\", boxShadow: \"1px 0 0 rgba(42,31,77,.06)\" }}>\n        <div className=\"flex items-center gap-3\">\n          <div className=\"grid h-11 w-11 place-items-center rounded-2xl\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}><GraduationCap size={24} color={C.ink} /></div>\n          <span className=\"text-3xl font-extrabold tracking-tight\">Learnly</span>\n        </div>\n        <nav className=\"flex flex-col gap-2\">\n          {items.map((it) => (\n            <motion.button key={it.k} whileTap={{ scale: 0.96 }} onClick={() => app.navigate(it.to)} className=\"relative flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-lg font-bold\" style={{ color: active === it.k ? C.ink : C.mute }}>\n              {active === it.k && <motion.span layoutId=\"side-pill\" className=\"absolute inset-0 rounded-2xl\" style={{ background: \"rgba(255,176,32,.22)\" }} transition={{ type: \"spring\", stiffness: 400, damping: 32 }} />}\n              <it.Icon size={22} className=\"relative\" /><span className=\"relative\">{it.label}</span>\n            </motion.button>\n          ))}\n        </nav>\n        <button onClick={() => app.auth.signOut()} className=\"mt-auto flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-bold\" style={{ color: C.mute }}><LogOut size={20} />Sign out</button>\n      </aside>\n      <div className=\"lg:pl-[250px] pb-28 lg:pb-12\">{children}</div>\n      <nav className=\"lg:hidden fixed bottom-3 left-3 right-3 z-20 flex items-center justify-around rounded-[28px] p-2\" style={{ background: \"rgba(255,253,247,.9)\", backdropFilter: \"blur(14px)\", boxShadow: SHADOW }}>\n        {items.map((it) => (\n          <motion.button key={it.k} whileTap={{ scale: 0.9 }} onClick={() => app.navigate(it.to)} className=\"relative flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2 text-xs font-extrabold\" style={{ color: active === it.k ? C.ink : C.mute }}>\n            {active === it.k && <motion.span layoutId=\"tab-pill\" className=\"absolute inset-0 rounded-2xl\" style={{ background: \"rgba(255,176,32,.28)\" }} transition={{ type: \"spring\", stiffness: 400, damping: 32 }} />}\n            <it.Icon size={22} className=\"relative\" /><span className=\"relative\">{it.label}</span>\n          </motion.button>\n        ))}\n        <motion.button whileTap={{ scale: 0.9 }} onClick={() => app.auth.signOut()} className=\"flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-extrabold\" style={{ color: C.mute }}><LogOut size={22} />Sign out</motion.button>\n      </nav>\n    </div>\n  );\n}\n\nexport type StudentHomeProps = { tab?: string; app?: AppHandle };\n\nexport default function StudentHome({ tab = \"mine\", app }: StudentHomeProps) {\n  const reduce = useReducedMotion();\n  const [cat, setCat] = useState(\"All\");\n  const courses = (app ? app.rows(\"course\") : []) as R[];\n  const lessons = (app ? app.rows(\"lesson\") : []) as R[];\n  const enrolls = (app ? app.rows(\"enrollment\") : []) as R[];\n  const progress = (app ? app.rows(\"lesson_progress\") : []) as R[];\n  const students = (app ? app.rows(\"student\") : []) as R[];\n  const meId = app ? app.me(\"student\") : undefined;\n  const me = students.find((s) => s.id === meId) || students[0] || {};\n  const xp = useCount(Number(me.xp) || 0);\n  const streak = useCount(Number(me.streak) || 0);\n  const loading = app ? app.loading(\"course\") && courses.length === 0 : false;\n\n  const info = useMemo(() => {\n    return enrolls.map((e) => {\n      const course = courses.find((c) => c.id === e.course_id);\n      const ls = lessons.filter((l) => l.course_id === e.course_id).sort((a, b) => Number(a.position) - Number(b.position));\n      const done = progress.filter((p) => p.course_id === e.course_id).map((p) => p.lesson_id);\n      const total = ls.length || Number(e.total_lessons) || 1;\n      const pct = e.status === \"completed\" ? 100 : Math.round((done.length / total) * 100);\n      const next = ls.find((l) => !done.includes(l.id)) || ls[0];\n      return { e, course, ls, done: done.length, total, pct, next };\n    }).filter((x) => x.course);\n  }, [enrolls, courses, lessons, progress]);\n\n  if (!app) return null;\n  const active = info.filter((x) => x.e.status !== \"completed\").sort((a, b) => b.pct - a.pct);\n  const hero = active[0];\n  const enrolledIds = info.map((x) => x.e.course_id);\n  const cats = [\"All\", ...Array.from(new Set(courses.map((c) => String(c.category))))];\n  const explore = courses.filter((c) => !enrolledIds.includes(c.id) && (cat === \"All\" || c.category === cat));\n  const first = String(me.name || app.user.name || \"friend\").split(\" \")[0];\n  const stag = (i: number) => ({ initial: { opacity: 0, y: reduce ? 0 : 22 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.06 * i, type: \"spring\" as const, stiffness: 260, damping: 24 } });\n\n  const header = (\n    <div className=\"flex flex-wrap items-end justify-between gap-4\">\n      <div>\n        <motion.p {...stag(0)} className=\"text-base font-bold\" style={{ color: C.mute }}>{tab === \"explore\" ? \"Find your next obsession\" : \"Welcome back\"}</motion.p>\n        <motion.h1 {...stag(1)} className=\"text-4xl lg:text-5xl font-extrabold leading-none tracking-tight\">{tab === \"explore\" ? \"Explore courses\" : <>Hi {first}! <motion.span className=\"inline-block\" animate={reduce ? undefined : { rotate: [0, 18, -8, 18, 0] }} transition={{ duration: 1.4, delay: 0.6 }}>👋</motion.span></>}</motion.h1>\n      </div>\n      <motion.div {...stag(2)} className=\"flex gap-2\">\n        <div className=\"flex items-center gap-2 rounded-full px-4 py-2 text-lg font-extrabold\" style={{ background: \"#fff\", boxShadow: SHADOW }}>\n          <motion.span animate={reduce ? undefined : { scale: [1, 1.25, 1] }} transition={{ repeat: Infinity, duration: 1.8 }}><Flame size={22} color={C.coral} fill={C.coral} /></motion.span>{streak}<span className=\"text-sm\" style={{ color: C.mute }}>day streak</span>\n        </div>\n        <div className=\"flex items-center gap-2 rounded-full px-4 py-2 text-lg font-extrabold\" style={{ background: \"#fff\", boxShadow: SHADOW }}>\n          <Zap size={22} color={C.sun} fill={C.sun} />{xp.toLocaleString()}<span className=\"text-sm\" style={{ color: C.mute }}>XP</span>\n        </div>\n      </motion.div>\n    </div>\n  );\n\n  const week = (\n    <motion.div {...stag(3)} className=\"mt-5 flex items-center gap-2 rounded-3xl px-4 py-3\" style={{ background: \"#fff\", boxShadow: SHADOW }}>\n      <span className=\"text-sm font-extrabold\">This week</span>\n      <div className=\"ml-auto flex gap-1.5\">\n        {[\"M\", \"T\", \"W\", \"T\", \"F\", \"S\", \"S\"].map((d, i) => {\n          const on = i >= 7 - Math.min(7, Number(me.streak) || 0);\n          return <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3 + i * 0.05, type: \"spring\", stiffness: 500, damping: 18 }} className=\"grid h-8 w-8 place-items-center rounded-full text-xs font-extrabold\" style={{ background: on ? C.sun : \"rgba(42,31,77,.07)\", color: on ? C.ink : C.mute }}>{on ? <Check size={16} strokeWidth={3} /> : d}</motion.div>;\n        })}\n      </div>\n    </motion.div>\n  );\n\n  const courseCard = (c: R, i: number, extra?: { pct: number; done: number; total: number; status: string }) => {\n    const color = TINT[String(c.category)] || C.sun;\n    const n = lessons.filter((l) => l.course_id === c.id).length;\n    return (\n      <motion.div key={c.id} layout {...stag(i)} whileHover={{ y: -6 }} whileTap={{ scale: 0.97 }} role=\"button\" tabIndex={0} onClick={() => app.navigate(\"/courses/\" + c.id)}\n        onKeyDown={(ev) => { if (ev.key === \"Enter\") app.navigate(\"/courses/\" + c.id); }}\n        className=\"group cursor-pointer overflow-hidden rounded-[28px] bg-white text-left\" style={{ boxShadow: SHADOW }}>\n        <div className=\"relative h-36 overflow-hidden\">\n          <Cover c={c} className=\"h-full w-full object-cover transition-transform duration-500 group-hover:scale-105\" />\n          <span className=\"absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-extrabold\" style={{ background: color, color: \"#fff\" }}>{String(c.category)}</span>\n          {extra && extra.status === \"completed\" && <span className=\"absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-extrabold\" style={{ color: C.mint }}><Trophy size={14} />Done</span>}\n        </div>\n        <div className=\"flex items-center gap-3 p-4\">\n          <div className=\"min-w-0 flex-1\">\n            <h3 className=\"text-xl font-extrabold leading-tight\">{String(c.title)}</h3>\n            <p className=\"mt-1 flex items-center gap-1 text-sm font-bold\" style={{ color: C.mute }}><Clock size={14} />{extra ? extra.done + \" of \" + extra.total + \" lessons\" : n + \" lessons · \" + String(c.level)}</p>\n          </div>\n          {extra ? <Ring value={extra.pct} size={58} stroke={7} color={extra.status === \"completed\" ? C.mint : color}>{extra.pct}%</Ring> : <span className=\"grid h-10 w-10 place-items-center rounded-full\" style={{ background: \"rgba(255,176,32,.25)\" }}><ArrowRight size={20} /></span>}\n        </div>\n      </motion.div>\n    );\n  };\n\n  const skeleton = (\n    <div className=\"mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3\">\n      {[0, 1, 2].map((i) => <div key={i} className=\"h-60 animate-pulse rounded-[28px]\" style={{ background: \"rgba(42,31,77,.07)\" }} />)}\n    </div>\n  );\n\n  return (\n    <Shell app={app} active={tab === \"explore\" ? \"explore\" : \"home\"}>\n      <div className=\"mx-auto max-w-6xl px-4 pt-8 lg:px-10 lg:pt-12\">\n        {header}\n        {tab !== \"explore\" && week}\n        {loading ? skeleton : tab === \"explore\" ? (\n          <>\n            <div className=\"mt-6 flex gap-2 overflow-x-auto pb-2\">\n              {cats.map((k) => (\n                <motion.button key={k} whileTap={{ scale: 0.92 }} onClick={() => setCat(k)} className=\"relative shrink-0 rounded-full px-4 py-2 text-sm font-extrabold\" style={{ background: \"#fff\", color: cat === k ? C.ink : C.mute, boxShadow: SHADOW }}>\n                  {cat === k && <motion.span layoutId=\"cat-pill\" className=\"absolute inset-0 rounded-full\" style={{ background: C.sun }} transition={{ type: \"spring\", stiffness: 420, damping: 30 }} />}\n                  <span className=\"relative\">{k}</span>\n                </motion.button>\n              ))}\n            </div>\n            <motion.div layout className=\"mt-5 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3\">\n              <AnimatePresence mode=\"popLayout\">{explore.map((c, i) => courseCard(c, i))}</AnimatePresence>\n            </motion.div>\n            {explore.length === 0 && (\n              <div className=\"mt-10 rounded-[32px] bg-white p-10 text-center\" style={{ boxShadow: SHADOW }}>\n                <div className=\"text-5xl\">🌻</div><p className=\"mt-3 text-2xl font-extrabold\">You joined everything here!</p><p className=\"font-bold\" style={{ color: C.mute }}>New courses are on the way.</p>\n              </div>\n            )}\n          </>\n        ) : (\n          <>\n            {hero && hero.next && (\n              <motion.div {...stag(4)} whileTap={{ scale: 0.985 }} className=\"relative mt-6 overflow-hidden rounded-[32px] p-6 lg:p-8\" style={{ background: \"linear-gradient(135deg,#FFC24D 0%,#FFB020 55%,#FF9A3C 100%)\", boxShadow: \"0 24px 48px -20px rgba(255,150,30,.65)\" }}>\n                <motion.div className=\"absolute -right-10 -top-10 h-44 w-44 rounded-full\" style={{ background: \"rgba(255,255,255,.28)\" }} animate={reduce ? undefined : { scale: [1, 1.12, 1] }} transition={{ repeat: Infinity, duration: 5 }} />\n                <div className=\"relative flex items-center gap-5\">\n                  <div className=\"min-w-0 flex-1\">\n                    <span className=\"inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold\"><Sparkles size={14} />Pick up where you left off</span>\n                    <h2 className=\"mt-3 text-3xl font-extrabold leading-tight lg:text-4xl\">{String(hero.course?.title)}</h2>\n                    <p className=\"mt-1 font-bold\" style={{ color: \"rgba(42,31,77,.75)\" }}>Next: {String(hero.next.title)}</p>\n                    <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }} onClick={() => app.navigate(\"/lessons/\" + hero.next.id)} className=\"mt-5 inline-flex items-center gap-2 rounded-full px-6 py-3 text-lg font-extrabold text-white\" style={{ background: C.ink, boxShadow: \"0 6px 0 #120B2B\" }}>\n                      <Play size={18} fill=\"#fff\" />Continue\n                    </motion.button>\n                  </div>\n                  <Ring value={hero.pct} size={108} stroke={13} color={C.ink}>{hero.pct}%</Ring>\n                </div>\n              </motion.div>\n            )}\n            <div className=\"mt-9 flex items-end justify-between\">\n              <h2 className=\"text-2xl font-extrabold\">My courses</h2>\n              <button onClick={() => app.navigate(\"/explore\")} className=\"flex items-center gap-1 text-sm font-extrabold\" style={{ color: C.mute }}>Find more<ArrowRight size={16} /></button>\n            </div>\n            {info.length === 0 ? (\n              <div className=\"mt-4 rounded-[32px] bg-white p-10 text-center\" style={{ boxShadow: SHADOW }}>\n                <motion.div className=\"text-6xl\" animate={reduce ? undefined : { y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 2 }}>🌱</motion.div>\n                <p className=\"mt-3 text-2xl font-extrabold\">Plant your first course</p>\n                <p className=\"font-bold\" style={{ color: C.mute }}>Pick something fun and start with a 5-minute lesson.</p>\n                <motion.button whileTap={{ scale: 0.94 }} onClick={() => app.navigate(\"/explore\")} className=\"mt-5 rounded-full px-6 py-3 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}>Explore courses</motion.button>\n              </div>\n            ) : (\n              <div className=\"mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3\">\n                {info.map((x, i) => courseCard(x.course as R, i + 5, { pct: x.pct, done: x.done, total: x.total, status: String(x.e.status) }))}\n              </div>\n            )}\n          </>\n        )}\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "CourseView",
+      "kind": "code",
+      "purpose": "Course page: hero, enroll, lesson list with progress",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, useReducedMotion } from \"motion/react\";\nimport { ArrowLeft, Play, Check, Clock, Award, Sparkles, Book } from \"lucide-react\";\n\ntype R = Record<string, any>;\nconst COV: Record<string, { u: string; e: string; a: string; b: string }> = {\n  Art: { u: \"1513364776144-60967b0f800f\", e: \"🎨\", a: \"#FF7A59\", b: \"#FFB020\" }, Code: { u: \"1555066931-4365d14bab8c\", e: \"💻\", a: \"#8E6CF0\", b: \"#3FA7FF\" },\n  Cooking: { u: \"1509440159596-0249088772ff\", e: \"🍞\", a: \"#FFB020\", b: \"#FF7A59\" }, Photo: { u: \"1516035069371-29a1b244cc32\", e: \"📸\", a: \"#3FA7FF\", b: \"#8E6CF0\" },\n  Languages: { u: \"1543783207-ec64e4d95325\", e: \"🗣️\", a: \"#1FBF9A\", b: \"#3FA7FF\" }, Finance: { u: \"1579621970563-ebec7560ff3e\", e: \"💰\", a: \"#1FBF9A\", b: \"#FFB020\" },\n  Design: { u: \"1561070791-2526d30994b5\", e: \"✏️\", a: \"#8E6CF0\", b: \"#FF7A59\" }, Lifestyle: { u: \"1485955900006-10f4d324d411\", e: \"🪴\", a: \"#1FBF9A\", b: \"#FFB020\" },\n};\nfunction Cover({ c, className }: { c: R; className?: string }) {\n  const [bad, setBad] = useState(false);\n  const k = COV[String(c.category)] || COV.Art;\n  if (bad) return <div className={(className || \"\") + \" grid place-items-center text-6xl\"} style={{ background: \"linear-gradient(135deg,\" + k.a + \",\" + k.b + \")\" }}>{k.e}</div>;\n  return <img src={\"https://images.unsplash.com/photo-\" + k.u + \"?auto=format&fit=crop&w=1400&q=70\"} alt={String(c.title)} className={className} onError={() => setBad(true)} />;\n}\nfunction Av({ s, cls }: { s: R | undefined; cls: string }) {\n  const n = String(s ? s.name : \"?\");\n  const hue = [C.coral, C.grape, C.mint, C.sky, C.sun][n.length % 5];\n  return <span className={cls + \" grid shrink-0 place-items-center rounded-full font-extrabold text-white\"} style={{ background: hue }}>{n.split(\" \").map((w) => w[0]).slice(0, 2).join(\"\")}</span>;\n}\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst TINT: Record<string, string> = { Art: C.coral, Code: C.grape, Cooking: C.sun, Photo: C.sky, Languages: C.mint, Finance: C.mint, Design: C.grape, Lifestyle: C.mint };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\nconst SHADOW = \"0 1px 2px rgba(42,31,77,.06), 0 8px 24px -8px rgba(42,31,77,.14), 0 24px 48px -24px rgba(42,31,77,.12)\";\n\nfunction Ring({ value, size = 64, stroke = 8, color = C.sun, children }: { value: number; size?: number; stroke?: number; color?: string; children?: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  const r = (size - stroke) / 2;\n  const c = 2 * Math.PI * r;\n  const v = Math.max(0, Math.min(100, value));\n  return (\n    <div className=\"relative shrink-0\" style={{ width: size, height: size }}>\n      <svg width={size} height={size} className=\"-rotate-90\">\n        <circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke=\"rgba(255,255,255,.35)\" strokeWidth={stroke} />\n        <motion.circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke={color} strokeWidth={stroke} strokeLinecap=\"round\" strokeDasharray={c}\n          initial={{ strokeDashoffset: reduce ? c * (1 - v / 100) : c }} animate={{ strokeDashoffset: c * (1 - v / 100) }} transition={{ duration: reduce ? 0 : 1.2, ease: \"easeOut\" }} />\n      </svg>\n      <div className=\"absolute inset-0 grid place-items-center text-center font-extrabold\" style={{ color: \"#fff\", fontSize: size * 0.26 }}>{children}</div>\n    </div>\n  );\n}\n\nexport type CourseViewProps = { app?: AppHandle };\n\nexport default function CourseView({ app }: CourseViewProps) {\n  const reduce = useReducedMotion();\n  const [busy, setBusy] = useState(false);\n  const id = app ? app.params.id : \"\";\n  const courses = (app ? app.rows(\"course\") : []) as R[];\n  const course = courses.find((c) => c.id === id);\n  const lessons = ((app ? app.rows(\"lesson\") : []) as R[]).filter((l) => l.course_id === id).sort((a, b) => Number(a.position) - Number(b.position));\n  const enr = ((app ? app.rows(\"enrollment\") : []) as R[]).find((e) => e.course_id === id);\n  const done = ((app ? app.rows(\"lesson_progress\") : []) as R[]).filter((p) => p.course_id === id).map((p) => p.lesson_id);\n  const instructor = ((app ? app.rows(\"instructor\") : []) as R[]).find((i) => course && i.id === course.instructor_id);\n  const attempts = ((app ? app.rows(\"quiz_attempt\") : []) as R[]).filter((a) => a.course_id === id);\n  if (!app) return null;\n  if (!course || app.loading(\"enrollment\")) {\n    return (\n      <div className=\"grid min-h-screen place-items-center p-6\" style={{ background: C.bg, fontFamily: FONT, color: C.ink }}>\n        <div className=\"w-full max-w-sm animate-pulse space-y-4\"><div className=\"h-48 rounded-[28px]\" style={{ background: \"rgba(42,31,77,.08)\" }} /><div className=\"h-8 w-2/3 rounded-full\" style={{ background: \"rgba(42,31,77,.08)\" }} /><div className=\"h-24 rounded-[28px]\" style={{ background: \"rgba(42,31,77,.08)\" }} /></div>\n      </div>\n    );\n  }\n  const total = lessons.length || 1;\n  const completed = enr && enr.status === \"completed\";\n  const pct = completed ? 100 : Math.round((done.length / total) * 100);\n  const next = lessons.find((l) => !done.includes(l.id)) || lessons[0];\n  const color = TINT[String(course.category)] || C.sun;\n  const minutes = lessons.reduce((s, l) => s + (Number(l.minutes) || 0), 0);\n\n  const start = async () => {\n    if (!next) return;\n    if (enr) { app.navigate(\"/lessons/\" + next.id); return; }\n    setBusy(true);\n    try {\n      await app.create(\"enrollment\", { student_id: app.me(\"student\"), course_id: id, instructor_id: course.instructor_id, status: \"enrolled\", done_lessons: 0, total_lessons: lessons.length });\n      app.navigate(\"/lessons/\" + next.id);\n    } catch (e) { setBusy(false); }\n  };\n\n  const stag = (i: number) => ({ initial: { opacity: 0, y: reduce ? 0 : 24 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.07 * i, type: \"spring\" as const, stiffness: 260, damping: 24 } });\n\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden pb-16\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <div className=\"mx-auto max-w-5xl lg:px-8 lg:pt-8\">\n        <div className=\"relative h-72 overflow-hidden lg:h-80 lg:rounded-[40px]\" style={{ boxShadow: SHADOW }}>\n          <Cover c={course} className=\"h-full w-full object-cover\" />\n          <div className=\"absolute inset-0\" style={{ background: \"linear-gradient(180deg,rgba(42,31,77,.35) 0%,rgba(42,31,77,0) 35%,rgba(42,31,77,.78) 100%)\" }} />\n          <motion.button whileTap={{ scale: 0.88 }} onClick={() => app.navigate(\"/home\")} aria-label=\"Back\" className=\"absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white\" style={{ boxShadow: SHADOW }}><ArrowLeft size={22} /></motion.button>\n          <div className=\"absolute inset-x-0 bottom-0 flex items-end gap-4 p-5 lg:p-8\">\n            <div className=\"min-w-0 flex-1 text-white\">\n              <span className=\"rounded-full px-3 py-1 text-xs font-extrabold\" style={{ background: color }}>{String(course.category)} · {String(course.level)}</span>\n              <h1 className=\"mt-2 text-4xl font-extrabold leading-none lg:text-5xl\">{String(course.title)}</h1>\n            </div>\n            {enr && <Ring value={pct} size={84} stroke={10} color={completed ? C.mint : C.sun}>{pct}%</Ring>}\n          </div>\n        </div>\n\n        <div className=\"grid gap-6 px-4 pt-6 lg:grid-cols-[1fr_320px] lg:px-0\">\n          <div>\n            <motion.p {...stag(0)} className=\"text-lg font-bold leading-snug\" style={{ color: C.mute }}>{String(course.summary)}</motion.p>\n            <motion.div {...stag(1)} className=\"mt-5 flex flex-wrap gap-2\">\n              {[{ I: Book, t: lessons.length + \" lessons\" }, { I: Clock, t: minutes + \" min total\" }, { I: Sparkles, t: \"+50 XP per quiz\" }].map((x) => (\n                <span key={x.t} className=\"flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold\" style={{ boxShadow: SHADOW }}><x.I size={16} color={C.sun} />{x.t}</span>\n              ))}\n            </motion.div>\n\n            <h2 className=\"mt-8 text-2xl font-extrabold\">Lessons</h2>\n            <div className=\"mt-3 flex flex-col gap-3\">\n              {lessons.map((l, i) => {\n                const isDone = done.includes(l.id);\n                const isNext = !isDone && next && next.id === l.id;\n                const tries = attempts.filter((a) => a.lesson_id === l.id);\n                const best = tries.reduce((m, a) => Math.max(m, Number(a.score) || 0), 0);\n                return (\n                  <motion.div key={l.id} {...stag(i + 2)} whileHover={{ x: 4 }} whileTap={{ scale: 0.97 }} role=\"button\" tabIndex={0}\n                    onClick={() => (enr ? app.navigate(\"/lessons/\" + l.id) : start())}\n                    onKeyDown={(ev) => { if (ev.key === \"Enter\") { if (enr) app.navigate(\"/lessons/\" + l.id); else start(); } }}\n                    className=\"flex cursor-pointer items-center gap-3 rounded-[24px] bg-white p-3\" style={{ boxShadow: isNext ? \"0 0 0 3px \" + C.sun + \", \" + SHADOW : SHADOW }}>\n                    <div className=\"relative h-16 w-20 shrink-0 overflow-hidden rounded-2xl\">\n                      <Cover c={course} className=\"h-full w-full object-cover\" />\n                      <span className=\"absolute inset-0 grid place-items-center\" style={{ background: isDone ? \"rgba(31,191,154,.75)\" : \"rgba(42,31,77,.3)\" }}>{isDone ? <Check size={26} color=\"#fff\" strokeWidth={3} /> : <Play size={22} color=\"#fff\" fill=\"#fff\" />}</span>\n                    </div>\n                    <div className=\"min-w-0 flex-1\">\n                      <p className=\"text-xs font-extrabold uppercase tracking-wide\" style={{ color: C.mute }}>Lesson {i + 1} · {Number(l.minutes)} min</p>\n                      <h3 className=\"truncate text-lg font-extrabold leading-tight\">{String(l.title)}</h3>\n                      {tries.length > 0 && <p className=\"text-xs font-bold\" style={{ color: C.mint }}>Quiz best: {best} · {tries.length}/3 tries</p>}\n                    </div>\n                    {isNext && <span className=\"rounded-full px-3 py-1 text-xs font-extrabold\" style={{ background: C.sun }}>Up next</span>}\n                  </motion.div>\n                );\n              })}\n            </div>\n          </div>\n\n          <div className=\"lg:sticky lg:top-8 lg:self-start\">\n            <motion.div {...stag(2)} className=\"rounded-[28px] bg-white p-5\" style={{ boxShadow: SHADOW }}>\n              {instructor && (\n                <div className=\"mb-4 flex items-center gap-3\">\n                  <Av s={instructor} cls=\"h-12 w-12 text-lg\" />\n                  <div><p className=\"text-xs font-extrabold uppercase\" style={{ color: C.mute }}>Taught by</p><p className=\"text-lg font-extrabold leading-tight\">{String(instructor.name)}</p></div>\n                </div>\n              )}\n              {completed ? (\n                <>\n                  <p className=\"mb-3 text-center text-lg font-extrabold\" style={{ color: C.mint }}>You finished this course! 🎉</p>\n                  <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95 }} onClick={() => app.navigate(\"/certificate/\" + id)} className=\"flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}><Award size={22} />View certificate</motion.button>\n                </>\n              ) : (\n                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95 }} disabled={busy} onClick={start} className=\"flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}>\n                  <Play size={20} fill={C.ink} />{enr ? (done.length ? \"Continue learning\" : \"Start first lesson\") : busy ? \"Joining…\" : \"Start this course\"}\n                </motion.button>\n              )}\n              <p className=\"mt-3 text-center text-sm font-bold\" style={{ color: C.mute }}>{enr ? done.length + \" of \" + total + \" lessons done\" : \"Free · learn at your own pace\"}</p>\n            </motion.div>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "LessonView",
+      "kind": "code",
+      "purpose": "Lesson reader with video thumb, text, quiz (3 attempts), AI hint, completion and celebration",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { ArrowLeft, ArrowRight, Play, Check, X, Lightbulb, Zap, Lock, Trophy, Sparkles, RefreshCw, Clock } from \"lucide-react\";\n\ntype R = Record<string, any>;\nconst COV: Record<string, { u: string; e: string; a: string; b: string }> = {\n  Art: { u: \"1513364776144-60967b0f800f\", e: \"🎨\", a: \"#FF7A59\", b: \"#FFB020\" }, Code: { u: \"1555066931-4365d14bab8c\", e: \"💻\", a: \"#8E6CF0\", b: \"#3FA7FF\" },\n  Cooking: { u: \"1509440159596-0249088772ff\", e: \"🍞\", a: \"#FFB020\", b: \"#FF7A59\" }, Photo: { u: \"1516035069371-29a1b244cc32\", e: \"📸\", a: \"#3FA7FF\", b: \"#8E6CF0\" },\n  Languages: { u: \"1543783207-ec64e4d95325\", e: \"🗣️\", a: \"#1FBF9A\", b: \"#3FA7FF\" }, Finance: { u: \"1579621970563-ebec7560ff3e\", e: \"💰\", a: \"#1FBF9A\", b: \"#FFB020\" },\n  Design: { u: \"1561070791-2526d30994b5\", e: \"✏️\", a: \"#8E6CF0\", b: \"#FF7A59\" }, Lifestyle: { u: \"1485955900006-10f4d324d411\", e: \"🪴\", a: \"#1FBF9A\", b: \"#FFB020\" },\n};\nfunction Cover({ c, className }: { c: R; className?: string }) {\n  const [bad, setBad] = useState(false);\n  const k = COV[String(c.category)] || COV.Art;\n  if (bad) return <div className={(className || \"\") + \" grid place-items-center text-6xl\"} style={{ background: \"linear-gradient(135deg,\" + k.a + \",\" + k.b + \")\" }}>{k.e}</div>;\n  return <img src={\"https://images.unsplash.com/photo-\" + k.u + \"?auto=format&fit=crop&w=1200&q=70\"} alt={String(c.title || \"\")} className={className} onError={() => setBad(true)} />;\n}\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\nconst SHADOW = \"0 1px 2px rgba(42,31,77,.06), 0 8px 24px -8px rgba(42,31,77,.14), 0 24px 48px -24px rgba(42,31,77,.12)\";\nconst CONF = [C.sun, C.coral, C.mint, C.sky, C.grape, \"#FFD66B\"];\nconst LETTERS = [\"a\", \"b\", \"c\", \"d\"];\n\nfunction Confetti({ count = 48 }: { count?: number }) {\n  const reduce = useReducedMotion();\n  if (reduce) return null;\n  return (\n    <div className=\"pointer-events-none fixed inset-0 z-50 overflow-hidden\">\n      {Array.from({ length: count }).map((_, i) => {\n        const a = (i / count) * Math.PI * 2 + (i % 5) * 0.3;\n        const d = 140 + ((i * 53) % 220);\n        const w = 8 + (i % 4) * 3;\n        return (\n          <motion.span key={i} className=\"absolute left-1/2 top-[42%]\" style={{ width: w, height: i % 3 === 0 ? w : w * 1.8, background: CONF[i % CONF.length], borderRadius: i % 3 === 0 ? 999 : 3 }}\n            initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 0.4 }}\n            animate={{ x: Math.cos(a) * d, y: Math.sin(a) * d * 0.7 + 260, opacity: [1, 1, 0], rotate: 360 + i * 40, scale: 1 }}\n            transition={{ duration: 1.9 + (i % 6) * 0.15, ease: \"easeOut\" }} />\n        );\n      })}\n    </div>\n  );\n}\n\nexport type LessonViewProps = { app?: AppHandle };\n\nexport default function LessonView({ app }: LessonViewProps) {\n  const reduce = useReducedMotion();\n  const id = app ? app.params.id : \"\";\n  const [qi, setQi] = useState(0);\n  const [picked, setPicked] = useState<string | null>(null);\n  const [score, setScore] = useState(0);\n  const [phase, setPhase] = useState<\"read\" | \"quiz\" | \"result\">(\"read\");\n  const [hint, setHint] = useState<string | null>(null);\n  const [hintBusy, setHintBusy] = useState(false);\n  const [hintsUsed, setHintsUsed] = useState(0);\n  const [saving, setSaving] = useState(false);\n  const [err, setErr] = useState<string | null>(null);\n  const [boom, setBoom] = useState(0);\n  const [finale, setFinale] = useState(false);\n  const [passedNow, setPassedNow] = useState<boolean | null>(null);\n\n  const lessonsAll = (app ? app.rows(\"lesson\") : []) as R[];\n  const lesson = lessonsAll.find((l) => l.id === id);\n  const courseId = lesson ? lesson.course_id : \"\";\n  const course = ((app ? app.rows(\"course\") : []) as R[]).find((c) => c.id === courseId);\n  const siblings = lessonsAll.filter((l) => l.course_id === courseId).sort((a, b) => Number(a.position) - Number(b.position));\n  const questions = ((app ? app.rows(\"quiz_question\") : []) as R[]).filter((q) => q.lesson_id === id);\n  const progress = ((app ? app.rows(\"lesson_progress\") : []) as R[]).filter((p) => p.course_id === courseId);\n  const attempts = ((app ? app.rows(\"quiz_attempt\") : []) as R[]).filter((a) => a.lesson_id === id);\n  const enr = ((app ? app.rows(\"enrollment\") : []) as R[]).find((e) => e.course_id === courseId);\n  const me = ((app ? app.rows(\"student\") : []) as R[])[0];\n  const done = progress.some((p) => p.lesson_id === id);\n  const tries = attempts.length;\n  const left = Math.max(0, 3 - tries);\n  const passedBefore = attempts.some((a) => a.result === \"passed\");\n  const idx = siblings.findIndex((l) => l.id === id);\n  const nextLesson = idx >= 0 ? siblings[idx + 1] : undefined;\n  const q = questions[qi];\n\n  useEffect(() => { setQi(0); setPicked(null); setScore(0); setPhase(\"read\"); setHint(null); setErr(null); setPassedNow(null); setHintsUsed(0); }, [id]);\n\n  if (!app) return null;\n  if (!lesson || app.loading(\"quiz_attempt\") || app.loading(\"lesson_progress\")) {\n    return <div className=\"grid min-h-screen place-items-center\" style={{ background: C.bg }}><div className=\"h-40 w-72 animate-pulse rounded-[28px]\" style={{ background: \"rgba(42,31,77,.08)\" }} /></div>;\n  }\n\n  const today = () => new Date().toISOString().slice(0, 10);\n  const awardXp = async (amount: number) => {\n    if (!me) return;\n    const t = today();\n    const last = String(me.last_active || \"\");\n    let streak = Number(me.streak) || 0;\n    if (last !== t) {\n      const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10);\n      streak = last === y ? streak + 1 : 1;\n    }\n    try { await app.update(\"student\", String(me.id), { xp: (Number(me.xp) || 0) + amount, streak, last_active: t }); } catch (e) { /* xp is a bonus */ }\n  };\n\n  const askHint = async () => {\n    if (!q || hintBusy) return;\n    setHintBusy(true); setHint(null);\n    try {\n      const text = await app.ai.ask(\"Lesson: \" + String(lesson.title) + \"\\n\" + String(lesson.body) + \"\\n\\nQuiz question: \" + String(q.prompt) + \"\\nOptions: A) \" + q.option_a + \" B) \" + q.option_b + \" C) \" + q.option_c + \" D) \" + q.option_d + \"\\n\\nHints already given: \" + hintsUsed + \". Reply with the next hint.\", { system: \"You are a warm, encouraging Socratic tutor. Reply with ONE short guiding question or nudge (max 2 short sentences) that points the student to the right part of the lesson so they can reason it out. NEVER state or imply the correct option, its letter, or its exact wording, and never rule options in or out by name. Plain text, no markdown.\", maxTokens: 120 });\n      setHint(text); setHintsUsed((n) => n + 1);\n    } catch (e) {\n      setHint(\"AI is resting right now, try again soon. Meanwhile, re-read the lesson above and look for the sentence about this idea. You've got this!\");\n    }\n    setHintBusy(false);\n  };\n\n  const pick = (letter: string) => {\n    if (picked || !q) return;\n    setPicked(letter);\n    if (letter === q.correct) { setScore((s) => s + 1); setBoom((b) => b + 1); }\n  };\n\n  const finishQuiz = async (finalScore: number) => {\n    setSaving(true); setErr(null);\n    const total = questions.length;\n    const ok = finalScore / total >= 0.6;\n    try {\n      await app.create(\"quiz_attempt\", { student_id: app.me(\"student\"), lesson_id: id, course_id: courseId, instructor_id: lesson.instructor_id, score: finalScore, total, result: ok ? \"passed\" : \"failed\" });\n      setPassedNow(ok); setPhase(\"result\");\n      if (ok) { setBoom((b) => b + 1); await awardXp(50 - Math.min(hintsUsed, 3) * 5); }\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Could not save your attempt.\");\n      setPhase(\"result\"); setPassedNow(false);\n    }\n    setSaving(false);\n  };\n\n  const nextQuestion = () => {\n    if (qi + 1 < questions.length) { setQi(qi + 1); setPicked(null); setHint(null); }\n    else finishQuiz(score);\n  };\n\n  const retry = () => { setQi(0); setPicked(null); setScore(0); setHint(null); setErr(null); setPassedNow(null); setPhase(\"quiz\"); };\n\n  const complete = async () => {\n    setSaving(true); setErr(null);\n    try {\n      if (!enr) await app.create(\"enrollment\", { student_id: app.me(\"student\"), course_id: courseId, instructor_id: lesson.instructor_id, status: \"enrolled\", done_lessons: 0, total_lessons: siblings.length });\n      if (!done) await app.create(\"lesson_progress\", { student_id: app.me(\"student\"), lesson_id: id, course_id: courseId, instructor_id: lesson.instructor_id });\n      const doneCount = progress.filter((p) => p.lesson_id !== id).length + 1;\n      setBoom((b) => b + 1);\n      if (doneCount >= siblings.length) { await awardXp(100); setFinale(true); }\n      else if (nextLesson) app.navigate(\"/lessons/\" + nextLesson.id);\n      else app.navigate(\"/courses/\" + courseId);\n    } catch (e) { setErr(e instanceof Error ? e.message : \"Something went wrong.\"); }\n    setSaving(false);\n  };\n\n  const canComplete = done || questions.length === 0 || passedBefore || passedNow === true || left === 0;\n  const pctBar = siblings.length ? Math.round(((idx + (done ? 1 : 0.5)) / siblings.length) * 100) : 0;\n  const paragraphs = String(lesson.body).split(\"\\n\").filter((p) => p.trim().length > 0);\n  const stag = (i: number) => ({ initial: { opacity: 0, y: reduce ? 0 : 22 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.07 * i, type: \"spring\" as const, stiffness: 260, damping: 24 } });\n\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden pb-32\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <div key={boom} style={{ display: boom ? \"block\" : \"none\" }}>{boom > 0 && <Confetti count={finale ? 90 : 26} />}</div>\n      <div className=\"sticky top-0 z-30 px-4 py-3 backdrop-blur\" style={{ background: \"rgba(255,247,230,.88)\" }}>\n        <div className=\"mx-auto flex max-w-3xl items-center gap-3\">\n          <motion.button whileTap={{ scale: 0.88 }} onClick={() => app.navigate(\"/courses/\" + courseId)} aria-label=\"Back to course\" className=\"grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white\" style={{ boxShadow: SHADOW }}><ArrowLeft size={22} /></motion.button>\n          <div className=\"h-4 flex-1 overflow-hidden rounded-full\" style={{ background: \"rgba(42,31,77,.1)\" }}>\n            <motion.div className=\"h-full rounded-full\" style={{ background: \"linear-gradient(90deg,#FFB020,#FF9A3C)\" }} initial={{ width: 0 }} animate={{ width: pctBar + \"%\" }} transition={{ type: \"spring\", stiffness: 120, damping: 20 }} />\n          </div>\n          <span className=\"text-sm font-extrabold\">{Math.max(idx + 1, 1)}/{siblings.length}</span>\n        </div>\n      </div>\n\n      <div className=\"mx-auto max-w-3xl px-4 pt-3\">\n        <motion.p {...stag(0)} className=\"text-sm font-extrabold uppercase tracking-wide\" style={{ color: C.mute }}>{course ? String(course.title) : \"Lesson\"}</motion.p>\n        <motion.h1 {...stag(1)} className=\"mt-1 text-4xl font-extrabold leading-none lg:text-5xl\">{String(lesson.title)}</motion.h1>\n\n        <motion.div {...stag(2)} className=\"relative mt-5 overflow-hidden rounded-[32px]\" style={{ boxShadow: SHADOW }}>\n          <Cover c={course || {}} className=\"aspect-video w-full object-cover\" />\n          <div className=\"absolute inset-0\" style={{ background: \"linear-gradient(180deg,rgba(42,31,77,0) 50%,rgba(42,31,77,.55))\" }} />\n          <motion.div className=\"absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full\" style={{ background: C.sun, boxShadow: \"0 8px 0 #E8940A\" }} animate={reduce ? undefined : { scale: [1, 1.07, 1] }} transition={{ repeat: Infinity, duration: 2 }} whileTap={{ scale: 0.9 }}><Play size={34} fill={C.ink} color={C.ink} /></motion.div>\n          <span className=\"absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-extrabold\"><Clock size={14} />{Number(lesson.minutes)} min</span>\n        </motion.div>\n\n        <motion.div {...stag(3)} className=\"mt-6 rounded-[28px] bg-white p-6\" style={{ boxShadow: SHADOW }}>\n          {paragraphs.map((p, i) => <p key={i} className=\"mb-3 text-lg font-semibold leading-relaxed last:mb-0\" style={{ color: \"#443a66\" }}>{p}</p>)}\n        </motion.div>\n\n        {questions.length > 0 && (\n          <motion.div {...stag(4)} layout className=\"mt-6 overflow-hidden rounded-[32px] p-5 lg:p-7\" style={{ background: \"#fff\", boxShadow: SHADOW }}>\n            <div className=\"flex items-center gap-3\">\n              <span className=\"grid h-11 w-11 place-items-center rounded-2xl\" style={{ background: \"rgba(255,176,32,.25)\" }}><Zap size={22} color=\"#E8940A\" fill=\"#E8940A\" /></span>\n              <div className=\"flex-1\"><h2 className=\"text-2xl font-extrabold leading-none\">Quick quiz</h2><p className=\"text-sm font-bold\" style={{ color: C.mute }}>{questions.length} question{questions.length > 1 ? \"s\" : \"\"} · pass to earn +50 XP</p></div>\n              <div className=\"flex gap-1.5\" aria-label={left + \" attempts left\"}>{[0, 1, 2].map((n) => <motion.span key={n} animate={{ scale: n < left ? 1 : 0.8 }} className=\"h-3.5 w-3.5 rounded-full\" style={{ background: n < left ? C.sun : \"rgba(42,31,77,.15)\" }} />)}</div>\n            </div>\n\n            <AnimatePresence mode=\"wait\">\n              {phase === \"read\" && (\n                <motion.div key=\"intro\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"mt-5\">\n                  {left === 0 ? (\n                    <div className=\"flex items-center gap-3 rounded-2xl p-4\" style={{ background: \"rgba(255,122,89,.12)\" }}><Lock size={22} color={C.coral} /><p className=\"font-extrabold\">All 3 attempts used. {passedBefore ? \"You passed already!\" : \"Your instructor has been told you could use a hand.\"}</p></div>\n                  ) : (\n                    <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95 }} onClick={() => setPhase(\"quiz\")} className=\"w-full rounded-full px-6 py-4 text-xl font-extrabold\" style={{ background: C.ink, color: \"#fff\", boxShadow: \"0 6px 0 #120B2B\" }}>{tries ? \"Try again (\" + left + \" left)\" : \"Start quiz\"}</motion.button>\n                  )}\n                </motion.div>\n              )}\n\n              {phase === \"quiz\" && q && (\n                <motion.div key={\"q\" + qi} initial={{ opacity: 0, x: reduce ? 0 : 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: reduce ? 0 : -40 }} transition={{ type: \"spring\", stiffness: 300, damping: 28 }} className=\"mt-5\">\n                  <p className=\"text-sm font-extrabold\" style={{ color: C.mute }}>Question {qi + 1} of {questions.length}</p>\n                  <h3 className=\"mt-1 text-2xl font-extrabold leading-tight\">{String(q.prompt)}</h3>\n                  <div className=\"mt-4 flex flex-col gap-3\">\n                    {LETTERS.map((L) => {\n                      const isRight = picked && L === q.correct;\n                      const isWrong = picked === L && L !== q.correct;\n                      return (\n                        <motion.button key={L} onClick={() => pick(L)} disabled={!!picked}\n                          whileHover={picked ? undefined : { scale: 1.02 }} whileTap={picked ? undefined : { scale: 0.96 }}\n                          animate={isWrong && !reduce ? { x: [0, -10, 10, -6, 6, 0] } : isRight && !reduce ? { scale: [1, 1.05, 1] } : { x: 0 }} transition={{ duration: 0.45 }}\n                          className=\"flex items-center gap-3 rounded-[22px] border-2 px-4 py-3.5 text-left text-lg font-extrabold\"\n                          style={{ borderColor: isRight ? C.mint : isWrong ? C.coral : \"rgba(42,31,77,.12)\", background: isRight ? \"rgba(31,191,154,.14)\" : isWrong ? \"rgba(255,122,89,.14)\" : \"#fff\", opacity: picked && !isRight && !isWrong ? 0.5 : 1 }}>\n                          <span className=\"grid h-9 w-9 shrink-0 place-items-center rounded-xl text-base uppercase\" style={{ background: isRight ? C.mint : isWrong ? C.coral : \"rgba(255,176,32,.25)\", color: isRight || isWrong ? \"#fff\" : C.ink }}>{isRight ? <Check size={20} strokeWidth={3} /> : isWrong ? <X size={20} strokeWidth={3} /> : L}</span>\n                          <span className=\"flex-1\">{String(q[\"option_\" + L])}</span>\n                        </motion.button>\n                      );\n                    })}\n                  </div>\n\n                  {!picked && (\n                    <div className=\"mt-4\">\n                      <motion.button whileTap={{ scale: 0.94 }} onClick={askHint} disabled={hintBusy} className=\"flex items-center gap-2 rounded-full px-4 py-2 text-base font-extrabold\" style={{ background: \"rgba(142,108,240,.14)\", color: C.grape }}>\n                        <motion.span animate={hintBusy && !reduce ? { rotate: 360 } : { rotate: 0 }} transition={{ repeat: hintBusy ? Infinity : 0, duration: 1 }}><Lightbulb size={18} /></motion.span>{hintBusy ? \"Thinking of a hint…\" : hint ? \"Another hint\" : \"Ask for a hint\"}\n                      </motion.button>\n                      <AnimatePresence>\n                        {hint && <motion.div initial={{ opacity: 0, y: 10, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} className=\"mt-3 rounded-2xl p-4 text-base font-bold leading-snug\" style={{ background: \"rgba(142,108,240,.12)\" }} role=\"status\"><span className=\"mb-1 block text-xs font-extrabold uppercase tracking-wide\" style={{ color: C.grape }}>💡 Hint, not the answer</span>{hint}</motion.div>}\n                      </AnimatePresence>\n                    </div>\n                  )}\n\n                  <AnimatePresence>\n                    {picked && (\n                      <motion.div initial={{ opacity: 0, y: 24, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: \"spring\", stiffness: 380, damping: 22 }} className=\"mt-4 rounded-[24px] p-4\" style={{ background: picked === q.correct ? \"rgba(31,191,154,.16)\" : \"rgba(255,122,89,.16)\" }}>\n                        <p className=\"text-xl font-extrabold\" style={{ color: picked === q.correct ? \"#0E8F73\" : \"#D4492A\" }}>{picked === q.correct ? \"🎉 Nailed it!\" : \"Not quite — you'll get it!\"}</p>\n                        {q.explanation && <p className=\"mt-1 font-bold\" style={{ color: \"#443a66\" }}>{String(q.explanation)}</p>}\n                        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95 }} onClick={nextQuestion} disabled={saving} className=\"mt-3 flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-lg font-extrabold text-white\" style={{ background: C.ink, boxShadow: \"0 5px 0 #120B2B\" }}>{qi + 1 < questions.length ? \"Next question\" : saving ? \"Saving…\" : \"See my score\"}<ArrowRight size={18} /></motion.button>\n                      </motion.div>\n                    )}\n                  </AnimatePresence>\n                </motion.div>\n              )}\n\n              {phase === \"result\" && (\n                <motion.div key=\"res\" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: \"spring\", stiffness: 300, damping: 18 }} className=\"mt-5 text-center\">\n                  <motion.div className=\"text-6xl\" animate={reduce ? undefined : { rotate: passedNow ? [0, -10, 10, 0] : 0, y: passedNow ? [0, -10, 0] : 0 }} transition={{ duration: 0.8 }}>{passedNow ? \"🏆\" : \"💪\"}</motion.div>\n                  <p className=\"mt-2 text-3xl font-extrabold\">{passedNow ? \"Passed!\" : \"Almost there\"}</p>\n                  <p className=\"text-lg font-bold\" style={{ color: C.mute }}>You scored {score} out of {questions.length}{passedNow ? \" · +\" + (50 - Math.min(hintsUsed, 3) * 5) + \" XP\" : \"\"}</p>\n                  {err && <p className=\"mt-2 rounded-xl p-3 font-bold\" style={{ background: \"rgba(255,122,89,.14)\", color: \"#D4492A\" }}>{err}</p>}\n                  {!passedNow && left > 0 && <motion.button whileTap={{ scale: 0.94 }} onClick={retry} className=\"mx-auto mt-4 flex items-center gap-2 rounded-full px-6 py-3 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 5px 0 #E8940A\" }}><RefreshCw size={18} />Try again · {left} left</motion.button>}\n                  {!passedNow && left === 0 && <p className=\"mt-3 font-bold\" style={{ color: C.mute }}>That was your last attempt — your instructor can help. You can still finish the lesson.</p>}\n                </motion.div>\n              )}\n            </AnimatePresence>\n          </motion.div>\n        )}\n        {err && phase !== \"result\" && <p className=\"mt-3 rounded-xl p-3 font-bold\" style={{ background: \"rgba(255,122,89,.14)\", color: \"#D4492A\" }}>{err}</p>}\n      </div>\n\n      <div className=\"fixed inset-x-0 bottom-0 z-30 p-4\" style={{ background: \"linear-gradient(180deg,rgba(255,247,230,0),#FFF7E6 40%)\" }}>\n        <div className=\"mx-auto max-w-3xl\">\n          <motion.button whileHover={canComplete ? { scale: 1.02 } : undefined} whileTap={canComplete ? { scale: 0.96 } : undefined} disabled={!canComplete || saving} onClick={complete}\n            className=\"flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-xl font-extrabold\" style={{ background: canComplete ? C.sun : \"rgba(42,31,77,.12)\", color: canComplete ? C.ink : C.mute, boxShadow: canComplete ? \"0 7px 0 #E8940A\" : \"none\" }}>\n            {!canComplete && <Lock size={20} />}{done ? (nextLesson ? \"Next lesson\" : \"Back to course\") : canComplete ? \"Complete lesson\" : \"Pass the quiz to continue\"}{canComplete && <ArrowRight size={20} />}\n          </motion.button>\n        </div>\n      </div>\n\n      <AnimatePresence>\n        {finale && (\n          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"fixed inset-0 z-40 grid place-items-center p-6\" style={{ background: \"rgba(42,31,77,.78)\", backdropFilter: \"blur(6px)\" }}>\n            <motion.div initial={{ scale: 0.6, y: 40 }} animate={{ scale: 1, y: 0 }} transition={{ type: \"spring\", stiffness: 260, damping: 16 }} className=\"w-full max-w-sm rounded-[40px] bg-white p-8 text-center\" style={{ boxShadow: \"0 40px 80px -20px rgba(0,0,0,.5)\" }}>\n              <motion.div className=\"mx-auto grid h-24 w-24 place-items-center rounded-full\" style={{ background: C.sun, boxShadow: \"0 8px 0 #E8940A\" }} animate={reduce ? undefined : { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2.4 }}><Trophy size={48} color={C.ink} /></motion.div>\n              <h2 className=\"mt-5 text-4xl font-extrabold leading-none\">Course complete!</h2>\n              <p className=\"mt-2 text-lg font-bold\" style={{ color: C.mute }}>You finished {course ? String(course.title) : \"the course\"}. +100 XP bonus <Sparkles size={16} className=\"inline\" /></p>\n              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }} onClick={() => app.navigate(\"/certificate/\" + courseId)} className=\"mt-6 w-full rounded-full px-6 py-4 text-xl font-extrabold\" style={{ background: C.sun, boxShadow: \"0 7px 0 #E8940A\" }}>Get my certificate</motion.button>\n              <button onClick={() => app.navigate(\"/home\")} className=\"mt-3 text-base font-extrabold\" style={{ color: C.mute }}>Back to my courses</button>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "Certificate",
+      "kind": "code",
+      "purpose": "Certificate of completion for a finished course",
+      "props": {},
+      "sample": {},
+      "source": "import React from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, useReducedMotion } from \"motion/react\";\nimport { ArrowLeft, Award, Lock, Star } from \"lucide-react\";\n\ntype R = Record<string, any>;\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\nconst SHADOW = \"0 1px 2px rgba(42,31,77,.06), 0 8px 24px -8px rgba(42,31,77,.14), 0 24px 48px -24px rgba(42,31,77,.12)\";\nconst CONF = [C.sun, C.coral, C.mint, C.sky, C.grape];\n\nexport type CertificateProps = { app?: AppHandle };\n\nexport default function Certificate({ app }: CertificateProps) {\n  const reduce = useReducedMotion();\n  const id = app ? app.params.id : \"\";\n  const course = ((app ? app.rows(\"course\") : []) as R[]).find((c) => c.id === id);\n  const enr = ((app ? app.rows(\"enrollment\") : []) as R[]).find((e) => e.course_id === id);\n  const me = ((app ? app.rows(\"student\") : []) as R[])[0];\n  const instructor = ((app ? app.rows(\"instructor\") : []) as R[]).find((i) => course && i.id === course.instructor_id);\n  if (!app) return null;\n  const ok = !!enr && enr.status === \"completed\";\n  const dateStr = enr && enr.updated_at ? String(enr.updated_at).slice(0, 10) : \"\";\n  const pretty = dateStr ? new Date(dateStr + \"T12:00:00Z\").toLocaleDateString(\"en-GB\", { day: \"numeric\", month: \"long\", year: \"numeric\" }) : \"\";\n  const serial = \"LRN-\" + String(enr ? enr.id : id).replace(/-/g, \"\").slice(0, 8).toUpperCase();\n\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden px-4 pb-16 pt-5\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <div className=\"mx-auto max-w-3xl\">\n        <motion.button whileTap={{ scale: 0.88 }} onClick={() => app.navigate(\"/courses/\" + id)} aria-label=\"Back\" className=\"grid h-11 w-11 place-items-center rounded-full bg-white\" style={{ boxShadow: SHADOW }}><ArrowLeft size={22} /></motion.button>\n        {!course || !me || app.loading(\"enrollment\") ? (\n          <div className=\"mt-6 h-96 animate-pulse rounded-[36px]\" style={{ background: \"rgba(42,31,77,.08)\" }} />\n        ) : !ok ? (\n          <div className=\"mt-8 rounded-[36px] bg-white p-10 text-center\" style={{ boxShadow: SHADOW }}>\n            <Lock size={44} color={C.mute} className=\"mx-auto\" />\n            <h1 className=\"mt-3 text-3xl font-extrabold\">Certificate locked</h1>\n            <p className=\"mt-1 font-bold\" style={{ color: C.mute }}>Finish every lesson in {String(course.title)} to unlock it.</p>\n            <motion.button whileTap={{ scale: 0.95 }} onClick={() => app.navigate(\"/courses/\" + id)} className=\"mt-5 rounded-full px-6 py-3 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}>Back to course</motion.button>\n          </div>\n        ) : (\n          <>\n            <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className=\"mt-5 text-center text-xl font-extrabold\" style={{ color: C.mint }}>You did it, {String(me.name).split(\" \")[0]}! 🎉</motion.p>\n            <motion.div initial={{ opacity: 0, y: 40, rotate: reduce ? 0 : -3, scale: 0.94 }} animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }} transition={{ type: \"spring\", stiffness: 160, damping: 16 }}\n              className=\"relative mt-4 overflow-hidden rounded-[36px] p-3\" style={{ background: \"linear-gradient(135deg,#FFD66B,#FFB020 60%,#FF9A3C)\", boxShadow: \"0 40px 80px -30px rgba(255,150,30,.7)\" }}>\n              <div className=\"relative overflow-hidden rounded-[28px] px-6 py-10 text-center lg:px-14 lg:py-14\" style={{ background: \"#FFFDF7\", border: \"3px dashed rgba(255,176,32,.7)\" }}>\n                {CONF.map((c, i) => (\n                  <motion.span key={i} className=\"absolute rounded-full\" style={{ width: 18 + i * 6, height: 18 + i * 6, background: c, opacity: 0.22, left: [\"6%\", \"84%\", \"12%\", \"88%\", \"48%\"][i], top: [\"8%\", \"12%\", \"80%\", \"74%\", \"2%\"][i] }} animate={reduce ? undefined : { y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 + i, delay: i * 0.3 }} />\n                ))}\n                <p className=\"text-sm font-extrabold uppercase tracking-[0.3em]\" style={{ color: C.mute }}>Learnly</p>\n                <h1 className=\"mt-3 text-4xl font-extrabold leading-none lg:text-6xl\">Certificate<br />of Completion</h1>\n                <div className=\"mt-3 flex justify-center gap-1\">{[0, 1, 2, 3, 4].map((n) => <motion.span key={n} initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.5 + n * 0.1, type: \"spring\", stiffness: 400, damping: 14 }}><Star size={22} color={C.sun} fill={C.sun} /></motion.span>)}</div>\n                <p className=\"mt-6 text-base font-bold\" style={{ color: C.mute }}>This proudly certifies that</p>\n                <p className=\"mt-1 text-4xl font-extrabold lg:text-5xl\" style={{ color: \"#E8940A\" }}>{String(me.name)}</p>\n                <p className=\"mt-4 text-base font-bold\" style={{ color: C.mute }}>has successfully completed</p>\n                <p className=\"mt-1 text-3xl font-extrabold lg:text-4xl\">{String(course.title)}</p>\n                <div className=\"mt-8 flex items-end justify-between gap-4 text-left\">\n                  <div>\n                    <p className=\"text-2xl font-extrabold italic leading-none\" style={{ fontFamily: \"'Brush Script MT','Segoe Script',cursive\" }}>{instructor ? String(instructor.name) : \"Learnly\"}</p>\n                    <div className=\"mt-1 h-0.5 w-28\" style={{ background: C.ink }} />\n                    <p className=\"text-xs font-extrabold uppercase\" style={{ color: C.mute }}>Instructor</p>\n                  </div>\n                  <motion.div initial={{ scale: 2.4, rotate: -30, opacity: 0 }} animate={{ scale: 1, rotate: 0, opacity: 1 }} transition={{ delay: 0.7, type: \"spring\", stiffness: 300, damping: 14 }} className=\"grid h-20 w-20 shrink-0 place-items-center rounded-full\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}><Award size={40} color={C.ink} /></motion.div>\n                  <div className=\"text-right\">\n                    <p className=\"text-lg font-extrabold leading-none\">{pretty || \"Today\"}</p>\n                    <div className=\"ml-auto mt-1 h-0.5 w-24\" style={{ background: C.ink }} />\n                    <p className=\"text-xs font-extrabold uppercase\" style={{ color: C.mute }}>Date</p>\n                  </div>\n                </div>\n                <p className=\"mt-6 text-xs font-extrabold tracking-widest\" style={{ color: C.mute }}>CERTIFICATE ID · {serial}</p>\n              </div>\n            </motion.div>\n            <div className=\"mt-6 flex flex-col gap-3 sm:flex-row\">\n              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95 }} onClick={() => app.navigate(\"/explore\")} className=\"flex-1 rounded-full px-6 py-4 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}>Find my next course</motion.button>\n              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.95 }} onClick={() => app.navigate(\"/home\")} className=\"flex-1 rounded-full bg-white px-6 py-4 text-lg font-extrabold\" style={{ boxShadow: SHADOW }}>My courses</motion.button>\n            </div>\n          </>\n        )}\n      </div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "LearnlyLogin",
+      "kind": "code",
+      "purpose": "Illustrated scene with a bottom-sheet sign-in (centred card on desktop), Google sign-in",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { GraduationCap } from \"lucide-react\";\n\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\n\nexport type LearnlyLoginProps = { app?: AppHandle };\n\nconst LETTERS = [\n  { ch: \"A\", x: \"9%\", y: \"13%\", c: \"#FF7A59\", r: -12, d: 0 },\n  { ch: \"b\", x: \"76%\", y: \"9%\", c: \"#8E6CF0\", r: 10, d: 0.5 },\n  { ch: \"7\", x: \"86%\", y: \"27%\", c: \"#1FBF9A\", r: -8, d: 1 },\n  { ch: \"Z\", x: \"20%\", y: \"30%\", c: \"#3FA7FF\", r: 14, d: 1.4 },\n  { ch: \"?\", x: \"62%\", y: \"20%\", c: \"#FFB020\", r: -6, d: 0.8 },\n];\n\nfunction GoogleG() {\n  return (\n    <svg width=\"20\" height=\"20\" viewBox=\"0 0 48 48\" aria-hidden=\"true\">\n      <path fill=\"#EA4335\" d=\"M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.5 17.7 9.5 24 9.5z\" />\n      <path fill=\"#4285F4\" d=\"M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z\" />\n      <path fill=\"#FBBC05\" d=\"M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z\" />\n      <path fill=\"#34A853\" d=\"M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z\" />\n    </svg>\n  );\n}\n\nfunction Scene({ reduce }: { reduce: boolean | null }) {\n  const bob = (a: number) => (reduce ? undefined : { y: [0, -a, 0] });\n  const tr = (d: number, dur = 4) => ({ repeat: Infinity, duration: dur, delay: d, ease: \"easeInOut\" as const });\n  return (\n    <div className=\"absolute inset-0 overflow-hidden\" aria-hidden=\"true\" style={{ background: \"linear-gradient(180deg,#FFD97A 0%,#FFE9B8 45%,#FFF7E6 100%)\" }}>\n      <motion.div className=\"absolute left-1/2 top-[6%] h-[420px] w-[420px] -translate-x-1/2 rounded-full\" style={{ background: \"radial-gradient(circle,rgba(255,255,255,.85),rgba(255,255,255,0) 65%)\" }} animate={reduce ? undefined : { scale: [1, 1.08, 1], opacity: [0.8, 1, 0.8] }} transition={tr(0, 5)} />\n      {LETTERS.map((l) => (\n        <motion.div key={l.ch} className=\"absolute grid h-12 w-12 place-items-center rounded-2xl bg-white text-3xl font-extrabold\" style={{ left: l.x, top: l.y, color: l.c, rotate: l.r, boxShadow: \"0 8px 0 rgba(42,31,77,.08)\", fontFamily: FONT }} animate={bob(14)} transition={tr(l.d, 3.6)}>{l.ch}</motion.div>\n      ))}\n      <svg className=\"absolute left-1/2 top-[8%] w-[min(86vw,520px)] -translate-x-1/2 md:top-[5%] md:w-[330px]\" viewBox=\"0 0 400 300\" fill=\"none\">\n        <motion.g animate={reduce ? undefined : { rotate: [-1.5, 1.5, -1.5] }} transition={tr(0, 6)} style={{ transformOrigin: \"290px 40px\" }}>\n          <path d=\"M290 40 L290 110\" stroke=\"#2A1F4D\" strokeWidth=\"6\" strokeLinecap=\"round\" />\n          <path d=\"M250 150 Q290 70 330 150 Z\" fill=\"#FFB020\" stroke=\"#2A1F4D\" strokeWidth=\"6\" strokeLinejoin=\"round\" />\n          <circle cx=\"290\" cy=\"156\" r=\"10\" fill=\"#FFF3C2\" />\n          <path d=\"M262 160 L246 250 L334 250 L318 160 Z\" fill=\"#FFF3C2\" opacity=\".55\" />\n        </motion.g>\n        <rect x=\"70\" y=\"236\" width=\"240\" height=\"40\" rx=\"12\" fill=\"#8E6CF0\" stroke=\"#2A1F4D\" strokeWidth=\"6\" />\n        <rect x=\"90\" y=\"200\" width=\"200\" height=\"36\" rx=\"12\" fill=\"#1FBF9A\" stroke=\"#2A1F4D\" strokeWidth=\"6\" />\n        <rect x=\"110\" y=\"166\" width=\"170\" height=\"34\" rx=\"12\" fill=\"#FF7A59\" stroke=\"#2A1F4D\" strokeWidth=\"6\" />\n        <path d=\"M130 183 H250\" stroke=\"#FFF7E6\" strokeWidth=\"5\" strokeLinecap=\"round\" />\n        <path d=\"M110 256 H290\" stroke=\"#FFF7E6\" strokeWidth=\"5\" strokeLinecap=\"round\" opacity=\".7\" />\n        <path d=\"M140 166 Q175 140 195 160 Q215 140 250 166 L250 150 Q215 124 195 144 Q175 124 140 150 Z\" fill=\"#fff\" stroke=\"#2A1F4D\" strokeWidth=\"5\" strokeLinejoin=\"round\" />\n        <motion.path d=\"M195 96 L202 114 L221 116 L207 129 L211 148 L195 138 L179 148 L183 129 L169 116 L188 114 Z\" fill=\"#FFB020\" stroke=\"#2A1F4D\" strokeWidth=\"5\" strokeLinejoin=\"round\" style={{ transformOrigin: \"195px 122px\" }} animate={reduce ? undefined : { scale: [1, 1.12, 1], rotate: [0, 8, 0] }} transition={tr(0.3, 2.6)} />\n      </svg>\n    </div>\n  );\n}\n\nexport default function LearnlyLogin(props: LearnlyLoginProps) {\n  const app = props.app;\n  const reduce = useReducedMotion();\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n  const [name, setName] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState<string | null>(null);\n  const auth = app ? app.auth : null;\n  const signup = !!auth && auth.mode === \"signup\";\n  const providers = auth && Array.isArray(auth.providers) ? auth.providers : [];\n  const canSignUp = !!auth && !!auth.canSignUp;\n\n  const submit = async () => {\n    if (!auth || busy) return;\n    setBusy(true); setErr(null);\n    try {\n      if (signup) await auth.signUp({ email, password, name });\n      else await auth.signIn(email, password);\n    } catch (e) { setErr(e instanceof Error ? e.message : \"Hmm, that didn't work. Check your details.\"); }\n    setBusy(false);\n  };\n\n  const social = async (p: string) => {\n    if (!auth) return;\n    setErr(null);\n    try { await auth.startProvider(p); } catch (e) { setErr(e instanceof Error ? e.message : \"Couldn't start that sign-in. Try again.\"); }\n  };\n\n  const field = \"w-full rounded-2xl border-2 bg-white px-4 py-3 text-lg font-bold outline-none transition-colors focus:border-[#FFB020]\";\n  const bd = { borderColor: \"rgba(42,31,77,.12)\" };\n\n  return (\n    <div className=\"relative min-h-screen w-full overflow-hidden\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <Scene reduce={reduce} />\n      <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className=\"absolute left-5 top-5 z-10 flex items-center gap-2.5 md:left-8 md:top-7\">\n        <span className=\"grid h-11 w-11 place-items-center rounded-2xl\" style={{ background: C.sun, boxShadow: \"0 5px 0 #E8940A\" }}><GraduationCap size={24} color={C.ink} /></span>\n        <span className=\"text-3xl font-extrabold tracking-tight\">Learnly</span>\n      </motion.div>\n\n      <div className=\"absolute inset-x-0 bottom-0 z-20 md:inset-0 md:flex md:items-center md:justify-center md:px-6\">\n        <motion.div\n          initial={{ y: reduce ? 0 : 520, opacity: reduce ? 0 : 1 }}\n          animate={{ y: 0, opacity: 1 }}\n          transition={{ type: \"spring\", stiffness: 160, damping: 22, delay: 0.1 }}\n          className=\"relative mx-auto w-full max-h-[78vh] overflow-y-auto rounded-t-[36px] bg-white px-6 pb-7 pt-3 md:mt-[34vh] md:max-h-none md:max-w-md md:rounded-[40px] md:px-8 md:pb-8 md:pt-6\"\n          style={{ boxShadow: \"0 -20px 60px -20px rgba(42,31,77,.35)\" }}\n        >\n          <div className=\"mx-auto mb-3 h-1.5 w-12 rounded-full md:hidden\" style={{ background: \"rgba(42,31,77,.15)\" }} />\n          <h1 className=\"text-3xl font-extrabold leading-none\">{signup ? \"Start your streak 🔥\" : \"Welcome back! 👋\"}</h1>\n          <p className=\"mt-1 text-base font-bold\" style={{ color: C.mute }}>{signup ? \"Join free and learn a little every day.\" : \"Your next lesson is waiting.\"}</p>\n\n          {canSignUp && (\n            <div className=\"relative my-4 flex rounded-full p-1\" style={{ background: \"rgba(42,31,77,.07)\" }}>\n              {[{ k: false, t: \"I'm back\" }, { k: true, t: \"Join free\" }].map((tab) => (\n                <button key={tab.t} type=\"button\" onClick={() => auth && auth.setMode(tab.k ? \"signup\" : \"login\")} className=\"relative flex-1 rounded-full py-2 text-base font-extrabold\" style={{ color: signup === tab.k ? C.ink : C.mute }}>\n                  {signup === tab.k && <motion.span layoutId=\"auth-pill\" className=\"absolute inset-0 rounded-full bg-white\" style={{ boxShadow: \"0 2px 8px rgba(42,31,77,.15)\" }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n                  <span className=\"relative\">{tab.t}</span>\n                </button>\n              ))}\n            </div>\n          )}\n\n          <form onSubmit={(e) => { e.preventDefault(); submit(); }} className={canSignUp ? \"\" : \"mt-4\"}>\n            <div className=\"flex flex-col gap-3\">\n              <AnimatePresence initial={false}>\n                {signup && (\n                  <motion.div key=\"name\" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"overflow-hidden\">\n                    <input aria-label=\"Name\" type=\"text\" placeholder=\"Your name\" autoComplete=\"name\" value={name} onChange={(e) => setName(e.target.value)} className={field} style={bd} />\n                  </motion.div>\n                )}\n              </AnimatePresence>\n              <input aria-label=\"Email\" type=\"email\" placeholder=\"Email\" autoComplete=\"email\" value={email} onChange={(e) => setEmail(e.target.value)} className={field} style={bd} />\n              <input aria-label=\"Password\" type=\"password\" placeholder=\"Password\" autoComplete={signup ? \"new-password\" : \"current-password\"} value={password} onChange={(e) => setPassword(e.target.value)} className={field} style={bd} />\n            </div>\n            <AnimatePresence>{err && <motion.p role=\"alert\" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-3 rounded-xl p-3 text-sm font-bold\" style={{ background: \"rgba(255,122,89,.14)\", color: \"#D4492A\" }}>{err}</motion.p>}</AnimatePresence>\n            <motion.button type=\"submit\" disabled={busy} whileHover={reduce ? undefined : { scale: 1.02 }} whileTap={reduce ? undefined : { scale: 0.96, y: 3 }} className=\"mt-4 w-full rounded-full px-6 py-3.5 text-xl font-extrabold\" style={{ background: C.sun, color: C.ink, boxShadow: \"0 6px 0 #E8940A\", opacity: busy ? 0.7 : 1 }}>{busy ? \"One moment…\" : signup ? \"Create my account\" : \"Sign in\"}</motion.button>\n          </form>\n\n          {providers.length > 0 && (\n            <>\n              <div className=\"my-4 flex items-center gap-3 text-sm font-extrabold\" style={{ color: C.mute }}>\n                <span className=\"h-px flex-1\" style={{ background: \"rgba(42,31,77,.12)\" }} />or<span className=\"h-px flex-1\" style={{ background: \"rgba(42,31,77,.12)\" }} />\n              </div>\n              <div className=\"flex flex-col gap-2.5\">\n                {providers.map((p) => (\n                  <motion.button key={p.name} type=\"button\" whileTap={reduce ? undefined : { scale: 0.97 }} onClick={() => social(p.name)} className=\"flex w-full items-center justify-center gap-3 rounded-full border-2 bg-white px-6 py-3 text-lg font-extrabold\" style={bd}>\n                    {p.name === \"google\" ? <GoogleG /> : null}Continue with {p.label}\n                  </motion.button>\n                ))}\n              </div>\n            </>\n          )}\n        </motion.div>\n      </div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "InstructorHome",
+      "kind": "code",
+      "purpose": "Instructor dashboard: stats, my courses, create course, quiz alerts",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion, animate } from \"motion/react\";\nimport { GraduationCap, LogOut, Plus, Users, Trophy, Target, Book, X, AlertTriangle, Check } from \"lucide-react\";\n\ntype R = Record<string, any>;\nconst COV: Record<string, { u: string; e: string; a: string; b: string }> = {\n  Art: { u: \"1513364776144-60967b0f800f\", e: \"🎨\", a: \"#FF7A59\", b: \"#FFB020\" }, Code: { u: \"1555066931-4365d14bab8c\", e: \"💻\", a: \"#8E6CF0\", b: \"#3FA7FF\" },\n  Cooking: { u: \"1509440159596-0249088772ff\", e: \"🍞\", a: \"#FFB020\", b: \"#FF7A59\" }, Photo: { u: \"1516035069371-29a1b244cc32\", e: \"📸\", a: \"#3FA7FF\", b: \"#8E6CF0\" },\n  Languages: { u: \"1543783207-ec64e4d95325\", e: \"🗣️\", a: \"#1FBF9A\", b: \"#3FA7FF\" }, Finance: { u: \"1579621970563-ebec7560ff3e\", e: \"💰\", a: \"#1FBF9A\", b: \"#FFB020\" },\n  Design: { u: \"1561070791-2526d30994b5\", e: \"✏️\", a: \"#8E6CF0\", b: \"#FF7A59\" }, Lifestyle: { u: \"1485955900006-10f4d324d411\", e: \"🪴\", a: \"#1FBF9A\", b: \"#FFB020\" },\n};\nfunction Cover({ c, className }: { c: R; className?: string }) {\n  const [bad, setBad] = useState(false);\n  const k = COV[String(c.category)] || COV.Art;\n  if (bad) return <div className={(className || \"\") + \" grid place-items-center text-6xl\"} style={{ background: \"linear-gradient(135deg,\" + k.a + \",\" + k.b + \")\" }}>{k.e}</div>;\n  return <img src={\"https://images.unsplash.com/photo-\" + k.u + \"?auto=format&fit=crop&w=900&q=70\"} alt={String(c.title)} className={className} onError={() => setBad(true)} />;\n}\nfunction Av({ s, cls }: { s: R | undefined; cls: string }) {\n  const n = String(s ? s.name : \"?\");\n  const hue = [C.coral, C.grape, C.mint, C.sky, C.sun][n.length % 5];\n  return <span className={cls + \" grid shrink-0 place-items-center rounded-full font-extrabold text-white\"} style={{ background: hue }}>{n.split(\" \").map((w) => w[0]).slice(0, 2).join(\"\")}</span>;\n}\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst TINT: Record<string, string> = { Art: C.coral, Code: C.grape, Cooking: C.sun, Photo: C.sky, Languages: C.mint, Finance: C.mint, Design: C.grape, Lifestyle: C.mint };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\nconst SHADOW = \"0 1px 2px rgba(42,31,77,.06), 0 8px 24px -8px rgba(42,31,77,.14), 0 24px 48px -24px rgba(42,31,77,.12)\";\n\nfunction useCount(to: number) {\n  const [v, setV] = useState(0);\n  const reduce = useReducedMotion();\n  useEffect(() => {\n    if (reduce) { setV(to); return; }\n    const a = animate(0, to, { duration: 1, ease: \"easeOut\", onUpdate: (x) => setV(Math.round(x)) });\n    return () => a.stop();\n  }, [to, reduce]);\n  return v;\n}\n\nfunction Stat({ I, label, value, suffix, color }: { I: React.ComponentType<{ size?: number; color?: string }>; label: string; value: number; suffix?: string; color: string }) {\n  const n = useCount(value);\n  return (\n    <div className=\"rounded-[26px] bg-white p-4\" style={{ boxShadow: SHADOW }}>\n      <span className=\"grid h-10 w-10 place-items-center rounded-2xl\" style={{ background: color + \"2E\" }}><I size={20} color={color} /></span>\n      <p className=\"mt-3 text-4xl font-extrabold leading-none\">{n}{suffix}</p>\n      <p className=\"mt-1 text-sm font-bold\" style={{ color: C.mute }}>{label}</p>\n    </div>\n  );\n}\n\nexport type InstructorHomeProps = { app?: AppHandle };\n\nexport default function InstructorHome({ app }: InstructorHomeProps) {\n  const reduce = useReducedMotion();\n  const [open, setOpen] = useState(false);\n  const [title, setTitle] = useState(\"\");\n  const [summary, setSummary] = useState(\"\");\n  const [category, setCategory] = useState(\"Art\");\n  const [level, setLevel] = useState(\"beginner\");\n  const [cover, setCover] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState<string | null>(null);\n\n  const courses = ((app ? app.rows(\"course\") : []) as R[]);\n  const meId = app ? app.me(\"instructor\") : undefined;\n  const mine = courses.filter((c) => c.instructor_id === meId);\n  const me = ((app ? app.rows(\"instructor\") : []) as R[]).find((i) => i.id === meId);\n  const enrolls = (app ? app.rows(\"enrollment\") : []) as R[];\n  const attempts = (app ? app.rows(\"quiz_attempt\") : []) as R[];\n  const students = (app ? app.rows(\"student\") : []) as R[];\n  const lessons = (app ? app.rows(\"lesson\") : []) as R[];\n  const covers = Array.from(new Set(courses.map((c) => String(c.cover)))).slice(0, 8);\n  const passRate = attempts.length ? Math.round((attempts.filter((a) => a.result === \"passed\").length / attempts.length) * 100) : 0;\n  const uniqueStudents = new Set(enrolls.map((e) => e.student_id)).size;\n  const completions = enrolls.filter((e) => e.status === \"completed\").length;\n  const alerts = attempts.filter((a) => a.result === \"failed\").slice(0, 4);\n  const cats = [\"Art\", \"Code\", \"Cooking\", \"Photo\", \"Languages\", \"Finance\", \"Design\", \"Lifestyle\"];\n  const stag = (i: number) => ({ initial: { opacity: 0, y: reduce ? 0 : 22 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.06 * i, type: \"spring\" as const, stiffness: 260, damping: 24 } });\n  if (!app) return null;\n\n  const create = async () => {\n    if (!title.trim() || !summary.trim()) { setErr(\"Give your course a title and a short summary.\"); return; }\n    setBusy(true); setErr(null);\n    try {\n      const row = await app.create(\"course\", { title: title.trim(), summary: summary.trim(), category, level, cover: cover || covers[0] || \"\", instructor_id: meId });\n      setOpen(false); setTitle(\"\"); setSummary(\"\");\n      app.navigate(\"/teach/\" + String((row as R).id));\n    } catch (e) { setErr(e instanceof Error ? e.message : \"Could not create the course.\"); }\n    setBusy(false);\n  };\n\n  const input = \"w-full rounded-2xl border-2 bg-white px-4 py-3 text-base font-bold outline-none focus:border-[#FFB020]\";\n\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden pb-16\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <header className=\"sticky top-0 z-20 px-4 py-3 backdrop-blur\" style={{ background: \"rgba(255,247,230,.9)\" }}>\n        <div className=\"mx-auto flex max-w-6xl items-center gap-3\">\n          <div className=\"grid h-10 w-10 place-items-center rounded-2xl\" style={{ background: C.sun, boxShadow: \"0 4px 0 #E8940A\" }}><GraduationCap size={22} /></div>\n          <span className=\"text-2xl font-extrabold\">Learnly</span>\n          <span className=\"rounded-full px-3 py-1 text-xs font-extrabold\" style={{ background: \"rgba(142,108,240,.16)\", color: C.grape }}>Instructor</span>\n          <button onClick={() => app.auth.signOut()} className=\"ml-auto flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-extrabold\" style={{ boxShadow: SHADOW }}><LogOut size={16} />Sign out</button>\n        </div>\n      </header>\n\n      <div className=\"mx-auto max-w-6xl px-4 pt-4 lg:pt-8\">\n        <div className=\"flex flex-wrap items-center justify-between gap-4\">\n          <div className=\"flex items-center gap-3\">\n            {me && <Av s={me} cls=\"h-14 w-14 text-xl\" />}\n            <div>\n              <motion.p {...stag(0)} className=\"text-sm font-bold\" style={{ color: C.mute }}>Your teaching studio</motion.p>\n              <motion.h1 {...stag(1)} className=\"text-4xl font-extrabold leading-none lg:text-5xl\">Hi {me ? String(me.name).split(\" \")[0] : \"there\"}! 🌻</motion.h1>\n            </div>\n          </div>\n          <motion.button {...stag(2)} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.94 }} onClick={() => setOpen(true)} className=\"flex items-center gap-2 rounded-full px-6 py-3 text-lg font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}><Plus size={20} strokeWidth={3} />New course</motion.button>\n        </div>\n\n        <div className=\"mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5\">\n          <Stat I={Book} label=\"Courses\" value={mine.length} color={C.sun} />\n          <Stat I={Users} label=\"Students\" value={uniqueStudents} color={C.sky} />\n          <Stat I={Trophy} label=\"Completions\" value={completions} color={C.mint} />\n          <Stat I={Target} label=\"Quiz pass rate\" value={passRate} suffix=\"%\" color={C.grape} />\n        </div>\n\n        <div className=\"mt-8 grid gap-6 lg:grid-cols-[1fr_320px]\">\n          <div>\n            <h2 className=\"text-2xl font-extrabold\">My courses</h2>\n            {mine.length === 0 ? (\n              <div className=\"mt-3 rounded-[32px] bg-white p-10 text-center\" style={{ boxShadow: SHADOW }}>\n                <div className=\"text-6xl\">📚</div><p className=\"mt-2 text-2xl font-extrabold\">Create your first course</p>\n                <p className=\"font-bold\" style={{ color: C.mute }}>Add lessons and quizzes, then watch students grow.</p>\n              </div>\n            ) : (\n              <div className=\"mt-3 grid grid-cols-1 gap-5 md:grid-cols-2\">\n                {mine.map((c, i) => {\n                  const es = enrolls.filter((e) => e.course_id === c.id);\n                  const done = es.filter((e) => e.status === \"completed\").length;\n                  const n = lessons.filter((l) => l.course_id === c.id).length;\n                  const at = attempts.filter((a) => a.course_id === c.id);\n                  const avg = at.length ? Math.round((at.reduce((s, a) => s + (Number(a.score) / Math.max(1, Number(a.total))), 0) / at.length) * 100) : 0;\n                  const color = TINT[String(c.category)] || C.sun;\n                  return (\n                    <motion.div key={c.id} {...stag(i + 3)} whileHover={{ y: -6 }} whileTap={{ scale: 0.97 }} role=\"button\" tabIndex={0} onClick={() => app.navigate(\"/teach/\" + c.id)} onKeyDown={(ev) => { if (ev.key === \"Enter\") app.navigate(\"/teach/\" + c.id); }} className=\"group cursor-pointer overflow-hidden rounded-[28px] bg-white\" style={{ boxShadow: SHADOW }}>\n                      <div className=\"relative h-32 overflow-hidden\">\n                        <Cover c={c} className=\"h-full w-full object-cover transition-transform duration-500 group-hover:scale-105\" />\n                        <span className=\"absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-extrabold text-white\" style={{ background: color }}>{String(c.category)}</span>\n                      </div>\n                      <div className=\"p-4\">\n                        <h3 className=\"text-xl font-extrabold leading-tight\">{String(c.title)}</h3>\n                        <div className=\"mt-3 grid grid-cols-4 gap-2 text-center\">\n                          {[{ v: n, l: \"lessons\" }, { v: es.length, l: \"students\" }, { v: done, l: \"finished\" }, { v: avg + \"%\", l: \"avg quiz\" }].map((s) => (\n                            <div key={s.l} className=\"rounded-2xl py-2\" style={{ background: \"rgba(255,176,32,.14)\" }}><p className=\"text-lg font-extrabold leading-none\">{s.v}</p><p className=\"text-[10px] font-extrabold uppercase\" style={{ color: C.mute }}>{s.l}</p></div>\n                          ))}\n                        </div>\n                      </div>\n                    </motion.div>\n                  );\n                })}\n              </div>\n            )}\n          </div>\n\n          <motion.div {...stag(4)} className=\"h-fit rounded-[28px] bg-white p-5\" style={{ boxShadow: SHADOW }}>\n            <div className=\"flex items-center gap-2\"><AlertTriangle size={20} color={C.coral} /><h2 className=\"text-xl font-extrabold\">Needs a cheer</h2></div>\n            <p className=\"text-sm font-bold\" style={{ color: C.mute }}>Recent failed quizzes from your students</p>\n            <div className=\"mt-3 flex flex-col gap-2\">\n              {alerts.length === 0 && <p className=\"flex items-center gap-2 font-bold\" style={{ color: C.mint }}><Check size={18} />Everyone is doing great</p>}\n              {alerts.map((a) => {\n                const s = students.find((x) => x.id === a.student_id);\n                const l = lessons.find((x) => x.id === a.lesson_id);\n                return (\n                  <div key={a.id} className=\"flex items-center gap-3 rounded-2xl p-2\" style={{ background: \"rgba(255,122,89,.1)\" }}>\n                    {s && <Av s={s} cls=\"h-10 w-10 text-sm\" />}\n                    <div className=\"min-w-0 flex-1\"><p className=\"truncate text-sm font-extrabold\">{s ? String(s.name) : \"Student\"}</p><p className=\"truncate text-xs font-bold\" style={{ color: C.mute }}>{l ? String(l.title) : \"Quiz\"}</p></div>\n                    <span className=\"rounded-full px-2.5 py-1 text-xs font-extrabold text-white\" style={{ background: C.coral }}>{Number(a.score)}/{Number(a.total)}</span>\n                  </div>\n                );\n              })}\n            </div>\n          </motion.div>\n        </div>\n      </div>\n\n      <AnimatePresence>\n        {open && (\n          <motion.div key=\"scrim\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} className=\"fixed inset-0 z-40 flex items-end justify-center lg:items-center\" style={{ background: \"rgba(42,31,77,.6)\" }}>\n            <motion.div initial={{ y: 80, opacity: 0, scale: 0.97 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 80, opacity: 0 }} transition={{ type: \"spring\", stiffness: 300, damping: 28 }} onClick={(e) => e.stopPropagation()} className=\"max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[36px] bg-white p-6 lg:rounded-[36px]\">\n              <div className=\"flex items-center\"><h2 className=\"flex-1 text-3xl font-extrabold\">New course</h2><button aria-label=\"Close\" onClick={() => setOpen(false)} className=\"grid h-10 w-10 place-items-center rounded-full\" style={{ background: \"rgba(42,31,77,.08)\" }}><X size={20} /></button></div>\n              <div className=\"mt-4 flex flex-col gap-3\">\n                <input aria-label=\"Course title\" placeholder=\"Course title\" value={title} onChange={(e) => setTitle(e.target.value)} className={input} style={{ borderColor: \"rgba(42,31,77,.12)\" }} />\n                <textarea aria-label=\"Summary\" placeholder=\"What will students learn?\" rows={3} value={summary} onChange={(e) => setSummary(e.target.value)} className={input} style={{ borderColor: \"rgba(42,31,77,.12)\" }} />\n                <div className=\"flex flex-wrap gap-2\">{cats.map((k) => <button key={k} onClick={() => setCategory(k)} className=\"rounded-full px-3 py-1.5 text-sm font-extrabold\" style={{ background: category === k ? C.sun : \"rgba(42,31,77,.07)\" }}>{k}</button>)}</div>\n                <div className=\"flex gap-2\">{[\"beginner\", \"intermediate\", \"advanced\"].map((k) => <button key={k} onClick={() => setLevel(k)} className=\"flex-1 rounded-full px-3 py-2 text-sm font-extrabold capitalize\" style={{ background: level === k ? C.ink : \"rgba(42,31,77,.07)\", color: level === k ? \"#fff\" : C.ink }}>{k}</button>)}</div>\n                <p className=\"text-sm font-extrabold\" style={{ color: C.mute }}>Pick a cover</p>\n                <div className=\"grid grid-cols-4 gap-2\">{covers.map((u) => <button key={u} aria-label=\"Choose cover\" onClick={() => setCover(u)} className=\"relative aspect-square overflow-hidden rounded-2xl\" style={{ boxShadow: (cover || covers[0]) === u ? \"0 0 0 4px \" + C.sun : \"none\" }}><img src={u} alt=\"\" className=\"h-full w-full object-cover\" /></button>)}</div>\n                {err && <p className=\"rounded-xl p-3 text-sm font-bold\" style={{ background: \"rgba(255,122,89,.14)\", color: \"#D4492A\" }}>{err}</p>}\n                <motion.button whileTap={{ scale: 0.95 }} disabled={busy} onClick={create} className=\"mt-1 rounded-full px-6 py-4 text-xl font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}>{busy ? \"Creating…\" : \"Create course\"}</motion.button>\n              </div>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "InstructorCourse",
+      "kind": "code",
+      "purpose": "Instructor course editor: lessons, quiz questions, student progress and quiz scores",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { ArrowLeft, Plus, X, HelpCircle, Users, Book, Check } from \"lucide-react\";\n\ntype R = Record<string, any>;\nconst COV: Record<string, { u: string; e: string; a: string; b: string }> = {\n  Art: { u: \"1513364776144-60967b0f800f\", e: \"🎨\", a: \"#FF7A59\", b: \"#FFB020\" }, Code: { u: \"1555066931-4365d14bab8c\", e: \"💻\", a: \"#8E6CF0\", b: \"#3FA7FF\" },\n  Cooking: { u: \"1509440159596-0249088772ff\", e: \"🍞\", a: \"#FFB020\", b: \"#FF7A59\" }, Photo: { u: \"1516035069371-29a1b244cc32\", e: \"📸\", a: \"#3FA7FF\", b: \"#8E6CF0\" },\n  Languages: { u: \"1543783207-ec64e4d95325\", e: \"🗣️\", a: \"#1FBF9A\", b: \"#3FA7FF\" }, Finance: { u: \"1579621970563-ebec7560ff3e\", e: \"💰\", a: \"#1FBF9A\", b: \"#FFB020\" },\n  Design: { u: \"1561070791-2526d30994b5\", e: \"✏️\", a: \"#8E6CF0\", b: \"#FF7A59\" }, Lifestyle: { u: \"1485955900006-10f4d324d411\", e: \"🪴\", a: \"#1FBF9A\", b: \"#FFB020\" },\n};\nfunction Cover({ c, className }: { c: R; className?: string }) {\n  const [bad, setBad] = useState(false);\n  const k = COV[String(c.category)] || COV.Art;\n  if (bad) return <div className={(className || \"\") + \" grid place-items-center text-6xl\"} style={{ background: \"linear-gradient(135deg,\" + k.a + \",\" + k.b + \")\" }}>{k.e}</div>;\n  return <img src={\"https://images.unsplash.com/photo-\" + k.u + \"?auto=format&fit=crop&w=1400&q=70\"} alt={String(c.title)} className={className} onError={() => setBad(true)} />;\n}\nfunction Av({ s, cls }: { s: R | undefined; cls: string }) {\n  const n = String(s ? s.name : \"?\");\n  const hue = [C.coral, C.grape, C.mint, C.sky, C.sun][n.length % 5];\n  return <span className={cls + \" grid shrink-0 place-items-center rounded-full font-extrabold text-white\"} style={{ background: hue }}>{n.split(\" \").map((w) => w[0]).slice(0, 2).join(\"\")}</span>;\n}\nconst C = { bg: \"#FFF7E6\", ink: \"#2A1F4D\", mute: \"#7B7197\", sun: \"#FFB020\", coral: \"#FF7A59\", mint: \"#1FBF9A\", sky: \"#3FA7FF\", grape: \"#8E6CF0\" };\nconst FONT = \"'Baloo 2','Nunito',ui-rounded,'SF Pro Rounded',system-ui,sans-serif\";\nconst SHADOW = \"0 1px 2px rgba(42,31,77,.06), 0 8px 24px -8px rgba(42,31,77,.14), 0 24px 48px -24px rgba(42,31,77,.12)\";\nconst STATUS: Record<string, { t: string; c: string }> = { enrolled: { t: \"Enrolled\", c: C.sky }, in_progress: { t: \"In progress\", c: C.sun }, completed: { t: \"Completed\", c: C.mint } };\n\nfunction Ring({ value, size = 52, stroke = 6, color = C.sun }: { value: number; size?: number; stroke?: number; color?: string }) {\n  const reduce = useReducedMotion();\n  const r = (size - stroke) / 2;\n  const c = 2 * Math.PI * r;\n  const v = Math.max(0, Math.min(100, value));\n  return (\n    <div className=\"relative shrink-0\" style={{ width: size, height: size }}>\n      <svg width={size} height={size} className=\"-rotate-90\">\n        <circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke=\"rgba(42,31,77,.09)\" strokeWidth={stroke} />\n        <motion.circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke={color} strokeWidth={stroke} strokeLinecap=\"round\" strokeDasharray={c} initial={{ strokeDashoffset: reduce ? c * (1 - v / 100) : c }} animate={{ strokeDashoffset: c * (1 - v / 100) }} transition={{ duration: reduce ? 0 : 1.1, ease: \"easeOut\" }} />\n      </svg>\n      <div className=\"absolute inset-0 grid place-items-center text-xs font-extrabold\">{v}%</div>\n    </div>\n  );\n}\n\nexport type InstructorCourseProps = { app?: AppHandle };\n\nexport default function InstructorCourse({ app }: InstructorCourseProps) {\n  const reduce = useReducedMotion();\n  const id = app ? app.params.id : \"\";\n  const [tab, setTab] = useState<\"lessons\" | \"students\">(\"lessons\");\n  const [sheet, setSheet] = useState<null | { kind: \"lesson\" } | { kind: \"question\"; lessonId: string }>(null);\n  const [f, setF] = useState<Record<string, string>>({ correct: \"a\" });\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState<string | null>(null);\n\n  const course = ((app ? app.rows(\"course\") : []) as R[]).find((c) => c.id === id);\n  const lessons = ((app ? app.rows(\"lesson\") : []) as R[]).filter((l) => l.course_id === id).sort((a, b) => Number(a.position) - Number(b.position));\n  const questions = (app ? app.rows(\"quiz_question\") : []) as R[];\n  const enrolls = ((app ? app.rows(\"enrollment\") : []) as R[]).filter((e) => e.course_id === id);\n  const attempts = ((app ? app.rows(\"quiz_attempt\") : []) as R[]).filter((a) => a.course_id === id);\n  const progress = ((app ? app.rows(\"lesson_progress\") : []) as R[]).filter((p) => p.course_id === id);\n  const students = (app ? app.rows(\"student\") : []) as R[];\n  const allLessons = (app ? app.rows(\"lesson\") : []) as R[];\n  const thumbs = Array.from(new Set(allLessons.map((l) => String(l.thumb)))).slice(0, 6);\n  if (!app) return null;\n  if (!course) return <div className=\"grid min-h-screen place-items-center\" style={{ background: C.bg }}><div className=\"h-40 w-72 animate-pulse rounded-[28px]\" style={{ background: \"rgba(42,31,77,.08)\" }} /></div>;\n  const meId = app.me(\"instructor\");\n  const stag = (i: number) => ({ initial: { opacity: 0, y: reduce ? 0 : 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.05 * i, type: \"spring\" as const, stiffness: 260, damping: 24 } });\n  const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));\n  const close = () => { setSheet(null); setErr(null); setF({ correct: \"a\" }); };\n\n  const save = async () => {\n    if (!sheet) return;\n    setBusy(true); setErr(null);\n    try {\n      if (sheet.kind === \"lesson\") {\n        if (!f.title || !f.body) { setErr(\"Add a title and some lesson text.\"); setBusy(false); return; }\n        await app.create(\"lesson\", { course_id: id, instructor_id: meId, position: lessons.length + 1, title: f.title, body: f.body, thumb: f.thumb || thumbs[0] || String(course.cover), minutes: Number(f.minutes) || 5 });\n      } else {\n        if (!f.prompt || !f.option_a || !f.option_b) { setErr(\"Add a question and at least two options.\"); setBusy(false); return; }\n        await app.create(\"quiz_question\", { lesson_id: sheet.lessonId, instructor_id: meId, prompt: f.prompt, option_a: f.option_a, option_b: f.option_b, option_c: f.option_c || \"None of these\", option_d: f.option_d || \"All of these\", correct: f.correct || \"a\", explanation: f.explanation || \"\" });\n      }\n      close();\n    } catch (e) { setErr(e instanceof Error ? e.message : \"Could not save.\"); }\n    setBusy(false);\n  };\n\n  const inp = \"w-full rounded-2xl border-2 bg-white px-4 py-3 text-base font-bold outline-none focus:border-[#FFB020]\";\n  const bd = { borderColor: \"rgba(42,31,77,.12)\" };\n\n  const lessonsPane = (\n    <div className={tab === \"lessons\" ? \"block\" : \"hidden lg:block\"}>\n      <div className=\"flex items-center\"><h2 className=\"flex-1 text-2xl font-extrabold\">Lessons &amp; quizzes</h2>\n        <motion.button whileTap={{ scale: 0.93 }} whileHover={{ scale: 1.04 }} onClick={() => setSheet({ kind: \"lesson\" })} className=\"flex items-center gap-1 rounded-full px-4 py-2 text-sm font-extrabold\" style={{ background: C.sun, boxShadow: \"0 4px 0 #E8940A\" }}><Plus size={16} strokeWidth={3} />Add lesson</motion.button></div>\n      <div className=\"mt-3 flex flex-col gap-3\">\n        {lessons.length === 0 && <div className=\"rounded-[28px] bg-white p-8 text-center font-bold\" style={{ boxShadow: SHADOW, color: C.mute }}>No lessons yet. Add your first one!</div>}\n        {lessons.map((l, i) => {\n          const qs = questions.filter((q) => q.lesson_id === l.id);\n          return (\n            <motion.div key={l.id} layout {...stag(i)} className=\"flex items-center gap-3 rounded-[24px] bg-white p-3\" style={{ boxShadow: SHADOW }}>\n              <Cover c={course} className=\"h-16 w-20 shrink-0 rounded-2xl object-cover\" />\n              <div className=\"min-w-0 flex-1\">\n                <p className=\"text-xs font-extrabold uppercase\" style={{ color: C.mute }}>Lesson {i + 1} · {Number(l.minutes)} min</p>\n                <h3 className=\"truncate text-lg font-extrabold leading-tight\">{String(l.title)}</h3>\n                <p className=\"flex items-center gap-1 text-xs font-bold\" style={{ color: C.grape }}><HelpCircle size={14} />{qs.length} quiz question{qs.length === 1 ? \"\" : \"s\"}</p>\n              </div>\n              <motion.button whileTap={{ scale: 0.92 }} onClick={() => setSheet({ kind: \"question\", lessonId: String(l.id) })} aria-label=\"Add question\" className=\"flex items-center gap-1 rounded-full px-3 py-2 text-xs font-extrabold\" style={{ background: \"rgba(142,108,240,.16)\", color: C.grape }}><Plus size={14} strokeWidth={3} />Question</motion.button>\n            </motion.div>\n          );\n        })}\n      </div>\n    </div>\n  );\n\n  const studentsPane = (\n    <div className={tab === \"students\" ? \"block\" : \"hidden lg:block\"}>\n      <h2 className=\"text-2xl font-extrabold\">Students</h2>\n      <div className=\"mt-3 flex flex-col gap-3\">\n        {enrolls.length === 0 && <div className=\"rounded-[28px] bg-white p-8 text-center font-bold\" style={{ boxShadow: SHADOW, color: C.mute }}>No students yet.</div>}\n        {enrolls.map((e, i) => {\n          const s = students.find((x) => x.id === e.student_id);\n          const done = progress.filter((p) => p.student_id === e.student_id).length;\n          const pct = e.status === \"completed\" ? 100 : Math.round((done / Math.max(1, lessons.length)) * 100);\n          const st = STATUS[String(e.status)] || STATUS.enrolled;\n          return (\n            <motion.div key={e.id} layout {...stag(i)} className=\"rounded-[24px] bg-white p-4\" style={{ boxShadow: SHADOW }}>\n              <div className=\"flex items-center gap-3\">\n                {s && <Av s={s} cls=\"h-12 w-12 text-lg\" />}\n                <div className=\"min-w-0 flex-1\"><p className=\"truncate text-lg font-extrabold leading-tight\">{s ? String(s.name) : \"Student\"}</p><span className=\"rounded-full px-2.5 py-0.5 text-xs font-extrabold text-white\" style={{ background: st.c }}>{st.t}</span></div>\n                <Ring value={pct} color={st.c} />\n              </div>\n              <div className=\"mt-3 flex flex-wrap gap-2\">\n                {lessons.map((l, li) => {\n                  const tries = attempts.filter((a) => a.student_id === e.student_id && a.lesson_id === l.id);\n                  const best = tries.reduce<R | null>((m, a) => (!m || Number(a.score) > Number(m.score) ? a : m), null);\n                  const ok = tries.some((a) => a.result === \"passed\");\n                  return (\n                    <span key={l.id} className=\"flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold\" style={{ background: !best ? \"rgba(42,31,77,.07)\" : ok ? \"rgba(31,191,154,.16)\" : \"rgba(255,122,89,.16)\", color: !best ? C.mute : ok ? \"#0E8F73\" : \"#D4492A\" }}>\n                      L{li + 1} {best ? Number(best.score) + \"/\" + Number(best.total) : \"–\"}{tries.length > 0 && <span className=\"opacity-70\">· {tries.length}x</span>}\n                    </span>\n                  );\n                })}\n              </div>\n            </motion.div>\n          );\n        })}\n      </div>\n    </div>\n  );\n\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden pb-16\" style={{ background: C.bg, color: C.ink, fontFamily: FONT }}>\n      <style>{\"@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap');\"}</style>\n      <div className=\"mx-auto max-w-6xl lg:px-8 lg:pt-6\">\n        <div className=\"relative h-52 overflow-hidden lg:h-60 lg:rounded-[36px]\" style={{ boxShadow: SHADOW }}>\n          <Cover c={course} className=\"h-full w-full object-cover\" />\n          <div className=\"absolute inset-0\" style={{ background: \"linear-gradient(180deg,rgba(42,31,77,.3),rgba(42,31,77,.8))\" }} />\n          <motion.button whileTap={{ scale: 0.88 }} onClick={() => app.navigate(\"/teach\")} aria-label=\"Back\" className=\"absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white\"><ArrowLeft size={22} /></motion.button>\n          <div className=\"absolute inset-x-0 bottom-0 p-5 text-white lg:p-8\">\n            <p className=\"text-sm font-extrabold uppercase tracking-wide opacity-80\">{String(course.category)} · {String(course.level)}</p>\n            <h1 className=\"text-4xl font-extrabold leading-none lg:text-5xl\">{String(course.title)}</h1>\n            <p className=\"mt-1 text-sm font-bold opacity-90\">{lessons.length} lessons · {enrolls.length} students · {enrolls.filter((e) => e.status === \"completed\").length} finished</p>\n          </div>\n        </div>\n\n        <div className=\"relative mx-4 mt-4 flex rounded-full p-1 lg:hidden\" style={{ background: \"rgba(42,31,77,.07)\" }}>\n          {([{ k: \"lessons\", t: \"Lessons\", I: Book }, { k: \"students\", t: \"Students\", I: Users }] as const).map((x) => (\n            <button key={x.k} onClick={() => setTab(x.k)} className=\"relative flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-base font-extrabold\" style={{ color: tab === x.k ? C.ink : C.mute }}>\n              {tab === x.k && <motion.span layoutId=\"ic-tab\" className=\"absolute inset-0 rounded-full bg-white\" style={{ boxShadow: SHADOW }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n              <span className=\"relative flex items-center gap-1.5\"><x.I size={18} />{x.t}</span>\n            </button>\n          ))}\n        </div>\n\n        <div className=\"mt-6 grid gap-8 px-4 lg:grid-cols-2 lg:px-0\">{lessonsPane}{studentsPane}</div>\n      </div>\n\n      <AnimatePresence>\n        {sheet && (\n          <motion.div key=\"scrim\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close} className=\"fixed inset-0 z-40 flex items-end justify-center lg:items-center\" style={{ background: \"rgba(42,31,77,.6)\" }}>\n            <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }} transition={{ type: \"spring\", stiffness: 300, damping: 28 }} onClick={(e) => e.stopPropagation()} className=\"max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[36px] bg-white p-6 lg:rounded-[36px]\">\n              <div className=\"flex items-center\"><h2 className=\"flex-1 text-3xl font-extrabold\">{sheet.kind === \"lesson\" ? \"New lesson\" : \"New quiz question\"}</h2><button aria-label=\"Close\" onClick={close} className=\"grid h-10 w-10 place-items-center rounded-full\" style={{ background: \"rgba(42,31,77,.08)\" }}><X size={20} /></button></div>\n              <div className=\"mt-4 flex flex-col gap-3\">\n                {sheet.kind === \"lesson\" ? (\n                  <>\n                    <input aria-label=\"Lesson title\" placeholder=\"Lesson title\" value={f.title || \"\"} onChange={(e) => set(\"title\", e.target.value)} className={inp} style={bd} />\n                    <textarea aria-label=\"Lesson text\" placeholder=\"Write the lesson…\" rows={5} value={f.body || \"\"} onChange={(e) => set(\"body\", e.target.value)} className={inp} style={bd} />\n                    <input aria-label=\"Minutes\" type=\"number\" placeholder=\"Minutes\" value={f.minutes || \"\"} onChange={(e) => set(\"minutes\", e.target.value)} className={inp} style={bd} />\n                    <p className=\"text-sm font-extrabold\" style={{ color: C.mute }}>Video thumbnail</p>\n                    <div className=\"grid grid-cols-3 gap-2\">{thumbs.map((u) => <button key={u} aria-label=\"Choose thumbnail\" onClick={() => set(\"thumb\", u)} className=\"aspect-video overflow-hidden rounded-2xl\" style={{ boxShadow: (f.thumb || thumbs[0]) === u ? \"0 0 0 4px \" + C.sun : \"none\" }}><img src={u} alt=\"\" className=\"h-full w-full object-cover\" /></button>)}</div>\n                  </>\n                ) : (\n                  <>\n                    <textarea aria-label=\"Question\" placeholder=\"Question\" rows={2} value={f.prompt || \"\"} onChange={(e) => set(\"prompt\", e.target.value)} className={inp} style={bd} />\n                    {[\"a\", \"b\", \"c\", \"d\"].map((L) => (\n                      <div key={L} className=\"flex items-center gap-2\">\n                        <button aria-label={\"Mark \" + L + \" correct\"} onClick={() => set(\"correct\", L)} className=\"grid h-11 w-11 shrink-0 place-items-center rounded-xl text-base font-extrabold uppercase\" style={{ background: f.correct === L ? C.mint : \"rgba(42,31,77,.08)\", color: f.correct === L ? \"#fff\" : C.ink }}>{f.correct === L ? <Check size={20} strokeWidth={3} /> : L}</button>\n                        <input aria-label={\"Option \" + L} placeholder={\"Option \" + L.toUpperCase()} value={f[\"option_\" + L] || \"\"} onChange={(e) => set(\"option_\" + L, e.target.value)} className={inp} style={bd} />\n                      </div>\n                    ))}\n                    <p className=\"text-xs font-bold\" style={{ color: C.mute }}>Tap a letter to mark the correct answer.</p>\n                    <input aria-label=\"Explanation\" placeholder=\"Explanation (optional)\" value={f.explanation || \"\"} onChange={(e) => set(\"explanation\", e.target.value)} className={inp} style={bd} />\n                  </>\n                )}\n                {err && <p className=\"rounded-xl p-3 text-sm font-bold\" style={{ background: \"rgba(255,122,89,.14)\", color: \"#D4492A\" }}>{err}</p>}\n                <motion.button whileTap={{ scale: 0.95 }} disabled={busy} onClick={save} className=\"rounded-full px-6 py-4 text-xl font-extrabold\" style={{ background: C.sun, boxShadow: \"0 6px 0 #E8940A\" }}>{busy ? \"Saving…\" : \"Save\"}</motion.button>\n              </div>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "demo_logins": [
+    {
+      "persona": "student",
+      "row": "518bb420-98b6-5acc-8c22-0a2f5d2a7a5f"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "lesson-done",
+      "title": "Track lesson completion",
+      "on": {
+        "entity": "lesson_progress",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const enrs = await ctx.db.list('enrollment'); const enr = enrs.find(e => String(e.student_id) === String(row.student_id) && String(e.course_id) === String(row.course_id)); if (!enr) { return; } const prog = (await ctx.db.list('lesson_progress')).filter(p => String(p.student_id) === String(row.student_id) && String(p.course_id) === String(row.course_id)); const total = (await ctx.db.list('lesson')).filter(l => String(l.course_id) === String(row.course_id)).length; const done = prog.length; await ctx.db.update('enrollment', String(enr.id), { done_lessons: done, total_lessons: total, status: done >= total ? 'completed' : 'in_progress' });",
+          "checked": "71c13ddb5338bcb9"
+        }
+      ]
+    },
+    {
+      "id": "course-completed",
+      "title": "Celebrate a completed course",
+      "on": {
+        "entity": "enrollment",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "completed"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "role": "student",
+          "to": {
+            "ref": "student_id",
+            "entity": "student"
+          },
+          "title": "Course complete! 🎉",
+          "body": "You finished every lesson. Your certificate is ready."
+        }
+      ]
+    },
+    {
+      "id": "quiz-failed",
+      "title": "Tell instructors about a failing quiz",
+      "on": {
+        "entity": "quiz_attempt",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "if (String(row.result) !== 'failed') { return; } ctx.notify({ role: 'instructor', title: 'A student failed a quiz', body: 'Scored ' + String(row.score) + ' out of ' + String(row.total) + '. They may need encouragement.' });",
+          "checked": "1326131d6cae8f6b"
+        }
+      ]
+    }
+  ]
+}

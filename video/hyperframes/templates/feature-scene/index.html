@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Appbricx feature scene (HyperFrames, 1280x720, 7 s): chapter label, heading, three goodies and a
+     real footage clip in a window frame. Put the clip at assets/clips/feature.mp4 and choose where it
+     starts with the data-media-start attribute on #feature-video (scripts/make-block.sh --clip does both). -->
+<html lang="en" data-composition-variables='[
+  {"id":"theme","type":"enum","label":"Theme","options":[{"value":"dark","label":"Dark"},{"value":"light","label":"Light"}],"default":"dark","role":"style"},
+  {"id":"kicker","type":"string","label":"Kicker","default":"Chapter 2","role":"content"},
+  {"id":"label","type":"string","label":"Label","default":"Data","role":"content"},
+  {"id":"heading","type":"string","label":"Heading","default":"A real Postgres backend, already wired.","role":"content"},
+  {"id":"good1","type":"string","label":"Goodie 1","default":"Roles and private rows","role":"content"},
+  {"id":"good2","type":"string","label":"Goodie 2","default":"Realtime","role":"content"},
+  {"id":"good3","type":"string","label":"Goodie 3","default":"Dev and Prod","role":"content"},
+  {"id":"badge","type":"string","label":"Footage badge","default":"Real footage","role":"content"}
+]'>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=1280, height=720" />
+<script src="assets/vendor/gsap.min.js"></script><link rel="stylesheet" href="assets/brand.css" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: var(--bg); }
+  #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+  .clip { position: absolute; inset: 0; }
+  .glow { position: absolute; width: 900px; height: 900px; left: 190px; top: -260px; border-radius: 50%; background: radial-gradient(circle, var(--glow) 0%, transparent 62%); }
+  .num { position: absolute; left: 70px; top: 176px; font-size: 18px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .label { position: absolute; left: 70px; top: 204px; font-size: 64px; font-weight: 820; letter-spacing: -0.045em; }
+  .head { position: absolute; left: 70px; top: 292px; width: 440px; font-size: 30px; line-height: 1.2; font-weight: 650; }
+  .goods { position: absolute; left: 70px; top: 420px; display: flex; flex-direction: column; gap: 10px; }
+  .goods span { align-self: flex-start; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 18px; font-weight: 600; color: var(--ink-2); }
+  .goods span::before { content: "\2713  "; color: var(--accent); }
+  .frame { position: absolute; left: 560px; top: 150px; width: 660px; height: 400px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+  .frame .fb { position: absolute; right: 12px; top: 5px; height: 18px; padding: 0 9px; border-radius: 999px; background: var(--glow); color: var(--accent); font-size: 11px; line-height: 18px; font-weight: 650; }
+  video { position: absolute; left: 560px; top: 178px; width: 660px; height: 372px; z-index: 3; object-fit: cover; border-radius: 0 0 14px 14px; }
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7" data-width="1280" data-height="720" data-fps="30">
+  <div class="clip" data-start="0" data-duration="7" data-track-index="0"><div class="glow"></div></div>
+  <section id="scene" class="clip" data-start="0" data-duration="7" data-track-index="1">
+    <div class="num" data-var-text="kicker">Chapter 2</div><div class="label" data-var-text="label">Data</div>
+    <div class="head" data-var-text="heading">A real Postgres backend, already wired.</div>
+    <div class="goods"><span data-var-text="good1">Roles and private rows</span><span data-var-text="good2">Realtime</span><span data-var-text="good3">Dev and Prod</span></div>
+    <div class="frame"><div class="fb" data-var-text="badge">Real footage</div></div>
+  </section>
+  <video id="feature-video" src="assets/clips/feature.mp4" muted playsinline data-start="0.3" data-duration="6.4" data-media-start="0" data-track-index="2"></video>
+</div>
+<script>
+  var v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  document.documentElement.setAttribute('data-theme', v.theme === 'light' ? 'light' : 'dark');
+  var tl = gsap.timeline({ paused: true });
+  tl.from('.num', { opacity: 0, duration: 0.4 }, 0).from('.label', { opacity: 0, x: -30, duration: 0.5 }, 0.05)
+    .from('.head', { opacity: 0, y: 16, duration: 0.5 }, 0.25).from('.goods span', { opacity: 0, x: -16, duration: 0.35, stagger: 0.18 }, 0.6)
+    .from('.frame', { opacity: 0, y: 30, duration: 0.5 }, 0.1).fromTo('#feature-video', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.3)
+    .to('#scene, #feature-video', { opacity: 0, duration: 0.3 }, 6.7);
+  window.__timelines = { main: tl };
+</script>
+</body></html>

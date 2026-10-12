@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- Appbricx end card (HyperFrames, 1280x720, 5 s). -->
+<html lang="en" data-composition-variables='[
+  {"id":"theme","type":"enum","label":"Theme","options":[{"value":"dark","label":"Dark"},{"value":"light","label":"Light"}],"default":"dark","role":"style"},
+  {"id":"endHeadline","type":"string","label":"Headline","default":"Your coding agent builds it. Appbricx runs it.","role":"content"},
+  {"id":"ctaUrl","type":"string","label":"CTA","default":"appbricx.com","role":"content"},
+  {"id":"endNote","type":"string","label":"Note","default":"Try ten live demo apps at appbricx.com/showcase","role":"content"}
+]'>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=1280, height=720" />
+<script src="assets/vendor/gsap.min.js"></script><link rel="stylesheet" href="assets/brand.css" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: var(--bg); }
+  #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+  .clip { position: absolute; inset: 0; }
+  #end { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .brandrow { display: flex; align-items: center; gap: 14px; font-weight: 650; font-size: 34px; }
+  .brandrow img { width: 56px; height: 56px; }
+  h2 { margin-top: 34px; font-size: 54px; font-weight: 750; letter-spacing: -0.035em; max-width: 1040px; line-height: 1.05; }
+  .cta { margin-top: 34px; padding: 16px 38px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 44px; font-weight: 750; }
+  p { margin-top: 26px; font-size: 22px; color: var(--ink-2); }
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1280" data-height="720" data-fps="30">
+  <section id="end" class="clip" data-start="0" data-duration="5" data-track-index="1">
+    <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+    <h2 data-var-text="endHeadline">Your coding agent builds it. Appbricx runs it.</h2>
+    <div class="cta" data-var-text="ctaUrl">appbricx.com</div>
+    <p data-var-text="endNote">Try ten live demo apps at appbricx.com/showcase</p>
+  </section>
+</div>
+<script>
+  var v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  document.documentElement.setAttribute('data-theme', v.theme === 'light' ? 'light' : 'dark');
+  var tl = gsap.timeline({ paused: true });
+  tl.from('.brandrow', { opacity: 0, y: 20, duration: 0.5 }, 0.2).from('h2', { opacity: 0, y: 24, duration: 0.6 }, 0.35)
+    .from('.cta', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.8)' }, 0.6).from('p', { opacity: 0, duration: 0.5 }, 0.9)
+    .to({}, { duration: 0.01 }, 4.99);
+  window.__timelines = { main: tl };
+</script>
+</body></html>

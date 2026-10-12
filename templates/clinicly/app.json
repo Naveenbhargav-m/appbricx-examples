@@ -1,0 +1,1496 @@
+{
+  "app": {
+    "name": "Clinicly",
+    "tagline": "Care that fits your day",
+    "theme": "ocean-teal",
+    "nav_style": "topbar",
+    "density": "comfortable",
+    "brand_icon": "HeartPulse",
+    "brand_color": "#12A594",
+    "direction": "editorial"
+  },
+  "personas": [
+    {
+      "id": "patient",
+      "label": "Patient",
+      "description": "books and tracks visits",
+      "kind": "consumer"
+    },
+    {
+      "id": "doctor",
+      "label": "Doctor",
+      "description": "sees patients and writes notes",
+      "kind": "staff"
+    },
+    {
+      "id": "desk",
+      "label": "Front desk",
+      "description": "checks patients in and reschedules",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": {
+    "primaryVerb": "book",
+    "inventoryShape": "shelf",
+    "moneySurface": "per-slot"
+  },
+  "basket": null,
+  "entities": [
+    {
+      "name": "patient",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "photo",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "dob",
+          "type": "date",
+          "optional": true
+        },
+        {
+          "name": "allergies",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "patient": {
+          "read": "own",
+          "update": "own"
+        },
+        "doctor": {
+          "read": "none",
+          "create": false,
+          "update": "none"
+        },
+        "desk": {
+          "read": "all",
+          "update": "all"
+        }
+      },
+      "owner_refs": []
+    },
+    {
+      "name": "doctor",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "specialty",
+          "type": "enum",
+          "enum_values": [
+            "General Practice",
+            "Cardiology",
+            "Dermatology",
+            "Pediatrics",
+            "Neurology",
+            "Orthopedics",
+            "Mental Health"
+          ]
+        },
+        {
+          "name": "photo",
+          "type": "image"
+        },
+        {
+          "name": "rating",
+          "type": "number"
+        },
+        {
+          "name": "review_count",
+          "type": "number"
+        },
+        {
+          "name": "years_experience",
+          "type": "number"
+        },
+        {
+          "name": "bio",
+          "type": "text"
+        },
+        {
+          "name": "room",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "patient": {
+          "read": "all",
+          "create": false,
+          "update": "none"
+        },
+        "doctor": {
+          "read": "all",
+          "update": "own"
+        },
+        "desk": {
+          "read": "all"
+        }
+      }
+    },
+    {
+      "name": "desk",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "photo",
+          "type": "image",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "appointment",
+      "label_field": "reason",
+      "fields": [
+        {
+          "name": "patient_id",
+          "type": "ref",
+          "ref": "patient"
+        },
+        {
+          "name": "doctor_id",
+          "type": "ref",
+          "ref": "doctor"
+        },
+        {
+          "name": "patient_name",
+          "type": "text"
+        },
+        {
+          "name": "patient_photo",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "patient_info",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "doctor_name",
+          "type": "text"
+        },
+        {
+          "name": "starts_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "ends_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "reason",
+          "type": "text"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "booked",
+            "checked_in",
+            "completed",
+            "cancelled"
+          ]
+        },
+        {
+          "name": "prep_notes",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "reminded",
+          "type": "boolean",
+          "optional": true
+        }
+      ],
+      "access": {
+        "patient": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "none"
+        },
+        "doctor": {
+          "create": false,
+          "read": "own",
+          "update": "own",
+          "delete": "none"
+        },
+        "desk": {
+          "create": true,
+          "read": "all",
+          "update": "all",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "patient_id",
+        "doctor_id"
+      ],
+      "actor_ref": "patient_id",
+      "rules": [
+        {
+          "id": "no-double-booking",
+          "on": "both",
+          "message": "That time is not available.",
+          "check": "const old = ctx.old || {}; const r2 = Object.assign({}, old, row); if (String(r2.status) === 'cancelled') return true; if (ctx.old && String(old.starts_at) === String(r2.starts_at) && String(old.ends_at) === String(r2.ends_at) && String(old.doctor_id) === String(r2.doctor_id) && String(old.status) !== 'cancelled') return true; const s = new Date(String(r2.starts_at)); const e = new Date(String(r2.ends_at)); if (isNaN(s.getTime()) || isNaN(e.getTime()) || e.getTime() <= s.getTime()) return 'Choose a valid start and end time.'; const sm = s.getUTCHours() * 60 + s.getUTCMinutes(); const em = e.getUTCHours() * 60 + e.getUTCMinutes(); if (s.toISOString().slice(0, 10) !== e.toISOString().slice(0, 10) || sm < 480 || em > 1080) return 'Appointments must fall within clinic hours (08:00-18:00).'; const q = await ctx.db.query('select appointment_id from slot where doctor_id = $1 and active = true and starts_at < $2::timestamptz and ends_at > $3::timestamptz and appointment_id is distinct from $4::uuid', [String(r2.doctor_id), e.toISOString(), s.toISOString(), ctx.old ? String(old.id) : null]); const rows = Array.isArray(q) ? q : ((q && q.rows) || []); if (rows.length > 0) return 'This doctor already has an appointment at that time.'; return true;"
+        }
+      ]
+    },
+    {
+      "name": "slot",
+      "label_field": "starts_at",
+      "fields": [
+        {
+          "name": "appointment_id",
+          "type": "ref",
+          "ref": "appointment"
+        },
+        {
+          "name": "doctor_id",
+          "type": "ref",
+          "ref": "doctor"
+        },
+        {
+          "name": "starts_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "ends_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        }
+      ],
+      "access": {
+        "patient": {
+          "read": "all",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "doctor": {
+          "read": "all",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "desk": {
+          "read": "all",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": []
+    },
+    {
+      "name": "visit_note",
+      "label_field": "diagnosis",
+      "fields": [
+        {
+          "name": "appointment_id",
+          "type": "ref",
+          "ref": "appointment"
+        },
+        {
+          "name": "patient_id",
+          "type": "ref",
+          "ref": "patient"
+        },
+        {
+          "name": "doctor_id",
+          "type": "ref",
+          "ref": "doctor"
+        },
+        {
+          "name": "summary",
+          "type": "text"
+        },
+        {
+          "name": "diagnosis",
+          "type": "text"
+        },
+        {
+          "name": "plan",
+          "type": "text"
+        },
+        {
+          "name": "follow_up",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "patient": {
+          "create": false,
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        },
+        "doctor": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "none"
+        },
+        "desk": {
+          "create": false,
+          "read": "none",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "patient_id",
+        "doctor_id"
+      ]
+    },
+    {
+      "name": "reminder",
+      "label_field": "message",
+      "fields": [
+        {
+          "name": "appointment_id",
+          "type": "ref",
+          "ref": "appointment"
+        },
+        {
+          "name": "patient_id",
+          "type": "ref",
+          "ref": "patient"
+        },
+        {
+          "name": "message",
+          "type": "text"
+        }
+      ],
+      "access": {
+        "patient": {
+          "create": false,
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        },
+        "doctor": {
+          "read": "none",
+          "create": false
+        },
+        "desk": {
+          "read": "all",
+          "create": false
+        }
+      },
+      "owner_refs": [
+        "patient_id"
+      ]
+    }
+  ],
+  "seeds": {
+    "patient": [
+      {
+        "id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "name": "Jordan Ellis",
+        "photo": "/assets/f25bf3cbdf227784.svg",
+        "phone": "+1 555 0110",
+        "dob": "1984-11-02T00:00:00.000Z",
+        "allergies": "None known"
+      },
+      {
+        "id": "29c4e317-ce25-5bdf-8e97-06b0b5fcc73b",
+        "name": "Sofia Alvarez",
+        "photo": "/assets/150f106509d2224e.svg",
+        "phone": "+1 555 0111",
+        "dob": "1976-07-23T00:00:00.000Z",
+        "allergies": "Latex"
+      },
+      {
+        "id": "91a64522-bb52-5ac5-a906-a488c7ab1e10",
+        "name": "Henry Walsh",
+        "photo": "/assets/ad64f75f0f840bec.svg",
+        "phone": "+1 555 0112",
+        "dob": "1958-02-09T00:00:00.000Z",
+        "allergies": "None known"
+      },
+      {
+        "id": "ee6bbf4b-52e5-53bd-afc9-b68a5ad61097",
+        "name": "Aisha Rahman",
+        "photo": "/assets/488d72a58b7c2980.svg",
+        "phone": "+1 555 0113",
+        "dob": "1999-09-30T00:00:00.000Z",
+        "allergies": "Peanuts"
+      },
+      {
+        "id": "4977bab3-1413-5fae-97fa-bb9709512d02",
+        "name": "Tom Becker",
+        "photo": "/assets/87ddeda1aa192d38.svg",
+        "phone": "+1 555 0114",
+        "dob": "1988-12-14T00:00:00.000Z",
+        "allergies": "None known"
+      },
+      {
+        "id": "7d3d4903-86ab-5fdb-aa45-5aadbc37a8b2",
+        "name": "Lena Fischer",
+        "photo": "/assets/f1383cfeada3a25e.svg",
+        "phone": "+1 555 0115",
+        "dob": "1995-05-05T00:00:00.000Z",
+        "allergies": "Dust mites"
+      },
+      {
+        "id": "8fce228a-75d5-5fcd-be38-4f2d0164bea9",
+        "name": "Noah Kim",
+        "photo": "/assets/ddabfa202588ec4b.svg",
+        "phone": "+1 555 0116",
+        "dob": "2012-03-21T00:00:00.000Z",
+        "allergies": "None known"
+      },
+      {
+        "id": "82cb8c32-efc2-5f1b-8c2f-ed88c5769c9c",
+        "name": "Grace Mbeki",
+        "photo": "/assets/314445750582b7d5.svg",
+        "phone": "+1 555 0117",
+        "dob": "1962-08-11T00:00:00.000Z",
+        "allergies": "Sulfa drugs"
+      },
+      {
+        "id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "name": "Maya Chen",
+        "photo": "/assets/7543138331cf972a.svg",
+        "phone": "+1 555 0118",
+        "dob": "1991-04-18T00:00:00.000Z",
+        "allergies": "Penicillin"
+      }
+    ],
+    "doctor": [
+      {
+        "id": "e9547eba-11e5-5342-900a-3fe51d4bc70f",
+        "name": "Dr. Lucas Bergmann",
+        "specialty": "Pediatrics",
+        "photo": "/assets/7e4b90c09008e857.svg",
+        "rating": 4.7,
+        "review_count": 241,
+        "years_experience": 9,
+        "bio": "Pediatrician who makes check-ups feel like play, from newborns to teens.",
+        "room": "Room 1"
+      },
+      {
+        "id": "787faa75-7000-5d6f-aa0d-b5fd1b729886",
+        "name": "Dr. Priya Nair",
+        "specialty": "Dermatology",
+        "photo": "/assets/6821d120d8d273b6.svg",
+        "rating": 4.9,
+        "review_count": 356,
+        "years_experience": 11,
+        "bio": "Skin health for every age: acne, eczema, mole checks and gentle cosmetic care.",
+        "room": "Room 3"
+      },
+      {
+        "id": "80832294-653e-508b-84b7-2df0b9fe78c7",
+        "name": "Dr. Sofia Marchetti",
+        "specialty": "Neurology",
+        "photo": "/assets/bc8561ec6059303a.svg",
+        "rating": 4.8,
+        "review_count": 198,
+        "years_experience": 16,
+        "bio": "Neurologist for migraines, sleep and memory concerns, with a patient-first approach.",
+        "room": "Room 6"
+      },
+      {
+        "id": "f48c0595-f3e0-5529-9134-8ff4611f2e8e",
+        "name": "Dr. Kwame Mensah",
+        "specialty": "Orthopedics",
+        "photo": "/assets/9e98882c6deacb76.svg",
+        "rating": 4.6,
+        "review_count": 173,
+        "years_experience": 20,
+        "bio": "Orthopedic care for sports injuries, joints and getting you moving again.",
+        "room": "Room 5"
+      },
+      {
+        "id": "4422d5d9-cab3-5e2d-a03d-a73f7804ee76",
+        "name": "Dr. Hannah Cho",
+        "specialty": "Mental Health",
+        "photo": "/assets/ca84f382ccb3b7bf.svg",
+        "rating": 5,
+        "review_count": 129,
+        "years_experience": 8,
+        "bio": "A warm, evidence-based space for anxiety, burnout and everything in between.",
+        "room": "Room 7"
+      },
+      {
+        "id": "e1dab3fa-b792-5173-b79e-ec55b0373ff0",
+        "name": "Dr. Elias Novak",
+        "specialty": "General Practice",
+        "photo": "/assets/9e1329bb8595e8d7.svg",
+        "rating": 4.7,
+        "review_count": 305,
+        "years_experience": 22,
+        "bio": "Experienced family physician; same-week appointments and straightforward advice.",
+        "room": "Room 8"
+      },
+      {
+        "id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "name": "Dr. Amara Okafor",
+        "specialty": "General Practice",
+        "photo": "/assets/fb389a717dacb65f.svg",
+        "rating": 4.9,
+        "review_count": 412,
+        "years_experience": 14,
+        "bio": "Family doctor focused on prevention, long-term conditions and unhurried conversations.",
+        "room": "Room 2"
+      },
+      {
+        "id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "name": "Dr. Daniel Reyes",
+        "specialty": "Cardiology",
+        "photo": "/assets/4e02a5dc12e905c4.svg",
+        "rating": 4.8,
+        "review_count": 287,
+        "years_experience": 18,
+        "bio": "Cardiologist helping patients protect their hearts through clear plans and calm guidance.",
+        "room": "Room 4"
+      }
+    ],
+    "desk": [
+      {
+        "id": "415a4671-035c-54c3-b931-63949be5815e",
+        "name": "Ben Archer",
+        "photo": "/assets/fc8c76fcc9f1680e.webp"
+      },
+      {
+        "id": "c067f035-ea10-5d1b-a3ee-c80383096a6e",
+        "name": "Rosa Delgado",
+        "photo": "/assets/448f9bc7666e334f.webp"
+      }
+    ],
+    "appointment": [
+      {
+        "id": "05b3dc2d-47ee-4019-ab74-c4ad20b7233a",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Maya",
+        "doctor_name": "Dr O",
+        "starts_at": "2026-10-16T12:00:00.000Z",
+        "ends_at": "2026-10-16T12:30:00.000Z",
+        "reason": "test",
+        "status": "booked"
+      },
+      {
+        "id": "2de62356-d67e-51c0-8bf8-9f1a69878b0c",
+        "patient_id": "29c4e317-ce25-5bdf-8e97-06b0b5fcc73b",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Sofia Alvarez",
+        "patient_photo": "/assets/c4ea008f017559da.webp",
+        "patient_info": "b. 1976 · Latex allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-11T09:30:00.000Z",
+        "ends_at": "2026-10-11T10:00:00.000Z",
+        "reason": "Persistent cough",
+        "status": "completed",
+        "prep_notes": "Note when the cough started."
+      },
+      {
+        "id": "ebd74914-309f-5cd3-91ac-0f00b9ad9f19",
+        "patient_id": "91a64522-bb52-5ac5-a906-a488c7ab1e10",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Henry Walsh",
+        "patient_photo": "/assets/f280fb4ae03582bc.webp",
+        "patient_info": "b. 1958 · No known allergies",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-11T13:00:00.000Z",
+        "ends_at": "2026-10-11T13:45:00.000Z",
+        "reason": "Knee pain, 3 weeks",
+        "status": "checked_in",
+        "prep_notes": "Wear loose clothing."
+      },
+      {
+        "id": "99599c60-0d30-51b2-b8c8-d7eea1767a61",
+        "patient_id": "4977bab3-1413-5fae-97fa-bb9709512d02",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Tom Becker",
+        "patient_photo": "/assets/d5526f6e7f5f1e9f.webp",
+        "patient_info": "b. 1988 · No known allergies",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-10-11T08:00:00.000Z",
+        "ends_at": "2026-10-11T08:30:00.000Z",
+        "reason": "Palpitations review",
+        "status": "completed",
+        "prep_notes": "Avoid caffeine before the visit."
+      },
+      {
+        "id": "ea3644ce-2af6-5059-a95a-a42dd4b0c93d",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Jordan Ellis",
+        "patient_photo": "/assets/6bd3b9d9e22a8d13.webp",
+        "patient_info": "b. 1984 · No known allergies",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-10-11T10:00:00.000Z",
+        "ends_at": "2026-10-11T10:30:00.000Z",
+        "reason": "ECG and stress test results",
+        "status": "checked_in",
+        "prep_notes": "Bring previous ECG printouts."
+      },
+      {
+        "id": "00d47f78-a93d-5791-9907-ef4a2ec215ef",
+        "patient_id": "8fce228a-75d5-5fcd-be38-4f2d0164bea9",
+        "doctor_id": "e9547eba-11e5-5342-900a-3fe51d4bc70f",
+        "patient_name": "Noah Kim",
+        "patient_photo": "/assets/d5cb292507842455.webp",
+        "patient_info": "b. 2012 · No known allergies",
+        "doctor_name": "Dr. Lucas Bergmann",
+        "starts_at": "2026-10-11T09:00:00.000Z",
+        "ends_at": "2026-10-11T09:30:00.000Z",
+        "reason": "Sports physical",
+        "status": "booked",
+        "prep_notes": "A parent or guardian must attend."
+      },
+      {
+        "id": "dccd034e-46f9-5d6d-864e-05d0e7c0116d",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Maya Chen",
+        "patient_photo": "/assets/307ccff9fa7193a2.webp",
+        "patient_info": "b. 1991 · Penicillin allergy",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-10-13T15:00:00.000Z",
+        "ends_at": "2026-10-13T15:30:00.000Z",
+        "reason": "Heart health screening",
+        "status": "booked",
+        "prep_notes": "Avoid caffeine for 4 hours before."
+      },
+      {
+        "id": "fa1fcbe0-1bcd-506a-9dee-591f6dea68c5",
+        "patient_id": "29c4e317-ce25-5bdf-8e97-06b0b5fcc73b",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Sofia Alvarez",
+        "patient_photo": "/assets/3922e330a8416d7e.webp",
+        "patient_info": "b. 1976 · Latex allergy",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-10-14T09:00:00.000Z",
+        "ends_at": "2026-10-14T09:30:00.000Z",
+        "reason": "Cholesterol consultation",
+        "status": "booked",
+        "prep_notes": "Fasting for 10 hours before."
+      },
+      {
+        "id": "2b73496a-6fed-5087-bcef-babc3c3b60e7",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Maya Chen",
+        "patient_photo": "/assets/73addfcb2c7d3124.webp",
+        "patient_info": "b. 1991 · Penicillin allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-12T10:00:00.000Z",
+        "ends_at": "2026-10-12T10:30:00.000Z",
+        "reason": "Lab results review",
+        "status": "booked",
+        "prep_notes": "Arrive 10 minutes early to check in.",
+        "reminded": true
+      },
+      {
+        "id": "3bf54d1f-a8fe-536f-b936-a5e92e073ed8",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Maya Chen",
+        "patient_photo": "/assets/9fb7461d250e23b7.webp",
+        "patient_info": "b. 1991 · Penicillin allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-11T11:00:00.000Z",
+        "ends_at": "2026-10-11T11:30:00.000Z",
+        "reason": "Annual check-up",
+        "status": "booked",
+        "prep_notes": "Fasting is not required. Bring your insurance card and a list of current medications.",
+        "reminded": true
+      },
+      {
+        "id": "b8c717ad-dc73-5f37-b77b-801b20757dbb",
+        "patient_id": "7d3d4903-86ab-5fdb-aa45-5aadbc37a8b2",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Lena Fischer",
+        "patient_photo": "/assets/455afb02e6608317.webp",
+        "patient_info": "b. 1995 · Dust mite allergy",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-10-11T14:00:00.000Z",
+        "ends_at": "2026-10-11T14:30:00.000Z",
+        "reason": "Chest tightness when running",
+        "status": "booked",
+        "prep_notes": "Wear comfortable shoes in case of a short walking test.",
+        "reminded": true
+      },
+      {
+        "id": "77043c47-cdba-5bc0-ada2-8de2757a83a9",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Jordan Ellis",
+        "patient_photo": "/assets/e42b36b13b8ad14c.webp",
+        "patient_info": "b. 1984 · No known allergies",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-11T08:30:00.000Z",
+        "ends_at": "2026-10-11T09:00:00.000Z",
+        "reason": "Blood pressure follow-up",
+        "status": "completed",
+        "prep_notes": "Bring your home BP log."
+      },
+      {
+        "id": "7bb9cc96-0e0e-5aaa-91e6-a3dd61b8d8af",
+        "patient_id": "4977bab3-1413-5fae-97fa-bb9709512d02",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Tom Becker",
+        "patient_photo": "/assets/f9b111654c45f613.webp",
+        "patient_info": "b. 1988 · No known allergies",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-12T14:00:00.000Z",
+        "ends_at": "2026-10-12T14:30:00.000Z",
+        "reason": "Lower back pain",
+        "status": "booked",
+        "prep_notes": "Note which movements hurt.",
+        "reminded": true
+      },
+      {
+        "id": "ecd5584b-fb04-5aec-aab3-9a7a94417651",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Maya Chen",
+        "patient_photo": "/assets/239267edf56aad6b.webp",
+        "patient_info": "b. 1991 · Penicillin allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-09-20T10:00:00.000Z",
+        "ends_at": "2026-09-20T10:30:00.000Z",
+        "reason": "Recurring headaches",
+        "status": "completed",
+        "prep_notes": "Keep a headache diary."
+      },
+      {
+        "id": "1bbd8bb3-a1e8-570c-a586-f9d74511dd85",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Maya Chen",
+        "patient_photo": "/assets/24b034f4b1b4a0c6.webp",
+        "patient_info": "b. 1991 · Penicillin allergy",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-08-30T15:00:00.000Z",
+        "ends_at": "2026-08-30T15:30:00.000Z",
+        "reason": "Dizziness on standing",
+        "status": "completed",
+        "prep_notes": "Drink water before arriving."
+      },
+      {
+        "id": "bc0ee020-d971-535e-975b-be3f98a3334e",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Maya Chen",
+        "patient_photo": "/assets/a291e856af29eb04.webp",
+        "patient_info": "b. 1991 · Penicillin allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-07-14T09:30:00.000Z",
+        "ends_at": "2026-07-14T10:00:00.000Z",
+        "reason": "Seasonal allergy review",
+        "status": "completed",
+        "prep_notes": "List your symptoms."
+      },
+      {
+        "id": "67670b4a-f7cb-5295-ae7c-063aecc257ae",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Jordan Ellis",
+        "patient_photo": "/assets/8a9993f2aca84c5d.webp",
+        "patient_info": "b. 1984 · No known allergies",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-09-28T11:00:00.000Z",
+        "ends_at": "2026-09-28T11:30:00.000Z",
+        "reason": "High blood pressure reading",
+        "status": "completed",
+        "prep_notes": "Measure BP at home for a week."
+      },
+      {
+        "id": "54c999e5-555c-5a35-bfa1-c1fd9d679628",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "patient_name": "Jordan Ellis",
+        "patient_photo": "/assets/7fc905134e73ba4a.webp",
+        "patient_info": "b. 1984 · No known allergies",
+        "doctor_name": "Dr. Daniel Reyes",
+        "starts_at": "2026-09-15T16:00:00.000Z",
+        "ends_at": "2026-09-15T16:30:00.000Z",
+        "reason": "Cardiology referral",
+        "status": "completed",
+        "prep_notes": "Bring referral letter."
+      },
+      {
+        "id": "65303459-f529-5975-b63c-e62856495125",
+        "patient_id": "91a64522-bb52-5ac5-a906-a488c7ab1e10",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Henry Walsh",
+        "patient_photo": "/assets/c496904d71c50efe.webp",
+        "patient_info": "b. 1958 · No known allergies",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-02T09:00:00.000Z",
+        "ends_at": "2026-10-02T09:45:00.000Z",
+        "reason": "Diabetes check",
+        "status": "completed",
+        "prep_notes": "Bring glucose readings."
+      },
+      {
+        "id": "c29ddffa-3c8f-5596-8d33-df85c38cf576",
+        "patient_id": "7d3d4903-86ab-5fdb-aa45-5aadbc37a8b2",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Lena Fischer",
+        "patient_photo": "/assets/08c660c503ee3ba3.webp",
+        "patient_info": "b. 1995 · Dust mite allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-13T10:00:00.000Z",
+        "ends_at": "2026-10-13T10:30:00.000Z",
+        "reason": "Allergy testing",
+        "status": "cancelled",
+        "prep_notes": "Stop antihistamines 3 days before."
+      },
+      {
+        "id": "0097b3da-a93f-524d-8811-45b1bc34d57a",
+        "patient_id": "ee6bbf4b-52e5-53bd-afc9-b68a5ad61097",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "patient_name": "Aisha Rahman",
+        "patient_photo": "/assets/5c000104fc162dc4.webp",
+        "patient_info": "b. 1999 · Peanut allergy",
+        "doctor_name": "Dr. Amara Okafor",
+        "starts_at": "2026-10-11T15:30:00.000Z",
+        "ends_at": "2026-10-11T16:00:00.000Z",
+        "reason": "Travel vaccinations",
+        "status": "booked",
+        "prep_notes": "Bring your vaccination card.",
+        "reminded": true
+      },
+      {
+        "id": "81a9240c-2516-5965-847d-966b2566021a",
+        "patient_id": "82cb8c32-efc2-5f1b-8c2f-ed88c5769c9c",
+        "doctor_id": "e9547eba-11e5-5342-900a-3fe51d4bc70f",
+        "patient_name": "Grace Mbeki",
+        "patient_photo": "/assets/c56fc6cee07d4c22.webp",
+        "patient_info": "b. 1962 · Sulfa allergy",
+        "doctor_name": "Dr. Lucas Bergmann",
+        "starts_at": "2026-10-12T11:00:00.000Z",
+        "ends_at": "2026-10-12T11:30:00.000Z",
+        "reason": "Accompanying grandchild vaccines",
+        "status": "booked",
+        "prep_notes": "Bring the child's vaccine card.",
+        "reminded": true
+      }
+    ],
+    "slot": [
+      {
+        "id": "59104943-8325-4337-ad43-624956c1acba",
+        "appointment_id": "05b3dc2d-47ee-4019-ab74-c4ad20b7233a",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-16T12:00:00.000Z",
+        "ends_at": "2026-10-16T12:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "9cf4f160-ac53-58ce-be4c-db9b04fabe77",
+        "appointment_id": "2de62356-d67e-51c0-8bf8-9f1a69878b0c",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-11T09:30:00.000Z",
+        "ends_at": "2026-10-11T10:00:00.000Z",
+        "active": true
+      },
+      {
+        "id": "fdb63c97-29f5-58d2-9883-0c916f88c4e5",
+        "appointment_id": "ebd74914-309f-5cd3-91ac-0f00b9ad9f19",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-11T13:00:00.000Z",
+        "ends_at": "2026-10-11T13:45:00.000Z",
+        "active": true
+      },
+      {
+        "id": "355fe649-d2a0-5591-aad8-4fef154579e0",
+        "appointment_id": "99599c60-0d30-51b2-b8c8-d7eea1767a61",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-10-11T08:00:00.000Z",
+        "ends_at": "2026-10-11T08:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "e17b4507-a27c-5afb-b156-462b47637ff9",
+        "appointment_id": "ea3644ce-2af6-5059-a95a-a42dd4b0c93d",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-10-11T10:00:00.000Z",
+        "ends_at": "2026-10-11T10:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "5a9782ee-58c7-56be-a855-42b956b6c429",
+        "appointment_id": "00d47f78-a93d-5791-9907-ef4a2ec215ef",
+        "doctor_id": "e9547eba-11e5-5342-900a-3fe51d4bc70f",
+        "starts_at": "2026-10-11T09:00:00.000Z",
+        "ends_at": "2026-10-11T09:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "6c1e43fb-fdc0-5e18-bed8-8b21cadbe5e2",
+        "appointment_id": "dccd034e-46f9-5d6d-864e-05d0e7c0116d",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-10-13T15:00:00.000Z",
+        "ends_at": "2026-10-13T15:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "4c5606fe-7ae5-506d-a5eb-ca27fbfb6fdf",
+        "appointment_id": "fa1fcbe0-1bcd-506a-9dee-591f6dea68c5",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-10-14T09:00:00.000Z",
+        "ends_at": "2026-10-14T09:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "a16808ec-05c2-5ab5-a623-ee639134c4a4",
+        "appointment_id": "ecd5584b-fb04-5aec-aab3-9a7a94417651",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-09-20T10:00:00.000Z",
+        "ends_at": "2026-09-20T10:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "800bc405-0d6e-56fc-8844-bca1b67f8f58",
+        "appointment_id": "1bbd8bb3-a1e8-570c-a586-f9d74511dd85",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-08-30T15:00:00.000Z",
+        "ends_at": "2026-08-30T15:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "db25057a-67f4-5c89-9982-71cb25039924",
+        "appointment_id": "bc0ee020-d971-535e-975b-be3f98a3334e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-07-14T09:30:00.000Z",
+        "ends_at": "2026-07-14T10:00:00.000Z",
+        "active": true
+      },
+      {
+        "id": "d6c7c1b1-cbed-506d-8e39-5b41252b006b",
+        "appointment_id": "67670b4a-f7cb-5295-ae7c-063aecc257ae",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-09-28T11:00:00.000Z",
+        "ends_at": "2026-09-28T11:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "5df37661-29ff-5887-88d1-86a165c372bf",
+        "appointment_id": "54c999e5-555c-5a35-bfa1-c1fd9d679628",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-09-15T16:00:00.000Z",
+        "ends_at": "2026-09-15T16:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "4d4f3778-b541-59d6-b58e-02bb01cb42cc",
+        "appointment_id": "65303459-f529-5975-b63c-e62856495125",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-02T09:00:00.000Z",
+        "ends_at": "2026-10-02T09:45:00.000Z",
+        "active": true
+      },
+      {
+        "id": "a50f258f-7135-58c1-bbfa-ad32ff353c27",
+        "appointment_id": "c29ddffa-3c8f-5596-8d33-df85c38cf576",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-13T10:00:00.000Z",
+        "ends_at": "2026-10-13T10:30:00.000Z",
+        "active": false
+      },
+      {
+        "id": "08f3b7fa-b659-5be7-a2d5-a52b71303f07",
+        "appointment_id": "0097b3da-a93f-524d-8811-45b1bc34d57a",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-11T15:30:00.000Z",
+        "ends_at": "2026-10-11T16:00:00.000Z",
+        "active": true
+      },
+      {
+        "id": "f3c2f2c1-338d-5e7d-aba2-013029cf7341",
+        "appointment_id": "2b73496a-6fed-5087-bcef-babc3c3b60e7",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-12T10:00:00.000Z",
+        "ends_at": "2026-10-12T10:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "6f1d5918-9350-5286-b4d8-b14255109a00",
+        "appointment_id": "3bf54d1f-a8fe-536f-b936-a5e92e073ed8",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-11T11:00:00.000Z",
+        "ends_at": "2026-10-11T11:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "0359ed0f-bcc3-5713-bcb4-c06867b18679",
+        "appointment_id": "b8c717ad-dc73-5f37-b77b-801b20757dbb",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "starts_at": "2026-10-11T14:00:00.000Z",
+        "ends_at": "2026-10-11T14:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "f0d5602d-bcd1-559b-bd03-58ee3b8dc663",
+        "appointment_id": "81a9240c-2516-5965-847d-966b2566021a",
+        "doctor_id": "e9547eba-11e5-5342-900a-3fe51d4bc70f",
+        "starts_at": "2026-10-12T11:00:00.000Z",
+        "ends_at": "2026-10-12T11:30:00.000Z",
+        "active": true
+      },
+      {
+        "id": "d26fe6b1-e66d-5a8b-8d61-f5173501d8c3",
+        "appointment_id": "77043c47-cdba-5bc0-ada2-8de2757a83a9",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-11T08:30:00.000Z",
+        "ends_at": "2026-10-11T09:00:00.000Z",
+        "active": true
+      },
+      {
+        "id": "74f92967-9289-5def-831f-d55d1b521cca",
+        "appointment_id": "7bb9cc96-0e0e-5aaa-91e6-a3dd61b8d8af",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "starts_at": "2026-10-12T14:00:00.000Z",
+        "ends_at": "2026-10-12T14:30:00.000Z",
+        "active": true
+      }
+    ],
+    "visit_note": [
+      {
+        "id": "1a609737-d346-5acc-885b-0a05d9842dc6",
+        "appointment_id": "77043c47-cdba-5bc0-ada2-8de2757a83a9",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "summary": "BP 128/82 today, improved from 142/90. Home log shows good control on current dose.",
+        "diagnosis": "Hypertension, improving",
+        "plan": "Continue current medication. Reduce sodium. Recheck in 3 months.",
+        "follow_up": "3 months"
+      },
+      {
+        "id": "c61a4c12-fe52-5127-9cc1-70b43ed471d3",
+        "appointment_id": "2de62356-d67e-51c0-8bf8-9f1a69878b0c",
+        "patient_id": "29c4e317-ce25-5bdf-8e97-06b0b5fcc73b",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "summary": "Dry cough for 2 weeks, no fever. Lungs clear on examination.",
+        "diagnosis": "Post-viral cough",
+        "plan": "Honey and fluids, avoid irritants. Return if symptoms last beyond 3 more weeks.",
+        "follow_up": "As needed"
+      },
+      {
+        "id": "16bc38fd-ea85-5ca3-9bac-a0cc356f4604",
+        "appointment_id": "99599c60-0d30-51b2-b8c8-d7eea1767a61",
+        "patient_id": "4977bab3-1413-5fae-97fa-bb9709512d02",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "summary": "Occasional palpitations, ECG normal. Likely linked to caffeine and stress.",
+        "diagnosis": "Benign palpitations",
+        "plan": "Reduce caffeine, 24h Holter monitor arranged.",
+        "follow_up": "2 weeks"
+      },
+      {
+        "id": "37050b6e-c9a4-5f94-b1bc-7c03b65cc695",
+        "appointment_id": "ecd5584b-fb04-5aec-aab3-9a7a94417651",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "summary": "Tension-type headaches 2-3 times weekly linked to screen time and poor sleep. Neurological exam normal.",
+        "diagnosis": "Tension headache",
+        "plan": "Regular breaks, hydration, sleep routine. Ibuprofen only when needed. Keep a headache diary.",
+        "follow_up": "4 weeks"
+      },
+      {
+        "id": "52cc575b-8da1-5448-8cc5-793e23c5a669",
+        "appointment_id": "1bbd8bb3-a1e8-570c-a586-f9d74511dd85",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "summary": "Brief dizziness when standing. Orthostatic BP drop is mild. ECG normal.",
+        "diagnosis": "Orthostatic dizziness, mild",
+        "plan": "Increase fluids and salt slightly, rise slowly. No further cardiac testing required.",
+        "follow_up": "As needed"
+      },
+      {
+        "id": "02a09292-446a-5317-b613-a480978cfa19",
+        "appointment_id": "bc0ee020-d971-535e-975b-be3f98a3334e",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "summary": "Seasonal rhinitis symptoms each spring. Penicillin allergy confirmed in record.",
+        "diagnosis": "Seasonal allergic rhinitis",
+        "plan": "Daily non-drowsy antihistamine in season, saline rinse.",
+        "follow_up": "Next spring"
+      },
+      {
+        "id": "aa1a2b0a-72f1-5d73-b5de-711d90fd51b9",
+        "appointment_id": "67670b4a-f7cb-5295-ae7c-063aecc257ae",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "summary": "Elevated BP readings at home averaging 145/92. No symptoms.",
+        "diagnosis": "Hypertension, new",
+        "plan": "Start low-dose ACE inhibitor, referral to cardiology, lifestyle advice.",
+        "follow_up": "4 weeks"
+      },
+      {
+        "id": "95468940-a631-5de8-b19c-e4459ba621b2",
+        "appointment_id": "54c999e5-555c-5a35-bfa1-c1fd9d679628",
+        "patient_id": "c664a513-a27e-5d9e-9f38-e6f88d2f0d5e",
+        "doctor_id": "425ba7cd-9be6-5c3a-9315-5bb69fc5b853",
+        "summary": "Echo and ECG ordered after hypertension diagnosis. Heart structure appears normal.",
+        "diagnosis": "Hypertension, no cardiac damage",
+        "plan": "Continue GP-managed therapy, return for stress test.",
+        "follow_up": "4 weeks"
+      },
+      {
+        "id": "d740ba68-28ff-52b5-bb8e-1c5a81925b9d",
+        "appointment_id": "65303459-f529-5975-b63c-e62856495125",
+        "patient_id": "91a64522-bb52-5ac5-a906-a488c7ab1e10",
+        "doctor_id": "134dd00f-7b53-5636-8903-8aaad119ffcc",
+        "summary": "HbA1c 6.9%. Feet exam normal. Diet good.",
+        "diagnosis": "Type 2 diabetes, well controlled",
+        "plan": "Continue metformin, annual eye exam, walk 30 minutes daily.",
+        "follow_up": "3 months"
+      }
+    ],
+    "reminder": [
+      {
+        "id": "e55897e1-0a6a-4309-ad6a-5841291df4ed",
+        "appointment_id": "7bb9cc96-0e0e-5aaa-91e6-a3dd61b8d8af",
+        "patient_id": "4977bab3-1413-5fae-97fa-bb9709512d02",
+        "message": "Reminder: Lower back pain with Dr. Amara Okafor on 2026-10-12 at 14:00."
+      },
+      {
+        "id": "4808db6e-1081-4454-bcbe-3c2c7277cc0b",
+        "appointment_id": "81a9240c-2516-5965-847d-966b2566021a",
+        "patient_id": "82cb8c32-efc2-5f1b-8c2f-ed88c5769c9c",
+        "message": "Reminder: Accompanying grandchild vaccines with Dr. Lucas Bergmann on 2026-10-12 at 11:00."
+      },
+      {
+        "id": "0e51a2d1-7dd3-4db1-ae97-9062c6a95773",
+        "appointment_id": "b8c717ad-dc73-5f37-b77b-801b20757dbb",
+        "patient_id": "7d3d4903-86ab-5fdb-aa45-5aadbc37a8b2",
+        "message": "Reminder: Chest tightness when running with Dr. Daniel Reyes on 2026-10-11 at 14:00."
+      },
+      {
+        "id": "aa015cbe-19cd-41a2-9952-21c0ebac7eff",
+        "appointment_id": "3bf54d1f-a8fe-536f-b936-a5e92e073ed8",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "message": "Reminder: Annual check-up with Dr. Amara Okafor on 2026-10-11 at 11:00."
+      },
+      {
+        "id": "360910ac-9bca-49d1-a583-b551218fe0b9",
+        "appointment_id": "2b73496a-6fed-5087-bcef-babc3c3b60e7",
+        "patient_id": "5b5f65e4-a8ce-552e-bb40-def47709055e",
+        "message": "Reminder: Lab results review with Dr. Amara Okafor on 2026-10-12 at 10:00."
+      },
+      {
+        "id": "34c308b5-a84b-41b4-8f23-bfafbce8f5c7",
+        "appointment_id": "0097b3da-a93f-524d-8811-45b1bc34d57a",
+        "patient_id": "ee6bbf4b-52e5-53bd-afc9-b68a5ad61097",
+        "message": "Reminder: Travel vaccinations with Dr. Amara Okafor on 2026-10-11 at 15:30."
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "day",
+      "route": "/day",
+      "title": "My day",
+      "icon": "CalendarDays",
+      "personas": [
+        "doctor"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "DoctorApp"
+      }
+    },
+    {
+      "name": "book",
+      "route": "/book",
+      "title": "Find a doctor",
+      "icon": "HeartPulse",
+      "personas": [
+        "patient"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "PatientApp",
+        "props": {
+          "tab": "find"
+        }
+      }
+    },
+    {
+      "name": "visits",
+      "route": "/visits",
+      "title": "My visits",
+      "icon": "Calendar",
+      "personas": [
+        "patient"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "PatientApp",
+        "props": {
+          "tab": "visits"
+        }
+      }
+    },
+    {
+      "name": "history",
+      "route": "/history",
+      "title": "History",
+      "icon": "FileText",
+      "personas": [
+        "patient"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "PatientApp",
+        "props": {
+          "tab": "history"
+        }
+      }
+    },
+    {
+      "name": "book-doctor",
+      "route": "/book/:id",
+      "title": "Book a visit",
+      "icon": "Calendar",
+      "personas": [
+        "patient"
+      ],
+      "chrome": "none",
+      "detailOf": "doctor",
+      "layout": {
+        "kind": "custom",
+        "custom": "BookDoctor"
+      }
+    },
+    {
+      "name": "front-desk",
+      "route": "/front-desk",
+      "title": "Front desk",
+      "icon": "ClipboardList",
+      "personas": [
+        "desk"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "DeskApp"
+      }
+    },
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "doctor"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "custom",
+            "custom": "TeamHeader"
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It's just you so far — add the people who work in the app and pick their role."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "auth": {
+    "screen": "ClinicLogin",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "PatientApp",
+      "kind": "code",
+      "purpose": "Patient home: find a doctor, my visits, visit history",
+      "props": {
+        "tab": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "tab": "find"
+      },
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, LayoutGroup, animate, useReducedMotion } from \"motion/react\";\nimport { HeartPulse, Search, Calendar, FileText, Bell, Star, Clock, X, LogOut, Lightbulb, Sparkles, Award, ChevronDown } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif\";\nconst DAY = 86400000;\nconst WD = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\nconst MO = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"];\nconst SPEC_TONE: Record<string, string> = {\n  \"General Practice\": \"bg-[#E3F6F3] text-[#0B7A6D]\",\n  Cardiology: \"bg-[#FDE8E6] text-[#B73E34]\",\n  Dermatology: \"bg-[#FFF0DD] text-[#A8630F]\",\n  Pediatrics: \"bg-[#E6F0FF] text-[#2E5FB8]\",\n  Neurology: \"bg-[#EEE8FD] text-[#6140B5]\",\n  Orthopedics: \"bg-[#E8F5DD] text-[#477A1E]\",\n  \"Mental Health\": \"bg-[#FCE8F3] text-[#A8397C]\",\n};\n\nconst s = (v: unknown): string => (v === null || v === undefined ? \"\" : String(v));\nconst pad = (n: number) => String(n).padStart(2, \"0\");\nconst ms = (v: unknown) => {\n  const t = Date.parse(s(v));\n  return Number.isNaN(t) ? 0 : t;\n};\nconst hm = (t: number) => {\n  const d = new Date(t);\n  return pad(d.getUTCHours()) + \":\" + pad(d.getUTCMinutes());\n};\nconst dayStart = (t: number) => t - (((t % DAY) + DAY) % DAY);\nconst dateLong = (t: number) => {\n  const d = new Date(t);\n  return WD[d.getUTCDay()] + \" \" + d.getUTCDate() + \" \" + MO[d.getUTCMonth()];\n};\nconst rel = (t: number, now: number) => {\n  const d = Math.round((dayStart(t) - dayStart(now)) / DAY);\n  if (d === 0) return \"Today\";\n  if (d === 1) return \"Tomorrow\";\n  return dateLong(t);\n};\nconst until = (t: number, now: number) => {\n  const m = Math.round((t - now) / 60000);\n  if (m <= 0) return \"now\";\n  if (m < 60) return \"in \" + m + \" min\";\n  if (m < 1440) return \"in \" + Math.floor(m / 60) + \"h \" + (m % 60) + \"m\";\n  return \"in \" + Math.floor(m / 1440) + \" days\";\n};\nconst initials = (n: string) => n.replace(\"Dr. \", \"\").split(\" \").map((p) => p[0] || \"\").join(\"\").slice(0, 2);\n\nfunction Photo({ src, name, className }: { src: string; name: string; className: string }) {\n  const [bad, setBad] = useState(false);\n  if (!src || bad || /\\.svg(\\?|$)/i.test(src)) {\n    return <div className={className + \" flex items-center justify-center bg-gradient-to-br from-[#BFEDE6] to-[#7FD6C9] font-extrabold text-[#0B6F63] \" + (className.includes(\"h-full\") ? \"text-4xl\" : \"text-xs\")}>{initials(name)}</div>;\n  }\n  return <img src={src} alt={name} loading=\"lazy\" onError={() => setBad(true)} className={className + \" object-cover\"} />;\n}\n\nfunction Counter({ value }: { value: number }) {\n  const reduce = useReducedMotion();\n  const [n, setN] = useState(0);\n  useEffect(() => {\n    if (reduce) {\n      setN(value);\n      return;\n    }\n    const c = animate(0, value, { duration: 0.9, ease: \"easeOut\", onUpdate: (v) => setN(Math.round(v)) });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <>{n}</>;\n}\n\ntype Tab = \"find\" | \"visits\" | \"history\";\n\nexport default function PatientApp({ app, tab: initialTab }: { app?: AppHandle; tab?: string }) {\n  const reduce = useReducedMotion();\n  const appRef = useRef(app);\n  appRef.current = app;\n  const [now, setNow] = useState(0);\n  const [tab, setTab] = useState<Tab>(initialTab === \"visits\" || initialTab === \"history\" ? initialTab : \"find\");\n  const [spec, setSpec] = useState(\"All\");\n  const [q, setQ] = useState(\"\");\n  const [notifOpen, setNotifOpen] = useState(false);\n  const [toast, setToast] = useState(\"\");\n  const [cancelId, setCancelId] = useState(\"\");\n  const [open, setOpen] = useState<string>(\"\");\n\n  useEffect(() => {\n    setNow(Date.now());\n    const t = setInterval(() => setNow(Date.now()), 30000);\n    return () => clearInterval(t);\n  }, []);\n  useEffect(() => {\n    const a = appRef.current;\n    if (!a) return;\n    const offs = [\"slot\", \"appointment\", \"visit_note\", \"reminder\"].map((e) => a.live(e));\n    return () => offs.forEach((o) => o());\n  }, []);\n  useEffect(() => {\n    if (!toast) return;\n    const t = setTimeout(() => setToast(\"\"), 3600);\n    return () => clearTimeout(t);\n  }, [toast]);\n\n  const doctors = (app?.rows(\"doctor\") || []) as Row[];\n  const appts = (app?.rows(\"appointment\") || []) as Row[];\n  const slots = (app?.rows(\"slot\") || []) as Row[];\n  const notes = (app?.rows(\"visit_note\") || []) as Row[];\n  const reminders = (app?.rows(\"reminder\") || []) as Row[];\n  const me = ((app?.rows(\"patient\") || []) as Row[])[0];\n  const first = s(me?.name || app?.user.name).split(\" \")[0] || \"there\";\n  const loading = !!app?.loading(\"doctor\") && doctors.length === 0;\n\n  const busy = useMemo(() => {\n    const m: Record<string, { s: number; e: number }[]> = {};\n    slots.forEach((r) => {\n      if (r.active === false) return;\n      const k = s(r.doctor_id);\n      (m[k] = m[k] || []).push({ s: ms(r.starts_at), e: ms(r.ends_at) });\n    });\n    return m;\n  }, [slots]);\n\n  const nextFree = (docId: string): number => {\n    if (!now) return 0;\n    const base = dayStart(now);\n    for (let d = 0; d < 21; d++) {\n      for (let m = 480; m < 1080; m += 30) {\n        const t = base + d * DAY + m * 60000;\n        if (t > now && !(busy[docId] || []).some((b) => b.s < t + 1800000 && b.e > t)) return t;\n      }\n    }\n    return 0;\n  };\n\n  const specialties = useMemo(() => [\"All\"].concat(Array.from(new Set(doctors.map((d) => s(d.specialty)))).filter(Boolean)), [doctors]);\n  const shown = doctors\n    .filter((d) => (spec === \"All\" || s(d.specialty) === spec) && (!q || (s(d.name) + \" \" + s(d.specialty)).toLowerCase().includes(q.toLowerCase())))\n    .sort((a, b) => Number(b.rating) - Number(a.rating));\n\n  const mine = appts.slice().sort((a, b) => ms(a.starts_at) - ms(b.starts_at));\n  const upcoming = mine.filter((a) => [\"booked\", \"checked_in\"].includes(s(a.status)) && ms(a.ends_at) > (now || 0));\n  const past = mine.filter((a) => s(a.status) === \"completed\").reverse();\n  const docById = (id: string) => doctors.find((d) => s(d.id) === id);\n  const noteFor = (id: string) => notes.find((n) => s(n.appointment_id) === id);\n  const next = upcoming[0];\n\n  const feed = useMemo(() => {\n    const items: { id: string; t: number; title: string; body: string; kind: \"rem\" | \"note\" }[] = [];\n    reminders.forEach((r) => items.push({ id: \"r\" + s(r.id), t: ms(r.created_at), title: \"Appointment reminder\", body: s(r.message), kind: \"rem\" }));\n    notes.forEach((n) => {\n      const ap = appts.find((a) => s(a.id) === s(n.appointment_id));\n      items.push({ id: \"n\" + s(n.id), t: ms(n.created_at), title: \"Your visit notes are ready\", body: ap ? s(ap.doctor_name) + \" added notes from \" + s(ap.reason).toLowerCase() + \".\" : \"A new visit note is available.\", kind: \"note\" });\n    });\n    return items.sort((a, b) => b.t - a.t).slice(0, 8);\n  }, [reminders, notes, appts]);\n  const fresh = now ? feed.filter((f) => now - f.t < 3 * DAY).length : 0;\n\n  const cancel = async () => {\n    const a = appRef.current;\n    const id = cancelId;\n    setCancelId(\"\");\n    if (!a || !id) return;\n    try {\n      await a.update(\"appointment\", id, { status: \"cancelled\" });\n      setToast(\"Appointment cancelled. The slot is open for others.\");\n    } catch (e) {\n      setToast(e instanceof Error ? e.message : \"Could not cancel this appointment.\");\n    }\n  };\n\n  const spring = reduce ? { duration: 0 } : { type: \"spring\" as const, stiffness: 320, damping: 28 };\n  const NAV: { id: Tab; label: string; Icon: typeof Search }[] = [\n    { id: \"find\", label: \"Find a doctor\", Icon: Search },\n    { id: \"visits\", label: \"My visits\", Icon: Calendar },\n    { id: \"history\", label: \"History\", Icon: FileText },\n  ];\n\n  const card = \"rounded-[28px] border border-[#E2F2EF] bg-white shadow-[0_1px_2px_rgba(14,43,41,0.04),0_14px_34px_-18px_rgba(18,165,148,0.28)]\";\n  const empty = \"rounded-[32px] border border-dashed border-[#BFE3DD] bg-white/60 p-12 text-center\";\n  const disk = \"mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#E3F6F3] text-[#12A594]\";\n\n  return (\n    <div className=\"min-h-screen w-full bg-[#F4FBFA] text-[#0E2B29]\" style={{ fontFamily: FONT }}>\n      <aside className=\"fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-[#E2F2EF] bg-white/80 p-5 backdrop-blur lg:flex\">\n        <div className=\"mb-8 flex items-center gap-3 text-xl font-extrabold\">\n          <span className=\"flex h-10 w-10 items-center justify-center rounded-2xl bg-[#12A594] text-white shadow-[0_10px_20px_-8px_rgba(18,165,148,0.7)]\">\n            <HeartPulse className=\"h-5 w-5\" />\n          </span>\n          Clinicly\n        </div>\n        <LayoutGroup id=\"side\">\n          <nav className=\"space-y-1.5\">\n            {NAV.map((n) => (\n              <button key={n.id} onClick={() => setTab(n.id)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-[15px] font-bold text-[#27504B]\">\n                {tab === n.id && <motion.span layoutId=\"sidepill\" transition={spring} className=\"absolute inset-0 rounded-2xl bg-[#E3F6F3]\" />}\n                <n.Icon className={\"relative h-5 w-5 \" + (tab === n.id ? \"text-[#0E8A7C]\" : \"text-[#7A9A95]\")} />\n                <span className={\"relative \" + (tab === n.id ? \"text-[#0B6F63]\" : \"\")}>{n.label}</span>\n              </button>\n            ))}\n          </nav>\n        </LayoutGroup>\n        <div className=\"mt-auto rounded-3xl bg-[#F4FBFA] p-4\">\n          <div className=\"flex items-center gap-3\">\n            <Photo src={s(me?.photo)} name={first} className=\"h-11 w-11 rounded-full\" />\n            <div className=\"min-w-0\">\n              <div className=\"truncate text-sm font-extrabold\">{s(me?.name || app?.user.name)}</div>\n              <div className=\"text-xs font-semibold text-[#7A9A95]\">Patient</div>\n            </div>\n          </div>\n          <button onClick={() => void app?.auth.signOut()} className=\"mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2 text-sm font-bold text-[#5B7C77] shadow-sm\">\n            <LogOut className=\"h-4 w-4\" /> Sign out\n          </button>\n        </div>\n      </aside>\n\n      <div className=\"lg:pl-64\">\n        <header className=\"sticky top-0 z-20 border-b border-[#E2F2EF] bg-white/80 backdrop-blur-xl\">\n          <div className=\"mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-10\">\n            <div className=\"flex items-center gap-2.5 text-lg font-extrabold lg:hidden\">\n              <span className=\"flex h-9 w-9 items-center justify-center rounded-xl bg-[#12A594] text-white\">\n                <HeartPulse className=\"h-5 w-5\" />\n              </span>\n              Clinicly\n            </div>\n            <div className=\"hidden text-[15px] font-extrabold text-[#27504B] lg:block\">{NAV.find((n) => n.id === tab)?.label}</div>\n            <div className=\"flex items-center gap-2\">\n              <motion.button whileTap={{ scale: 0.92 }} aria-label=\"Notifications\" onClick={() => setNotifOpen((v) => !v)} className=\"relative flex h-10 w-10 items-center justify-center rounded-full bg-[#E3F6F3] text-[#0E8A7C]\">\n                <Bell className=\"h-5 w-5\" />\n                {fresh > 0 && <span className=\"absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF7A59] px-1 text-[11px] font-extrabold text-white\">{fresh}</span>}\n              </motion.button>\n              <button onClick={() => void app?.auth.signOut()} aria-label=\"Sign out\" className=\"lg:hidden\">\n                <Photo src={s(me?.photo)} name={first} className=\"h-10 w-10 rounded-full\" />\n              </button>\n            </div>\n          </div>\n        </header>\n\n        <AnimatePresence>\n          {notifOpen && (\n            <motion.div initial={{ opacity: 0, y: -10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} className=\"fixed left-3 right-3 top-[68px] z-40 rounded-[28px] border border-[#E2F2EF] bg-white p-3 shadow-[0_30px_60px_-20px_rgba(14,43,41,0.3)] sm:left-auto sm:right-6 sm:w-[390px] lg:right-10\">\n              <div className=\"flex items-center justify-between px-3 py-2\">\n                <div className=\"text-[15px] font-extrabold\">Notifications</div>\n                <button onClick={() => setNotifOpen(false)} aria-label=\"Close\" className=\"rounded-full p-1 text-[#7A9A95]\"><X className=\"h-4 w-4\" /></button>\n              </div>\n              {feed.length === 0 && <div className=\"px-3 pb-4 text-sm font-semibold text-[#7A9A95]\">You are all caught up.</div>}\n              <div className=\"max-h-[60vh] space-y-1 overflow-y-auto\">\n                {feed.map((f, i) => (\n                  <motion.div key={f.id} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className=\"flex gap-3 rounded-2xl p-3 hover:bg-[#F4FBFA]\">\n                    <span className={\"mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl \" + (f.kind === \"rem\" ? \"bg-[#FFF0DD] text-[#A8630F]\" : \"bg-[#E3F6F3] text-[#0E8A7C]\")}>\n                      {f.kind === \"rem\" ? <Clock className=\"h-4 w-4\" /> : <FileText className=\"h-4 w-4\" />}\n                    </span>\n                    <div className=\"min-w-0\">\n                      <div className=\"text-sm font-extrabold\">{f.title}</div>\n                      <div className=\"text-[13px] font-semibold leading-snug text-[#5B7C77]\">{f.body}</div>\n                    </div>\n                  </motion.div>\n                ))}\n              </div>\n            </motion.div>\n          )}\n        </AnimatePresence>\n\n        <main className=\"mx-auto max-w-6xl px-4 pb-32 pt-5 lg:px-10 lg:pb-14 lg:pt-8\">\n          <AnimatePresence mode=\"wait\">\n            <motion.div key={tab} initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>\n              {tab === \"find\" && (\n                <div>\n                  <div className=\"relative overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,#0E8A7C_0%,#12A594_55%,#4FCDBB_100%)] p-6 text-white shadow-[0_24px_50px_-24px_rgba(18,165,148,0.8)] lg:p-9\">\n                    <motion.div className=\"absolute -right-10 -top-10 h-52 w-52 rounded-full bg-white/15\" animate={reduce ? undefined : { scale: [1, 1.08, 1] }} transition={{ duration: 7, repeat: Infinity }} />\n                    <motion.div className=\"absolute -bottom-16 right-24 h-44 w-44 rounded-full bg-white/10\" animate={reduce ? undefined : { y: [0, -14, 0] }} transition={{ duration: 8, repeat: Infinity }} />\n                    <div className=\"relative max-w-xl\">\n                      <div className=\"text-sm font-bold text-white/80\">{now && new Date(now).getUTCHours() < 12 ? \"Good morning\" : \"Hello\"}, {first}</div>\n                      <h1 className=\"mt-1 text-[28px] font-extrabold leading-tight lg:text-4xl\" style={{ fontFamily: FONT }}>How can we help you today?</h1>\n                      <div className=\"relative mt-5\">\n                        <Search className=\"absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7A9A95]\" />\n                        <input aria-label=\"Search doctors\" value={q} onChange={(e) => setQ(e.target.value)} placeholder=\"Search by name or specialty\" className=\"w-full rounded-2xl border-0 bg-white py-3.5 pl-12 pr-4 text-[15px] font-semibold text-[#0E2B29] outline-none placeholder:text-[#9BB8B3] focus:ring-4 focus:ring-white/40\" />\n                      </div>\n                      {next && (\n                        <button onClick={() => setTab(\"visits\")} className=\"mt-4 flex w-full items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 text-left backdrop-blur\">\n                          <Clock className=\"h-5 w-5 shrink-0\" />\n                          <span className=\"min-w-0 truncate text-sm font-bold\">Next: {s(next.reason)} · {rel(ms(next.starts_at), now)} {hm(ms(next.starts_at))}</span>\n                          <span className=\"ml-auto shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-extrabold text-[#0B6F63]\">{until(ms(next.starts_at), now)}</span>\n                        </button>\n                      )}\n                    </div>\n                  </div>\n\n                  <div className=\"-mx-4 mt-5 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0\">\n                    <LayoutGroup id=\"spec\">\n                      <div className=\"flex w-max gap-2\">\n                        {specialties.map((sp) => (\n                          <button key={sp} onClick={() => setSpec(sp)} className=\"relative rounded-full px-4 py-2 text-sm font-extrabold\">\n                            {spec === sp && <motion.span layoutId=\"specpill\" transition={spring} className=\"absolute inset-0 rounded-full bg-[#12A594]\" />}\n                            {spec !== sp && <span className=\"absolute inset-0 rounded-full border border-[#D6ECE8] bg-white\" />}\n                            <span className={\"relative \" + (spec === sp ? \"text-white\" : \"text-[#27504B]\")}>{sp}</span>\n                          </button>\n                        ))}\n                      </div>\n                    </LayoutGroup>\n                  </div>\n\n                  <div className=\"mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3\">\n                    {loading && [0, 1, 2].map((i) => <div key={i} className={card + \" h-40 animate-pulse bg-[#EAF6F4] sm:h-72\"} />)}\n                    <AnimatePresence mode=\"popLayout\">\n                      {shown.map((d, i) => {\n                        const nf = nextFree(s(d.id));\n                        return (\n                          <motion.div key={s(d.id)} layout initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ ...spring, delay: reduce ? 0 : Math.min(i, 8) * 0.05 }} whileTap={{ scale: 0.98 }} whileHover={reduce ? undefined : { y: -4 }} className={card + \" flex cursor-pointer gap-4 overflow-hidden p-3 sm:flex-col sm:gap-0 sm:p-0\"} onClick={() => app?.navigate(\"/book/\" + s(d.id))}>\n                            <div className=\"relative h-32 w-28 shrink-0 overflow-hidden rounded-[22px] sm:h-52 sm:w-full sm:rounded-none\">\n                              <Photo src={s(d.photo)} name={s(d.name)} className=\"h-full w-full\" />\n                              <div className=\"absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-extrabold shadow\">\n                                <Star className=\"h-3.5 w-3.5 fill-[#F5B544] text-[#F5B544]\" /> {Number(d.rating).toFixed(1)} <span className=\"font-semibold text-[#7A9A95]\">({s(d.review_count)})</span>\n                              </div>\n                            </div>\n                            <div className=\"flex min-w-0 flex-1 flex-col py-1 sm:p-5\">\n                              <span className={\"mb-2 w-fit rounded-full px-2.5 py-1 text-[11px] font-extrabold \" + (SPEC_TONE[s(d.specialty)] || \"bg-[#E3F6F3] text-[#0B7A6D]\")}>{s(d.specialty)}</span>\n                              <div className=\"truncate text-[17px] font-extrabold\" style={{ fontFamily: FONT }}>{s(d.name)}</div>\n                              <div className=\"mt-0.5 flex items-center gap-1 text-[13px] font-semibold text-[#7A9A95]\"><Award className=\"h-3.5 w-3.5\" /> {s(d.years_experience)} yrs · {s(d.room)}</div>\n                              <div className=\"mt-auto flex items-end justify-between gap-2 pt-3\">\n                                <div className=\"text-xs font-bold text-[#5B7C77]\">\n                                  <div className=\"text-[#9BB8B3]\">Next available</div>\n                                  <div className=\"text-[13px] text-[#0B7A6D]\">{nf ? rel(nf, now) + \" \" + hm(nf) : \"—\"}</div>\n                                </div>\n                                <span className=\"rounded-xl bg-[#12A594] px-4 py-2 text-sm font-extrabold text-white shadow-[0_8px_16px_-8px_rgba(18,165,148,0.8)]\">Book</span>\n                              </div>\n                            </div>\n                          </motion.div>\n                        );\n                      })}\n                    </AnimatePresence>\n                  </div>\n                  {!loading && shown.length === 0 && (\n                    <div className=\"mt-8 rounded-[28px] border border-dashed border-[#BFE3DD] p-10 text-center\">\n                      <Search className=\"mx-auto h-8 w-8 text-[#7FD6C9]\" />\n                      <div className=\"mt-3 font-extrabold\">No doctors match that search</div>\n                      <div className=\"text-sm font-semibold text-[#7A9A95]\">Try another specialty or clear the search.</div>\n                    </div>\n                  )}\n                </div>\n              )}\n\n              {tab === \"visits\" && (\n                <div>\n                  <div className=\"mb-5 flex items-end justify-between\">\n                    <div>\n                      <h1 className=\"text-[28px] font-extrabold\" style={{ fontFamily: FONT }}>My visits</h1>\n                      <p className=\"text-sm font-semibold text-[#7A9A95]\">Everything coming up, with what to prepare.</p>\n                    </div>\n                    <div className=\"flex gap-3 text-center\">\n                      <div className=\"rounded-2xl bg-white px-4 py-2 shadow-sm\"><div className=\"text-xl font-extrabold text-[#0E8A7C]\"><Counter value={upcoming.length} /></div><div className=\"text-[11px] font-bold text-[#7A9A95]\">Upcoming</div></div>\n                      <div className=\"rounded-2xl bg-white px-4 py-2 shadow-sm\"><div className=\"text-xl font-extrabold text-[#0E8A7C]\"><Counter value={past.length} /></div><div className=\"text-[11px] font-bold text-[#7A9A95]\">Past</div></div>\n                    </div>\n                  </div>\n                  <div className=\"grid gap-4 lg:grid-cols-2\">\n                    <AnimatePresence mode=\"popLayout\">\n                      {upcoming.map((a, i) => {\n                        const d = docById(s(a.doctor_id));\n                        const t = ms(a.starts_at);\n                        return (\n                          <motion.div key={s(a.id)} layout initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ ...spring, delay: reduce ? 0 : i * 0.06 }} className={card + \" p-5\"}>\n                            <div className=\"flex gap-4\">\n                              <div className=\"flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#E3F6F3] text-[#0B6F63]\">\n                                <div className=\"text-2xl font-extrabold leading-none\">{new Date(t).getUTCDate()}</div>\n                                <div className=\"text-[11px] font-extrabold uppercase\">{MO[new Date(t).getUTCMonth()]}</div>\n                              </div>\n                              <div className=\"min-w-0 flex-1\">\n                                <div className=\"flex items-start justify-between gap-2\">\n                                  <div className=\"text-[17px] font-extrabold leading-tight\">{s(a.reason)}</div>\n                                  <span className={\"shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold \" + (s(a.status) === \"checked_in\" ? \"bg-[#E8F5DD] text-[#477A1E]\" : \"bg-[#E6F0FF] text-[#2E5FB8]\")}>{s(a.status) === \"checked_in\" ? \"Checked in\" : \"Booked\"}</span>\n                                </div>\n                                <div className=\"mt-2 flex items-center gap-2 text-sm font-bold text-[#5B7C77]\">\n                                  <Photo src={s(d?.photo)} name={s(a.doctor_name)} className=\"h-6 w-6 rounded-full\" />\n                                  {s(a.doctor_name)}\n                                </div>\n                                <div className=\"mt-1 flex items-center gap-1.5 text-sm font-bold text-[#0B7A6D]\"><Clock className=\"h-4 w-4\" /> {rel(t, now)}, {hm(t)}–{hm(ms(a.ends_at))} · {until(t, now)}</div>\n                              </div>\n                            </div>\n                            {s(a.prep_notes) && (\n                              <div className=\"mt-4 flex gap-3 rounded-2xl bg-[#FFF7E8] p-3.5\">\n                                <Lightbulb className=\"mt-0.5 h-4 w-4 shrink-0 text-[#C98410]\" />\n                                <div className=\"text-[13px] font-semibold leading-snug text-[#7A5A12]\"><span className=\"font-extrabold\">Prepare:</span> {s(a.prep_notes)}</div>\n                              </div>\n                            )}\n                            {s(a.status) === \"booked\" && (\n                              <div className=\"mt-4 flex justify-end\">\n                                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setCancelId(s(a.id))} className=\"rounded-xl border border-[#F3C9C4] px-4 py-2 text-sm font-extrabold text-[#C5463B]\">Cancel visit</motion.button>\n                              </div>\n                            )}\n                          </motion.div>\n                        );\n                      })}\n                    </AnimatePresence>\n                  </div>\n                  {upcoming.length === 0 && (\n                    <div className={empty}>\n                      <motion.div animate={reduce ? undefined : { y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }} className={disk}><Calendar className=\"h-9 w-9\" /></motion.div>\n                      <div className=\"mt-4 text-lg font-extrabold\">Nothing booked yet</div>\n                      <div className=\"mt-1 text-sm font-semibold text-[#7A9A95]\">Find a doctor and pick a time that suits you.</div>\n                      <button onClick={() => setTab(\"find\")} className=\"mt-5 rounded-2xl bg-[#12A594] px-6 py-3 text-sm font-extrabold text-white\">Find a doctor</button>\n                    </div>\n                  )}\n                </div>\n              )}\n\n              {tab === \"history\" && (\n                <div>\n                  <div className=\"mb-5\">\n                    <h1 className=\"text-[28px] font-extrabold\" style={{ fontFamily: FONT }}>Visit history</h1>\n                    <p className=\"text-sm font-semibold text-[#7A9A95]\">Your doctor's notes, kept private between you and them.</p>\n                  </div>\n                  <div className=\"relative space-y-4 lg:max-w-3xl\">\n                    <div className=\"absolute bottom-6 left-[27px] top-6 hidden w-0.5 bg-[#D6ECE8] sm:block\" />\n                    {past.map((a, i) => {\n                      const d = docById(s(a.doctor_id));\n                      const n = noteFor(s(a.id));\n                      const isOpen = open === s(a.id) || (open === \"\" && i === 0);\n                      return (\n                        <motion.div key={s(a.id)} initial={reduce ? false : { opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.06 }} className=\"relative sm:pl-16\">\n                          <span className=\"absolute left-[18px] top-7 hidden h-5 w-5 rounded-full border-4 border-[#F4FBFA] bg-[#12A594] sm:block\" />\n                          <div className={card + \" overflow-hidden\"}>\n                            <button className=\"flex w-full items-center gap-4 p-4 text-left\" onClick={() => setOpen(isOpen ? \"none\" : s(a.id))}>\n                              <Photo src={s(d?.photo)} name={s(a.doctor_name)} className=\"h-14 w-14 shrink-0 rounded-2xl\" />\n                              <div className=\"min-w-0 flex-1\">\n                                <div className=\"truncate text-[16px] font-extrabold\">{s(a.reason)}</div>\n                                <div className=\"truncate text-sm font-bold text-[#5B7C77]\">{s(a.doctor_name)} · {dateLong(ms(a.starts_at))}</div>\n                                {n && <div className=\"mt-1 text-[13px] font-extrabold text-[#0B7A6D]\">{s(n.diagnosis)}</div>}\n                              </div>\n                              <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className=\"text-[#7A9A95]\"><ChevronDown className=\"h-5 w-5\" /></motion.span>\n                            </button>\n                            <AnimatePresence initial={false}>\n                              {isOpen && (\n                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: \"auto\", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className=\"overflow-hidden\">\n                                  <div className=\"space-y-3 border-t border-[#EAF4F2] p-4 pt-4\">\n                                    {n ? (\n                                      [[\"What we found\", s(n.summary)], [\"Diagnosis\", s(n.diagnosis)], [\"Plan\", s(n.plan)], [\"Follow-up\", s(n.follow_up)]].filter((r) => r[1]).map((r) => (\n                                        <div key={r[0]} className=\"rounded-2xl bg-[#F4FBFA] p-3.5\">\n                                          <div className=\"text-[11px] font-extrabold uppercase tracking-wide text-[#0E8A7C]\">{r[0]}</div>\n                                          <div className=\"mt-1 text-[14px] font-semibold leading-relaxed text-[#27504B]\">{r[1]}</div>\n                                        </div>\n                                      ))\n                                    ) : (\n                                      <div className=\"text-sm font-semibold text-[#7A9A95]\">Notes from this visit will appear here.</div>\n                                    )}\n                                  </div>\n                                </motion.div>\n                              )}\n                            </AnimatePresence>\n                          </div>\n                        </motion.div>\n                      );\n                    })}\n                    {past.length === 0 && (\n                      <div className={empty}>\n                        <div className={disk}><FileText className=\"h-9 w-9\" /></div>\n                        <div className=\"mt-4 text-lg font-extrabold\">No visits yet</div>\n                        <div className=\"mt-1 text-sm font-semibold text-[#7A9A95]\">After your first appointment, your doctor's notes will show up here.</div>\n                      </div>\n                    )}\n                  </div>\n                </div>\n              )}\n            </motion.div>\n          </AnimatePresence>\n        </main>\n      </div>\n\n      <LayoutGroup id=\"tabs\">\n        <nav className=\"fixed inset-x-3 bottom-3 z-30 flex rounded-[26px] border border-white/70 bg-white/85 p-1.5 shadow-[0_20px_50px_-12px_rgba(14,43,41,0.35)] backdrop-blur-xl lg:hidden\">\n          {NAV.map((n) => (\n            <button key={n.id} onClick={() => setTab(n.id)} className=\"relative flex flex-1 flex-col items-center gap-0.5 rounded-[20px] py-2 text-[11px] font-extrabold\">\n              {tab === n.id && <motion.span layoutId=\"tabpill\" transition={spring} className=\"absolute inset-0 rounded-[20px] bg-[#E3F6F3]\" />}\n              <n.Icon className={\"relative h-5 w-5 \" + (tab === n.id ? \"text-[#0E8A7C]\" : \"text-[#7A9A95]\")} />\n              <span className={\"relative \" + (tab === n.id ? \"text-[#0B6F63]\" : \"text-[#7A9A95]\")}>{n.id === \"find\" ? \"Doctors\" : n.label}</span>\n            </button>\n          ))}\n        </nav>\n      </LayoutGroup>\n\n      <AnimatePresence>\n        {cancelId && (\n          <motion.div key=\"cancel\" className=\"fixed inset-0 z-50 flex items-center justify-center bg-[#0E2B29]/40 p-5\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCancelId(\"\")}>\n            <motion.div initial={{ scale: 0.92, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }} onClick={(e) => e.stopPropagation()} className=\"w-full max-w-sm rounded-[28px] bg-white p-6 text-center shadow-2xl\">\n              <div className=\"text-lg font-extrabold\">Cancel this visit?</div>\n              <p className=\"mt-1 text-sm font-semibold text-[#7A9A95]\">The time will be released for other patients.</p>\n              <div className=\"mt-5 grid grid-cols-2 gap-3\">\n                <button onClick={() => setCancelId(\"\")} className=\"rounded-2xl bg-[#F0F7F6] py-3 text-sm font-extrabold text-[#27504B]\">Keep it</button>\n                <button onClick={() => void cancel()} className=\"rounded-2xl bg-[#E5594F] py-3 text-sm font-extrabold text-white\">Cancel visit</button>\n              </div>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n\n      <AnimatePresence>\n        {toast && (\n          <motion.div key=\"toast\" initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className=\"fixed inset-x-4 bottom-24 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-[#0E2B29] px-4 py-3.5 text-sm font-bold text-white shadow-2xl lg:bottom-8\">\n            <Sparkles className=\"h-5 w-5 shrink-0 text-[#5CD0C0]\" /> {toast}\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "DoctorApp",
+      "kind": "code",
+      "purpose": "Doctor day: animated timeline with now-line, appointment detail with patient history, AI summary, visit notes",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, LayoutGroup, animate, useReducedMotion } from \"motion/react\";\nimport { HeartPulse, ChevronLeft, ChevronRight, Clock, FileText, Sparkles, Check, CheckCircle, X, LogOut, Users, UserCheck, Lightbulb, AlertCircle } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif\";\nconst DAY = 86400000;\nconst H = 84;\nconst START = 8;\nconst WD = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\nconst MO = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"];\nconst ST: Record<string, { label: string; chip: string; card: string }> = {\n  booked: { label: \"Booked\", chip: \"bg-[#E6F0FF] text-[#2E5FB8]\", card: \"border-[#D6ECE8] bg-white\" },\n  checked_in: { label: \"Waiting\", chip: \"bg-[#FFF0DD] text-[#A8630F]\", card: \"border-[#F5D9A8] bg-[#FFF9EE]\" },\n  completed: { label: \"Done\", chip: \"bg-[#E8F5DD] text-[#477A1E]\", card: \"border-[#DCEBD0] bg-[#F5FAF0] opacity-90\" },\n  cancelled: { label: \"Cancelled\", chip: \"bg-[#F1F1F1] text-[#888]\", card: \"border-dashed border-[#DDD] bg-[#FAFAFA] opacity-60\" },\n};\n\nconst s = (v: unknown): string => (v === null || v === undefined ? \"\" : String(v));\nconst pad = (n: number) => String(n).padStart(2, \"0\");\nconst ms = (v: unknown) => {\n  const t = Date.parse(s(v));\n  return Number.isNaN(t) ? 0 : t;\n};\nconst hm = (t: number) => {\n  const d = new Date(t);\n  return pad(d.getUTCHours()) + \":\" + pad(d.getUTCMinutes());\n};\nconst dayStart = (t: number) => t - (((t % DAY) + DAY) % DAY);\nconst dateLong = (t: number) => {\n  const d = new Date(t);\n  return WD[d.getUTCDay()] + \" \" + d.getUTCDate() + \" \" + MO[d.getUTCMonth()];\n};\nconst initials = (n: string) => n.replace(\"Dr. \", \"\").split(\" \").map((p) => p[0] || \"\").join(\"\").slice(0, 2);\n\nfunction Photo({ src, name, className }: { src: string; name: string; className: string }) {\n  const [bad, setBad] = useState(false);\n  if (!src || bad || /\\.svg(\\?|$)/i.test(src)) {\n    return <div className={className + \" flex items-center justify-center bg-gradient-to-br from-[#BFEDE6] to-[#7FD6C9] text-xs font-extrabold text-[#0B6F63]\"}>{initials(name)}</div>;\n  }\n  return <img src={src} alt={name} onError={() => setBad(true)} className={className + \" object-cover\"} />;\n}\n\nfunction Counter({ value }: { value: number }) {\n  const reduce = useReducedMotion();\n  const [n, setN] = useState(0);\n  useEffect(() => {\n    if (reduce) {\n      setN(value);\n      return;\n    }\n    const c = animate(0, value, { duration: 0.8, ease: \"easeOut\", onUpdate: (v) => setN(Math.round(v)) });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <>{n}</>;\n}\n\nconst field = \"w-full rounded-2xl border border-[#D6ECE8] bg-white px-4 py-3 text-[14px] font-semibold text-[#0E2B29] outline-none placeholder:text-[#9BB8B3] focus:border-[#12A594] focus:ring-4 focus:ring-[#12A594]/15\";\n\nfunction Detail({ a, appts, notes, app, onDone, onClose }: { a: Row; appts: Row[]; notes: Row[]; app?: AppHandle; onDone: (m: string) => void; onClose?: () => void }) {\n  const reduce = useReducedMotion();\n  const id = s(a.id);\n  const [form, setForm] = useState({ summary: \"\", diagnosis: \"\", plan: \"\", follow_up: \"\" });\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const [ai, setAi] = useState(\"\");\n  const [aiBusy, setAiBusy] = useState(false);\n  const [vs, setVs] = useState(\"\");\n  const [vsBusy, setVsBusy] = useState(false);\n  const [vsFail, setVsFail] = useState(false);\n  useEffect(() => {\n    setForm({ summary: \"\", diagnosis: \"\", plan: \"\", follow_up: \"\" });\n    setErr(\"\");\n    setAi(\"\");\n    setVs(\"\");\n    setVsFail(false);\n  }, [id]);\n\n  const status = s(a.status);\n  const own = notes.find((n) => s(n.appointment_id) === id);\n  const history = appts\n    .filter((x) => s(x.patient_id) === s(a.patient_id) && s(x.id) !== id && s(x.status) === \"completed\")\n    .sort((x, y) => ms(y.starts_at) - ms(x.starts_at));\n  const noteOf = (x: Row) => notes.find((n) => s(n.appointment_id) === s(x.id));\n  const open = status === \"booked\" || status === \"checked_in\";\n\n  const complete = async () => {\n    if (!app || busy) return;\n    if (!form.summary.trim() || !form.diagnosis.trim()) {\n      setErr(\"Add a summary and a diagnosis before completing the visit.\");\n      return;\n    }\n    setBusy(true);\n    setErr(\"\");\n    try {\n      await app.create(\"visit_note\", { appointment_id: id, patient_id: s(a.patient_id), doctor_id: app.me(\"doctor\"), summary: form.summary.trim(), diagnosis: form.diagnosis.trim(), plan: form.plan.trim() || \"No further plan.\", follow_up: form.follow_up.trim() || null });\n      await app.transition(\"appointment\", id, \"status\", \"completed\");\n      onDone(s(a.patient_name) + \" has been notified that their notes are ready.\");\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Could not save the notes.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  const summarise = async () => {\n    if (!app || aiBusy) return;\n    setAiBusy(true);\n    setAi(\"\");\n    const lines = history.map((x) => {\n      const n = noteOf(x);\n      return dateLong(ms(x.starts_at)) + \" \" + s(x.reason) + (n ? \": \" + s(n.summary) + \" Dx: \" + s(n.diagnosis) + \". Plan: \" + s(n.plan) : \"\");\n    });\n    try {\n      const r = await app.ai.ask(\"Patient: \" + s(a.patient_name) + \" (\" + s(a.patient_info) + \"). Today's reason: \" + s(a.reason) + \".\\nPrevious visits:\\n\" + (lines.join(\"\\n\") || \"None on record.\"), { system: \"You summarise a patient's history for their doctor in at most 4 short bullet points, then one line starting 'Watch:' for anything to follow up. Use only the facts given; never invent details.\", maxTokens: 320 });\n      setAi(r);\n    } catch {\n      setAi(\"The summary is unavailable right now. Previous visits are listed below.\");\n    } finally {\n      setAiBusy(false);\n    }\n  };\n\n  const noteSrc = own ? { summary: s(own.summary), diagnosis: s(own.diagnosis), plan: s(own.plan), follow_up: s(own.follow_up) } : form;\n  const hasNotes = !!(noteSrc.summary.trim() || noteSrc.plan.trim());\n  const visitSummary = async () => {\n    if (!app || vsBusy || !hasNotes) return;\n    setVsBusy(true);\n    setVsFail(false);\n    setVs(\"\");\n    try {\n      const r = await app.ai.ask(\"Visit notes for \" + s(a.patient_name) + \" (reason: \" + s(a.reason) + \")\\nSummary: \" + noteSrc.summary + \"\\nDiagnosis: \" + noteSrc.diagnosis + \"\\nPlan: \" + noteSrc.plan + \"\\nFollow-up: \" + noteSrc.follow_up, { system: \"You write a short, warm, plain-language visit summary for a patient from their doctor's visit notes: 2-3 sentences, then 'Next steps:' with up to 4 short bullet points. Use ONLY facts in the notes. Never diagnose, never add medical advice, doses, causes or reassurance beyond what the notes say; if something is missing, leave it out. No headings besides 'Next steps:'.\", maxTokens: 300 });\n      setVs(r);\n    } catch {\n      setVsFail(true);\n    } finally {\n      setVsBusy(false);\n    }\n  };\n\n  return (\n    <div style={{ fontFamily: FONT }}>\n      <div className=\"flex items-start gap-4\">\n        <Photo src={s(a.patient_photo)} name={s(a.patient_name)} className=\"h-16 w-16 shrink-0 rounded-[22px]\" />\n        <div className=\"min-w-0 flex-1\">\n          <div className=\"truncate text-xl font-extrabold\">{s(a.patient_name)}</div>\n          <div className=\"text-[13px] font-bold text-[#5B7C77]\">{s(a.patient_info)}</div>\n          <span className={\"mt-1.5 inline-block rounded-full px-2.5 py-1 text-[11px] font-extrabold \" + (ST[status] || ST.booked).chip}>{(ST[status] || ST.booked).label}</span>\n        </div>\n        {onClose && <button onClick={onClose} aria-label=\"Close\" className=\"flex h-9 w-9 items-center justify-center rounded-full bg-[#F0F7F6] text-[#27504B]\"><X className=\"h-4 w-4\" /></button>}\n      </div>\n\n      <div className=\"mt-4 grid grid-cols-2 gap-3\">\n        <div className=\"rounded-2xl bg-[#F4FBFA] p-3\"><div className=\"text-[11px] font-extrabold uppercase text-[#7A9A95]\">When</div><div className=\"text-sm font-extrabold\">{dateLong(ms(a.starts_at))}</div><div className=\"text-sm font-bold text-[#0B7A6D]\">{hm(ms(a.starts_at))}–{hm(ms(a.ends_at))}</div></div>\n        <div className=\"rounded-2xl bg-[#F4FBFA] p-3\"><div className=\"text-[11px] font-extrabold uppercase text-[#7A9A95]\">Reason</div><div className=\"text-sm font-extrabold leading-snug\">{s(a.reason)}</div></div>\n      </div>\n      {s(a.prep_notes) && (\n        <div className=\"mt-3 flex gap-2.5 rounded-2xl bg-[#FFF7E8] p-3\"><Lightbulb className=\"mt-0.5 h-4 w-4 shrink-0 text-[#C98410]\" /><div className=\"text-[13px] font-semibold text-[#7A5A12]\">{s(a.prep_notes)}</div></div>\n      )}\n\n      <div className=\"mt-5\">\n        <div className=\"mb-2 flex items-center justify-between\">\n          <div className=\"text-[15px] font-extrabold\">Patient history</div>\n          <motion.button whileTap={{ scale: 0.95 }} onClick={() => void summarise()} disabled={aiBusy} className=\"flex items-center gap-1.5 rounded-full bg-[#12A594] px-3.5 py-1.5 text-xs font-extrabold text-white shadow-[0_8px_16px_-8px_rgba(18,165,148,0.9)] disabled:opacity-70\">\n                <Sparkles className=\"h-3.5 w-3.5\" /> {aiBusy ? \"Summarising…\" : \"Summarise with AI\"}\n          </motion.button>\n        </div>\n        <AnimatePresence>\n          {(aiBusy || ai) && (\n            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"mb-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#E3F6F3] to-[#F4FBFA] ring-1 ring-[#BFE3DD]\">\n              <div className=\"p-3.5\">\n                {aiBusy ? (\n                  <div className=\"space-y-2\">{[90, 75, 60].map((w) => <div key={w} className=\"h-3 animate-pulse rounded-full bg-[#BFE3DD]\" style={{ width: w + \"%\" }} />)}</div>\n                ) : (\n                  <div className=\"whitespace-pre-line text-[13px] font-semibold leading-relaxed text-[#27504B]\">{ai}</div>\n                )}\n              </div>\n            </motion.div>\n          )}\n        </AnimatePresence>\n        <div className=\"space-y-2\">\n          {history.map((x, i) => {\n            const n = noteOf(x);\n            return (\n              <motion.div key={s(x.id)} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className=\"rounded-2xl border border-[#E2F2EF] bg-white p-3\">\n                <div className=\"flex items-center justify-between text-xs font-extrabold text-[#7A9A95]\"><span>{dateLong(ms(x.starts_at))}</span><span>{s(x.reason)}</span></div>\n                {n ? (<><div className=\"mt-1 text-sm font-extrabold text-[#0B7A6D]\">{s(n.diagnosis)}</div><div className=\"text-[13px] font-semibold leading-snug text-[#5B7C77]\">{s(n.summary)}</div></>) : <div className=\"mt-1 text-[13px] font-semibold text-[#9BB8B3]\">No notes recorded.</div>}\n              </motion.div>\n            );\n          })}\n          {history.length === 0 && <div className=\"rounded-2xl border border-dashed border-[#BFE3DD] p-4 text-center text-sm font-semibold text-[#7A9A95]\">First visit with you. No earlier notes.</div>}\n        </div>\n      </div>\n\n      {open && (\n        <div className=\"mt-5 rounded-[24px] bg-[#F4FBFA] p-4\">\n          <div className=\"mb-3 flex items-center gap-2 text-[15px] font-extrabold\"><FileText className=\"h-4 w-4 text-[#12A594]\" /> Visit notes</div>\n          <div className=\"space-y-2.5\">\n            <textarea aria-label=\"Summary\" rows={3} className={field} placeholder=\"What happened in the visit?\" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />\n            <input aria-label=\"Diagnosis\" className={field} placeholder=\"Diagnosis\" value={form.diagnosis} onChange={(e) => setForm({ ...form, diagnosis: e.target.value })} />\n            <textarea aria-label=\"Plan\" rows={2} className={field} placeholder=\"Plan and prescriptions\" value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })} />\n            <input aria-label=\"Follow-up\" className={field} placeholder=\"Follow-up (e.g. 4 weeks)\" value={form.follow_up} onChange={(e) => setForm({ ...form, follow_up: e.target.value })} />\n          </div>\n          <AnimatePresence>{err && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"mt-3 flex gap-2 rounded-xl bg-[#FDECEC] px-3 py-2 text-[13px] font-bold text-[#B42318]\"><AlertCircle className=\"h-4 w-4 shrink-0\" /> {err}</motion.div>}</AnimatePresence>\n          <motion.button whileTap={{ scale: 0.97 }} onClick={() => void complete()} disabled={busy} className=\"mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#12A594] py-3.5 text-[15px] font-extrabold text-white shadow-[0_12px_24px_-10px_rgba(18,165,148,0.8)] disabled:opacity-70\">\n            <Check className=\"h-5 w-5\" /> {busy ? \"Saving…\" : \"Save notes & mark completed\"}\n          </motion.button>\n        </div>\n      )}\n      {status === \"completed\" && own && (\n        <div className=\"mt-5 rounded-[24px] bg-[#F5FAF0] p-4\">\n          <div className=\"mb-2 flex items-center gap-2 text-[15px] font-extrabold text-[#477A1E]\"><CheckCircle className=\"h-4 w-4\" /> Notes for this visit</div>\n          {[[\"Summary\", s(own.summary)], [\"Diagnosis\", s(own.diagnosis)], [\"Plan\", s(own.plan)], [\"Follow-up\", s(own.follow_up)]].filter((r) => r[1]).map((r) => (\n            <div key={r[0]} className=\"mb-2 last:mb-0\"><div className=\"text-[11px] font-extrabold uppercase text-[#7A9A95]\">{r[0]}</div><div className=\"text-[13px] font-semibold text-[#27504B]\">{r[1]}</div></div>\n          ))}\n        </div>\n      )}\n      {status !== \"cancelled\" && (\n        <div className=\"mt-5 rounded-[24px] bg-gradient-to-br from-[#E3F6F3] to-[#F4FBFA] p-4 ring-1 ring-[#BFE3DD]\">\n          <div className=\"flex items-center justify-between gap-2\">\n            <div className=\"flex items-center gap-2 text-[15px] font-extrabold\"><Sparkles className=\"h-4 w-4 text-[#12A594]\" /> Visit summary</div>\n            <motion.button whileTap={{ scale: 0.95 }} onClick={() => void visitSummary()} disabled={vsBusy || !hasNotes} className=\"rounded-full bg-[#12A594] px-3.5 py-1.5 text-xs font-extrabold text-white disabled:opacity-60\">\n              {vsBusy ? \"Writing…\" : vs ? \"Rewrite\" : \"Write patient summary\"}\n            </motion.button>\n          </div>\n          {!hasNotes && !vs && <div className=\"mt-2 text-[13px] font-semibold text-[#5B7C77]\">Add visit notes above, then turn them into a patient-friendly summary.</div>}\n          {vsBusy && <div className=\"mt-3 space-y-2\">{[90, 75, 60].map((w) => <div key={w} className=\"h-3 animate-pulse rounded-full bg-[#BFE3DD]\" style={{ width: w + \"%\" }} />)}</div>}\n          {vsFail && <div className=\"mt-3 rounded-xl bg-white/80 px-3 py-2 text-[13px] font-bold text-[#7A5A12]\">AI is resting right now, try again soon.</div>}\n          {vs && !vsBusy && (\n            <div className=\"mt-3 rounded-2xl bg-white p-3.5\">\n              <span className=\"mb-2 inline-block rounded-full bg-[#FFF0DD] px-2.5 py-0.5 text-[11px] font-extrabold text-[#A8630F]\">Draft, review before sharing</span>\n              <div className=\"whitespace-pre-line text-[13px] font-semibold leading-relaxed text-[#27504B]\">{vs}</div>\n            </div>\n          )}\n        </div>\n      )}\n    </div>\n  );\n}\n\nexport default function DoctorApp({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const appRef = useRef(app);\n  appRef.current = app;\n  const [now, setNow] = useState(0);\n  const [off, setOff] = useState(0);\n  const [selId, setSelId] = useState(\"\");\n  const [wide, setWide] = useState(false);\n  const [toast, setToast] = useState(\"\");\n\n  useEffect(() => {\n    setNow(Date.now());\n    const t = setInterval(() => setNow(Date.now()), 20000);\n    return () => clearInterval(t);\n  }, []);\n  useEffect(() => {\n    const mq = window.matchMedia(\"(min-width: 1024px)\");\n    const f = () => setWide(mq.matches);\n    f();\n    mq.addEventListener(\"change\", f);\n    return () => mq.removeEventListener(\"change\", f);\n  }, []);\n  useEffect(() => {\n    const a = appRef.current;\n    if (!a) return;\n    const offs = [\"appointment\", \"visit_note\"].map((e) => a.live(e));\n    return () => offs.forEach((o) => o());\n  }, []);\n  useEffect(() => {\n    if (!toast) return;\n    const t = setTimeout(() => setToast(\"\"), 4000);\n    return () => clearTimeout(t);\n  }, [toast]);\n\n  const appts = (app?.rows(\"appointment\") || []) as Row[];\n  const notes = (app?.rows(\"visit_note\") || []) as Row[];\n  const doctors = (app?.rows(\"doctor\") || []) as Row[];\n  const meId = app?.me(\"doctor\");\n  const me = doctors.find((d) => s(d.id) === meId) || doctors[0];\n  const lastName = s(me?.name || app?.user.name).replace(\"Dr. \", \"\").split(\" \").slice(-1)[0];\n\n  const today = now ? dayStart(now) : dayStart(Date.UTC(2026, 9, 11));\n  const base = today + off * DAY;\n  const days = [-1, 0, 1, 2, 3, 4, 5].map((i) => today + i * DAY);\n  const dayAppts = useMemo(() => appts.filter((a) => dayStart(ms(a.starts_at)) === base).sort((a, b) => ms(a.starts_at) - ms(b.starts_at)), [appts, base]);\n  const active = dayAppts.filter((a) => s(a.status) !== \"cancelled\");\n  const counts = (d: number) => appts.filter((a) => dayStart(ms(a.starts_at)) === d && s(a.status) !== \"cancelled\").length;\n  const done = active.filter((a) => s(a.status) === \"completed\").length;\n  const waiting = active.filter((a) => s(a.status) === \"checked_in\").length;\n  const nextUp = active.find((a) => s(a.status) !== \"completed\" && ms(a.ends_at) > now);\n  const sel = appts.find((a) => s(a.id) === selId);\n  const isToday = off === 0;\n  const nowTop = now ? ((now - today) / 3600000 - START) * H : -1;\n  const showNow = isToday && nowTop >= 0 && nowTop <= 10 * H;\n  const spring = reduce ? { duration: 0 } : { type: \"spring\" as const, stiffness: 300, damping: 28 };\n  const loading = !!app?.loading(\"appointment\") && appts.length === 0;\n\n  const card = \"rounded-[28px] border border-[#E2F2EF] bg-white shadow-[0_1px_2px_rgba(14,43,41,0.04),0_14px_34px_-18px_rgba(18,165,148,0.28)]\";\n\n  return (\n    <div className=\"min-h-screen w-full bg-[#F4FBFA] text-[#0E2B29]\" style={{ fontFamily: FONT }}>\n      <header className=\"sticky top-0 z-30 border-b border-[#E2F2EF] bg-white/85 backdrop-blur-xl\">\n        <div className=\"mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8\">\n          <div className=\"flex items-center gap-2.5 text-lg font-extrabold\">\n            <span className=\"flex h-9 w-9 items-center justify-center rounded-xl bg-[#12A594] text-white\"><HeartPulse className=\"h-5 w-5\" /></span>\n            Clinicly <span className=\"hidden rounded-full bg-[#E3F6F3] px-2.5 py-0.5 text-xs font-extrabold text-[#0B7A6D] sm:inline\">Doctor</span>\n          </div>\n          <div className=\"flex items-center gap-3\">\n            <a href=\"/team\" onClick={(e) => { if (app) { e.preventDefault(); app.navigate(\"/team\"); } }} className=\"flex items-center gap-1.5 rounded-full bg-[#E3F6F3] px-3.5 py-2 text-xs font-extrabold text-[#0B7A6D]\"><Users className=\"h-3.5 w-3.5\" /> Team<span className=\"hidden sm:inline\"> &amp; access</span></a>\n            <div className=\"hidden text-right sm:block\"><div className=\"text-sm font-extrabold\">{s(me?.name || app?.user.name)}</div><div className=\"text-xs font-bold text-[#7A9A95]\">{s(me?.specialty)} · {s(me?.room)}</div></div>\n            <Photo src={s(me?.photo)} name={s(me?.name || app?.user.name)} className=\"h-10 w-10 rounded-full\" />\n            <button onClick={() => void app?.auth.signOut()} aria-label=\"Sign out\" className=\"flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F7F6] text-[#5B7C77]\"><LogOut className=\"h-4 w-4\" /></button>\n          </div>\n        </div>\n      </header>\n\n      <main className=\"mx-auto max-w-7xl px-4 pb-16 pt-5 lg:px-8 lg:pt-7\">\n        <div className=\"flex flex-wrap items-end justify-between gap-3\">\n          <div>\n            <h1 className=\"text-[28px] font-extrabold leading-tight lg:text-[34px]\" style={{ fontFamily: FONT }}>{isToday ? \"Good day, Dr. \" + lastName : dateLong(base)}</h1>\n            <p className=\"text-sm font-bold text-[#7A9A95]\">{dateLong(base)} · {active.length} appointment{active.length === 1 ? \"\" : \"s\"}{isToday && now ? \" · it is \" + hm(now) : \"\"}</p>\n          </div>\n        </div>\n\n        <div className=\"mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4\">\n          {[{ l: \"Appointments\", v: active.length, I: Users }, { l: \"Completed\", v: done, I: CheckCircle }, { l: \"Waiting\", v: waiting, I: UserCheck }, { l: \"Remaining\", v: active.length - done, I: Clock }].map((c, i) => (\n            <motion.div key={c.l} initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.06 }} className={card + \" flex items-center gap-3 p-4\"}>\n              <span className=\"flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E3F6F3] text-[#0E8A7C]\"><c.I className=\"h-5 w-5\" /></span>\n              <div><div className=\"text-2xl font-extrabold leading-none\"><Counter value={c.v} /></div><div className=\"mt-0.5 text-xs font-bold text-[#7A9A95]\">{c.l}</div></div>\n            </motion.div>\n          ))}\n        </div>\n\n        <LayoutGroup id=\"strip\">\n          <div className=\"-mx-4 mt-5 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0\">\n            <div className=\"flex w-max gap-2\">\n              {days.map((d, i) => {\n                const on = off === i - 1;\n                return (\n                  <button key={d} onClick={() => { setOff(i - 1); setSelId(\"\"); }} className=\"relative flex w-[68px] flex-col items-center rounded-2xl px-2 py-2.5\">\n                    {on ? <motion.span layoutId=\"daypill\" transition={spring} className=\"absolute inset-0 rounded-2xl bg-[#12A594] shadow-[0_10px_20px_-8px_rgba(18,165,148,0.8)]\" /> : <span className=\"absolute inset-0 rounded-2xl border border-[#D6ECE8] bg-white\" />}\n                    <span className={\"relative text-[11px] font-extrabold uppercase \" + (on ? \"text-white/80\" : \"text-[#7A9A95]\")}>{i === 1 ? \"Today\" : WD[new Date(d).getUTCDay()]}</span>\n                    <span className={\"relative text-xl font-extrabold \" + (on ? \"text-white\" : \"text-[#0E2B29]\")}>{new Date(d).getUTCDate()}</span>\n                    <span className={\"relative text-[11px] font-bold \" + (on ? \"text-white/80\" : \"text-[#9BB8B3]\")}>{counts(d)} appt</span>\n                  </button>\n                );\n              })}\n            </div>\n          </div>\n        </LayoutGroup>\n\n        <div className=\"mt-5 grid gap-6 lg:grid-cols-[1fr_440px]\">\n          <div className={card + \" p-4 sm:p-5\"}>\n            <div className=\"mb-3 flex items-center justify-between\">\n              <div className=\"text-[16px] font-extrabold\">Day timeline</div>\n              {nextUp && <div className=\"flex items-center gap-1.5 rounded-full bg-[#E3F6F3] px-3 py-1 text-xs font-extrabold text-[#0B7A6D]\"><Clock className=\"h-3.5 w-3.5\" /> Next: {s(nextUp.patient_name)} at {hm(ms(nextUp.starts_at))}</div>}\n            </div>\n            <div className=\"relative\" style={{ height: H * 10 + 8 }}>\n              {Array.from({ length: 11 }, (_, i) => (\n                <div key={i} className=\"absolute left-0 right-0 flex items-start\" style={{ top: i * H }}>\n                  <div className=\"w-12 -translate-y-2 text-[11px] font-extrabold text-[#9BB8B3]\">{pad(START + i)}:00</div>\n                  <div className=\"mt-0 h-px flex-1 bg-[#E8F3F1]\" />\n                </div>\n              ))}\n              <div className=\"absolute bottom-0 left-14 right-0 top-0\">\n                <AnimatePresence>\n                  {active.length === 0 && !loading && (\n                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"absolute inset-x-0 top-24 mx-auto max-w-xs rounded-3xl border border-dashed border-[#BFE3DD] bg-white/80 p-6 text-center\">\n                      <Calendar2 />\n                      <div className=\"mt-2 font-extrabold\">A free day</div>\n                      <div className=\"text-sm font-semibold text-[#7A9A95]\">No appointments scheduled.</div>\n                    </motion.div>\n                  )}\n                </AnimatePresence>\n                {loading && [1, 3, 5].map((k) => <div key={k} className=\"absolute inset-x-0 h-16 animate-pulse rounded-2xl bg-[#EAF6F4]\" style={{ top: k * H }} />)}\n                {dayAppts.map((a, i) => {\n                  const top = ((ms(a.starts_at) - base) / 3600000 - START) * H;\n                  const h = Math.max(((ms(a.ends_at) - ms(a.starts_at)) / 3600000) * H, 40);\n                  const st = ST[s(a.status)] || ST.booked;\n                  const on = selId === s(a.id);\n                  return (\n                    <motion.button\n                      key={s(a.id)}\n                      layout\n                      initial={reduce ? false : { opacity: 0, x: 24 }}\n                      animate={{ opacity: s(a.status) === \"cancelled\" ? 0.6 : 1, x: 0 }}\n                      transition={{ ...spring, delay: reduce ? 0 : i * 0.07 }}\n                      whileTap={{ scale: 0.98 }}\n                      whileHover={reduce ? undefined : { x: 3 }}\n                      onClick={() => setSelId(s(a.id))}\n                      className={\"absolute inset-x-0 flex items-center gap-3 overflow-hidden rounded-2xl border px-3 text-left \" + st.card + (on ? \" ring-2 ring-[#12A594] shadow-[0_14px_28px_-14px_rgba(18,165,148,0.7)]\" : \"\")}\n                      style={{ top: top + 2, height: h - 4 }}\n                    >\n                      <span className=\"absolute inset-y-0 left-0 w-1.5 bg-[#12A594]\" />\n                      <Photo src={s(a.patient_photo)} name={s(a.patient_name)} className=\"ml-1.5 h-9 w-9 shrink-0 rounded-full\" />\n                      <div className=\"min-w-0 flex-1\">\n                        <div className=\"truncate text-[14px] font-extrabold\">{s(a.patient_name)}</div>\n                        <div className=\"truncate text-xs font-bold text-[#7A9A95]\">{hm(ms(a.starts_at))} · {s(a.reason)}</div>\n                      </div>\n                      <span className={\"hidden shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold sm:inline \" + st.chip}>{st.label}</span>\n                    </motion.button>\n                  );\n                })}\n                {showNow && (\n                  <motion.div className=\"pointer-events-none absolute -left-14 right-0 z-10 flex items-center\" initial={false} animate={{ top: nowTop }} transition={spring}>\n                    <span className=\"rounded-md bg-[#FF6B5A] px-1.5 py-0.5 text-[10px] font-extrabold text-white\">{hm(now)}</span>\n                    <span className=\"relative -ml-0.5 h-2.5 w-2.5 rounded-full bg-[#FF6B5A]\">\n                      <motion.span className=\"absolute inset-0 rounded-full bg-[#FF6B5A]\" animate={reduce ? undefined : { scale: [1, 2.6], opacity: [0.6, 0] }} transition={{ duration: 1.8, repeat: Infinity }} />\n                    </span>\n                    <span className=\"h-0.5 flex-1 bg-[#FF6B5A]\" />\n                  </motion.div>\n                )}\n              </div>\n            </div>\n          </div>\n\n          {wide && (\n            <aside className={card + \" h-fit p-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto\"}>\n              <AnimatePresence mode=\"wait\">\n                {sel ? (\n                  <motion.div key={s(sel.id)} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}>\n                    <Detail a={sel} appts={appts} notes={notes} app={app} onDone={(m) => setToast(m)} />\n                  </motion.div>\n                ) : (\n                  <motion.div key=\"none\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className=\"py-16 text-center\">\n                    <div className=\"mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#E3F6F3] text-[#12A594]\"><Users className=\"h-7 w-7\" /></div>\n                    <div className=\"mt-3 font-extrabold\">Select an appointment</div>\n                    <div className=\"text-sm font-semibold text-[#7A9A95]\">See the patient's history, write notes and complete the visit.</div>\n                  </motion.div>\n                )}\n              </AnimatePresence>\n            </aside>\n          )}\n        </div>\n      </main>\n\n      <AnimatePresence>\n        {!wide && sel && (\n          <motion.div key=\"sheet\" className=\"fixed inset-0 z-40 flex items-end bg-[#0E2B29]/45\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelId(\"\")}>\n            <motion.div initial={{ y: 120 }} animate={{ y: 0 }} exit={{ y: 160 }} transition={spring} onClick={(e) => e.stopPropagation()} className=\"max-h-[92vh] w-full overflow-y-auto rounded-t-[32px] bg-white p-5 pb-8 shadow-2xl\">\n              <Detail a={sel} appts={appts} notes={notes} app={app} onDone={(m) => { setToast(m); setSelId(\"\"); }} onClose={() => setSelId(\"\")} />\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n\n      <AnimatePresence>\n        {toast && (\n          <motion.div key=\"toast\" initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className=\"fixed inset-x-4 bottom-6 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-[#0E2B29] px-4 py-3.5 text-sm font-bold text-white shadow-2xl\">\n            <Sparkles className=\"h-5 w-5 shrink-0 text-[#5CD0C0]\" /> {toast}\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n\nfunction Calendar2() {\n  return <HeartPulse className=\"mx-auto h-8 w-8 text-[#7FD6C9]\" />;\n}\n"
+    },
+    {
+      "name": "DeskApp",
+      "kind": "code",
+      "purpose": "Front desk: today's schedule across doctors, check-in, reschedule",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, LayoutGroup, animate, useReducedMotion } from \"motion/react\";\nimport { HeartPulse, Search, Clock, X, LogOut, Users, UserCheck, CheckCircle, Calendar, Sparkles, ChevronLeft, ChevronRight, AlertCircle } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif\";\nconst DAY = 86400000;\nconst WD = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\nconst MO = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"];\nconst ST: Record<string, { label: string; chip: string }> = {\n  booked: { label: \"Booked\", chip: \"bg-[#E6F0FF] text-[#2E5FB8]\" },\n  checked_in: { label: \"Checked in\", chip: \"bg-[#FFF0DD] text-[#A8630F]\" },\n  completed: { label: \"Completed\", chip: \"bg-[#E8F5DD] text-[#477A1E]\" },\n  cancelled: { label: \"Cancelled\", chip: \"bg-[#F1F1F1] text-[#888]\" },\n};\n\nconst s = (v: unknown): string => (v === null || v === undefined ? \"\" : String(v));\nconst pad = (n: number) => String(n).padStart(2, \"0\");\nconst ms = (v: unknown) => {\n  const t = Date.parse(s(v));\n  return Number.isNaN(t) ? 0 : t;\n};\nconst hm = (t: number) => {\n  const d = new Date(t);\n  return pad(d.getUTCHours()) + \":\" + pad(d.getUTCMinutes());\n};\nconst dayStart = (t: number) => t - (((t % DAY) + DAY) % DAY);\nconst dateLong = (t: number) => {\n  const d = new Date(t);\n  return WD[d.getUTCDay()] + \" \" + d.getUTCDate() + \" \" + MO[d.getUTCMonth()];\n};\nconst initials = (n: string) => n.replace(\"Dr. \", \"\").split(\" \").map((p) => p[0] || \"\").join(\"\").slice(0, 2);\n\nfunction Photo({ src, name, className }: { src: string; name: string; className: string }) {\n  const [bad, setBad] = useState(false);\n  if (!src || bad) {\n    return <div className={className + \" flex items-center justify-center bg-gradient-to-br from-[#BFEDE6] to-[#7FD6C9] text-xs font-extrabold text-[#0B6F63]\"}>{initials(name)}</div>;\n  }\n  return <img src={src} alt={name} onError={() => setBad(true)} className={className + \" object-cover\"} />;\n}\n\nfunction Counter({ value }: { value: number }) {\n  const reduce = useReducedMotion();\n  const [n, setN] = useState(0);\n  useEffect(() => {\n    if (reduce) {\n      setN(value);\n      return;\n    }\n    const c = animate(0, value, { duration: 0.8, ease: \"easeOut\", onUpdate: (v) => setN(Math.round(v)) });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <>{n}</>;\n}\n\nexport default function DeskApp({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const appRef = useRef(app);\n  appRef.current = app;\n  const [now, setNow] = useState(0);\n  const [off, setOff] = useState(0);\n  const [doc, setDoc] = useState(\"all\");\n  const [q, setQ] = useState(\"\");\n  const [toast, setToast] = useState(\"\");\n  const [busyId, setBusyId] = useState(\"\");\n  const [resched, setResched] = useState<Row | null>(null);\n\n  useEffect(() => {\n    setNow(Date.now());\n    const t = setInterval(() => setNow(Date.now()), 20000);\n    return () => clearInterval(t);\n  }, []);\n  useEffect(() => {\n    const a = appRef.current;\n    if (!a) return;\n    const offs = [\"appointment\", \"slot\"].map((e) => a.live(e));\n    return () => offs.forEach((o) => o());\n  }, []);\n  useEffect(() => {\n    if (!toast) return;\n    const t = setTimeout(() => setToast(\"\"), 3800);\n    return () => clearTimeout(t);\n  }, [toast]);\n\n  const appts = (app?.rows(\"appointment\") || []) as Row[];\n  const doctors = (app?.rows(\"doctor\") || []) as Row[];\n  const slots = (app?.rows(\"slot\") || []) as Row[];\n  const meRow = ((app?.rows(\"desk\") || []) as Row[]).find((d) => s(d.id) === app?.me(\"desk\")) || ((app?.rows(\"desk\") || []) as Row[])[0];\n  const today = now ? dayStart(now) : dayStart(Date.UTC(2026, 9, 11));\n  const base = today + off * DAY;\n  const days = [0, 1, 2, 3, 4, 5, 6].map((i) => today + i * DAY);\n  const spring = reduce ? { duration: 0 } : { type: \"spring\" as const, stiffness: 320, damping: 28 };\n\n  const dayAppts = useMemo(() => appts.filter((a) => dayStart(ms(a.starts_at)) === base).sort((a, b) => ms(a.starts_at) - ms(b.starts_at)), [appts, base]);\n  const docIds = Array.from(new Set(dayAppts.map((a) => s(a.doctor_id))));\n  const shown = dayAppts.filter((a) => (doc === \"all\" || s(a.doctor_id) === doc) && (!q || s(a.patient_name).toLowerCase().includes(q.toLowerCase())));\n  const live = dayAppts.filter((a) => s(a.status) !== \"cancelled\");\n  const arrived = live.filter((a) => s(a.status) === \"checked_in\").length;\n  const completed = live.filter((a) => s(a.status) === \"completed\").length;\n  const toGo = live.filter((a) => s(a.status) === \"booked\").length;\n  const docOf = (id: string) => doctors.find((d) => s(d.id) === id);\n  const nowIdx = off === 0 && now ? shown.findIndex((a) => ms(a.starts_at) > now) : -1;\n  const loading = !!app?.loading(\"appointment\") && appts.length === 0;\n\n  const checkIn = async (a: Row) => {\n    const ap = appRef.current;\n    if (!ap) return;\n    setBusyId(s(a.id));\n    try {\n      await ap.transition(\"appointment\", s(a.id), \"status\", \"checked_in\");\n      setToast(s(a.patient_name) + \" is checked in for \" + hm(ms(a.starts_at)) + \".\");\n    } catch (e) {\n      setToast(e instanceof Error ? e.message : \"Could not check in.\");\n    } finally {\n      setBusyId(\"\");\n    }\n  };\n\n  const card = \"rounded-[28px] border border-[#E2F2EF] bg-white shadow-[0_1px_2px_rgba(14,43,41,0.04),0_14px_34px_-18px_rgba(18,165,148,0.28)]\";\n\n  return (\n    <div className=\"min-h-screen w-full bg-[#F4FBFA] text-[#0E2B29]\" style={{ fontFamily: FONT }}>\n      <header className=\"sticky top-0 z-30 border-b border-[#E2F2EF] bg-white/85 backdrop-blur-xl\">\n        <div className=\"mx-auto flex max-w-6xl items-center justify-between px-4 py-3 lg:px-8\">\n          <div className=\"flex items-center gap-2.5 text-lg font-extrabold\">\n            <span className=\"flex h-9 w-9 items-center justify-center rounded-xl bg-[#12A594] text-white\"><HeartPulse className=\"h-5 w-5\" /></span>\n            Clinicly <span className=\"hidden rounded-full bg-[#E3F6F3] px-2.5 py-0.5 text-xs font-extrabold text-[#0B7A6D] sm:inline\">Front desk</span>\n          </div>\n          <div className=\"flex items-center gap-3\">\n            <div className=\"hidden text-right sm:block\"><div className=\"text-sm font-extrabold\">{s(meRow?.name || app?.user.name)}</div><div className=\"text-xs font-bold text-[#7A9A95]\">Reception</div></div>\n            <Photo src={s(meRow?.photo)} name={s(meRow?.name || app?.user.name)} className=\"h-10 w-10 rounded-full\" />\n            <button onClick={() => void app?.auth.signOut()} aria-label=\"Sign out\" className=\"flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F7F6] text-[#5B7C77]\"><LogOut className=\"h-4 w-4\" /></button>\n          </div>\n        </div>\n      </header>\n\n      <main className=\"mx-auto max-w-6xl px-4 pb-16 pt-5 lg:px-8 lg:pt-7\">\n        <h1 className=\"text-[28px] font-extrabold leading-tight lg:text-[34px]\" style={{ fontFamily: FONT }}>{off === 0 ? \"Today's schedule\" : dateLong(base)}</h1>\n        <p className=\"text-sm font-bold text-[#7A9A95]\">{dateLong(base)} · all doctors{off === 0 && now ? \" · it is \" + hm(now) : \"\"}</p>\n\n        <div className=\"mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4\">\n          {[{ l: \"Appointments\", v: live.length, I: Calendar }, { l: \"Still to arrive\", v: toGo, I: Clock }, { l: \"In clinic\", v: arrived, I: UserCheck }, { l: \"Completed\", v: completed, I: CheckCircle }].map((c, i) => (\n            <motion.div key={c.l} initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.06 }} className={card + \" flex items-center gap-3 p-4\"}>\n              <span className=\"flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E3F6F3] text-[#0E8A7C]\"><c.I className=\"h-5 w-5\" /></span>\n              <div><div className=\"text-2xl font-extrabold leading-none\"><Counter value={c.v} /></div><div className=\"mt-0.5 text-xs font-bold text-[#7A9A95]\">{c.l}</div></div>\n            </motion.div>\n          ))}\n        </div>\n\n        <LayoutGroup id=\"deskdays\">\n          <div className=\"-mx-4 mt-5 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0\">\n            <div className=\"flex w-max gap-2\">\n              {days.map((d, i) => {\n                const on = off === i;\n                const n = appts.filter((a) => dayStart(ms(a.starts_at)) === d && s(a.status) !== \"cancelled\").length;\n                return (\n                  <button key={d} onClick={() => { setOff(i); setDoc(\"all\"); }} className=\"relative flex w-[68px] flex-col items-center rounded-2xl px-2 py-2.5\">\n                    {on ? <motion.span layoutId=\"deskpill\" transition={spring} className=\"absolute inset-0 rounded-2xl bg-[#12A594] shadow-[0_10px_20px_-8px_rgba(18,165,148,0.8)]\" /> : <span className=\"absolute inset-0 rounded-2xl border border-[#D6ECE8] bg-white\" />}\n                    <span className={\"relative text-[11px] font-extrabold uppercase \" + (on ? \"text-white/80\" : \"text-[#7A9A95]\")}>{i === 0 ? \"Today\" : WD[new Date(d).getUTCDay()]}</span>\n                    <span className={\"relative text-xl font-extrabold \" + (on ? \"text-white\" : \"text-[#0E2B29]\")}>{new Date(d).getUTCDate()}</span>\n                    <span className={\"relative text-[11px] font-bold \" + (on ? \"text-white/80\" : \"text-[#9BB8B3]\")}>{n} appt</span>\n                  </button>\n                );\n              })}\n            </div>\n          </div>\n        </LayoutGroup>\n\n        <div className=\"mt-4 flex flex-col gap-3 sm:flex-row sm:items-center\">\n          <div className=\"relative flex-1\">\n            <Search className=\"absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9BB8B3]\" />\n            <input aria-label=\"Search patients\" value={q} onChange={(e) => setQ(e.target.value)} placeholder=\"Search patient\" className=\"w-full rounded-2xl border border-[#D6ECE8] bg-white py-3 pl-11 pr-4 text-sm font-semibold outline-none focus:border-[#12A594] focus:ring-4 focus:ring-[#12A594]/15\" />\n          </div>\n          <LayoutGroup id=\"docs\">\n            <div className=\"-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0\">\n              <div className=\"flex w-max gap-2\">\n                {[\"all\"].concat(docIds).map((id) => (\n                  <button key={id} onClick={() => setDoc(id)} className=\"relative rounded-full px-3.5 py-2 text-[13px] font-extrabold\">\n                    {doc === id ? <motion.span layoutId=\"docpill\" transition={spring} className=\"absolute inset-0 rounded-full bg-[#12A594]\" /> : <span className=\"absolute inset-0 rounded-full border border-[#D6ECE8] bg-white\" />}\n                    <span className={\"relative \" + (doc === id ? \"text-white\" : \"text-[#27504B]\")}>{id === \"all\" ? \"All doctors\" : s(docOf(id)?.name || \"Doctor\").replace(\"Dr. \", \"Dr \")}</span>\n                  </button>\n                ))}\n              </div>\n            </div>\n          </LayoutGroup>\n        </div>\n\n        <div className=\"mt-4 space-y-3\">\n          {loading && [0, 1, 2].map((i) => <div key={i} className={card + \" h-24 animate-pulse bg-[#EAF6F4]\"} />)}\n          <AnimatePresence initial>\n            {shown.map((a, i) => {\n              const st = ST[s(a.status)] || ST.booked;\n              const d = docOf(s(a.doctor_id));\n              const canAct = s(a.status) === \"booked\" || s(a.status) === \"checked_in\";\n              return (\n                <div key={s(a.id)}>\n                  {nowIdx === i && (\n                    <motion.div initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }} className=\"mb-3 flex origin-left items-center gap-2\">\n                      <span className=\"rounded-md bg-[#FF6B5A] px-2 py-0.5 text-[11px] font-extrabold text-white\">Now {hm(now)}</span>\n                      <span className=\"h-0.5 flex-1 bg-[#FF6B5A]/60\" />\n                    </motion.div>\n                  )}\n                  <motion.div layout initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: s(a.status) === \"cancelled\" ? 0.55 : 1, y: 0 }} exit={{ opacity: 0 }} transition={{ ...spring, delay: reduce ? 0 : Math.min(i, 8) * 0.05 }} className={card + \" flex flex-col gap-3 p-4 sm:flex-row sm:items-center\"}>\n                    <div className=\"flex items-center gap-4 sm:flex-1\">\n                      <div className=\"w-[58px] shrink-0 text-center\"><div className=\"text-[19px] font-extrabold leading-none\">{hm(ms(a.starts_at))}</div><div className=\"mt-1 text-[11px] font-bold text-[#9BB8B3]\">{Math.round((ms(a.ends_at) - ms(a.starts_at)) / 60000)} min</div></div>\n                      <Photo src={s(a.patient_photo)} name={s(a.patient_name)} className=\"h-12 w-12 shrink-0 rounded-2xl\" />\n                      <div className=\"min-w-0 flex-1\">\n                        <div className=\"truncate text-[16px] font-extrabold\">{s(a.patient_name)}</div>\n                        <div className=\"truncate text-[13px] font-bold text-[#7A9A95]\">{s(a.reason)}</div>\n                        <div className=\"mt-1 flex items-center gap-1.5 text-xs font-bold text-[#5B7C77]\"><Photo src={s(d?.photo)} name={s(a.doctor_name)} className=\"h-5 w-5 rounded-full\" />{s(a.doctor_name)}{d ? \" · \" + s(d.room) : \"\"}</div>\n                      </div>\n                    </div>\n                    <div className=\"flex items-center justify-between gap-2 sm:justify-end\">\n                      <AnimatePresence mode=\"wait\" initial={false}>\n                        <motion.span key={s(a.status)} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className={\"rounded-full px-3 py-1 text-xs font-extrabold \" + st.chip}>{st.label}</motion.span>\n                      </AnimatePresence>\n                      <div className=\"flex gap-2\">\n                        {s(a.status) === \"booked\" && (\n                          <motion.button whileTap={{ scale: 0.93 }} disabled={busyId === s(a.id)} onClick={() => void checkIn(a)} className=\"flex items-center gap-1.5 rounded-xl bg-[#12A594] px-4 py-2.5 text-sm font-extrabold text-white shadow-[0_8px_16px_-8px_rgba(18,165,148,0.9)] disabled:opacity-70\"><UserCheck className=\"h-4 w-4\" /> {busyId === s(a.id) ? \"…\" : \"Check in\"}</motion.button>\n                        )}\n                        {canAct && (\n                          <motion.button whileTap={{ scale: 0.93 }} onClick={() => setResched(a)} className=\"rounded-xl border border-[#D6ECE8] bg-white px-4 py-2.5 text-sm font-extrabold text-[#27504B]\">Reschedule</motion.button>\n                        )}\n                      </div>\n                    </div>\n                  </motion.div>\n                </div>\n              );\n            })}\n          </AnimatePresence>\n          {!loading && shown.length === 0 && (\n            <div className=\"rounded-[32px] border border-dashed border-[#BFE3DD] bg-white/60 p-12 text-center\">\n              <div className=\"mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#E3F6F3] text-[#12A594]\"><Users className=\"h-9 w-9\" /></div>\n              <div className=\"mt-4 text-lg font-extrabold\">No appointments here</div>\n              <div className=\"mt-1 text-sm font-semibold text-[#7A9A95]\">Try another day or clear the filters.</div>\n            </div>\n          )}\n        </div>\n      </main>\n\n      <AnimatePresence>\n        {resched && <Reschedule key=\"rs\" a={resched} slots={slots} now={now} app={app} onClose={() => setResched(null)} onDone={(m) => { setToast(m); setResched(null); }} />}\n      </AnimatePresence>\n\n      <AnimatePresence>\n        {toast && (\n          <motion.div key=\"toast\" initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className=\"fixed inset-x-4 bottom-6 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-[#0E2B29] px-4 py-3.5 text-sm font-bold text-white shadow-2xl\">\n            <Sparkles className=\"h-5 w-5 shrink-0 text-[#5CD0C0]\" /> {toast}\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n\nfunction Reschedule({ a, slots, now, app, onClose, onDone }: { a: Row; slots: Row[]; now: number; app?: AppHandle; onClose: () => void; onDone: (m: string) => void }) {\n  const reduce = useReducedMotion();\n  const [week, setWeek] = useState(0);\n  const [day, setDay] = useState(0);\n  const [pick, setPick] = useState(0);\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const dur = ms(a.ends_at) - ms(a.starts_at) || 1800000;\n  const base = now ? dayStart(now) : dayStart(Date.UTC(2026, 9, 11));\n  const days = [0, 1, 2, 3, 4, 5, 6].map((i) => base + (week * 7 + i) * DAY);\n  const selDay = days[Math.min(day, 6)];\n  const busyList = slots.filter((r) => r.active !== false && s(r.doctor_id) === s(a.doctor_id) && s(r.appointment_id) !== s(a.id)).map((r) => ({ s: ms(r.starts_at), e: ms(r.ends_at) }));\n  const times = (d: number) => {\n    const out: number[] = [];\n    for (let m = 480; m + dur / 60000 <= 1080; m += 30) out.push(d + m * 60000);\n    return out;\n  };\n  const free = (t: number) => (!now || t > now) && !busyList.some((b) => b.s < t + dur && b.e > t);\n  const spring = reduce ? { duration: 0 } : { type: \"spring\" as const, stiffness: 320, damping: 30 };\n\n  const save = async () => {\n    if (!app || !pick || busy) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      await app.update(\"appointment\", s(a.id), { starts_at: new Date(pick).toISOString(), ends_at: new Date(pick + dur).toISOString() });\n      onDone(s(a.patient_name) + \" moved to \" + dateLong(pick) + \" at \" + hm(pick) + \".\");\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Could not reschedule.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  return (\n    <motion.div className=\"fixed inset-0 z-50 flex items-end justify-center bg-[#0E2B29]/45 lg:items-center\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>\n      <motion.div initial={{ y: reduce ? 0 : 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: reduce ? 0 : 80, opacity: 0 }} transition={spring} onClick={(e) => e.stopPropagation()} className=\"max-h-[94vh] w-full overflow-y-auto rounded-t-[32px] bg-white p-5 shadow-2xl lg:max-w-[620px] lg:rounded-[32px] lg:p-7\" style={{ fontFamily: FONT }}>\n        <div className=\"flex items-start justify-between gap-3\">\n          <div>\n            <div className=\"text-xl font-extrabold\">Reschedule</div>\n            <div className=\"text-sm font-bold text-[#7A9A95]\">{s(a.patient_name)} · {s(a.doctor_name)} · now {dateLong(ms(a.starts_at))} {hm(ms(a.starts_at))}</div>\n          </div>\n          <button onClick={onClose} aria-label=\"Close\" className=\"flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F0F7F6] text-[#27504B]\"><X className=\"h-5 w-5\" /></button>\n        </div>\n        <div className=\"mt-5 flex items-center justify-between\">\n          <div className=\"text-[15px] font-extrabold\">{MO[new Date(days[0]).getUTCMonth()]} {new Date(days[0]).getUTCFullYear()}</div>\n          <div className=\"flex gap-2\">\n            <button aria-label=\"Previous week\" disabled={week === 0} onClick={() => { setWeek(week - 1); setDay(0); setPick(0); }} className=\"flex h-9 w-9 items-center justify-center rounded-full bg-[#F0F7F6] disabled:opacity-30\"><ChevronLeft className=\"h-5 w-5\" /></button>\n            <button aria-label=\"Next week\" disabled={week >= 3} onClick={() => { setWeek(week + 1); setDay(0); setPick(0); }} className=\"flex h-9 w-9 items-center justify-center rounded-full bg-[#F0F7F6] disabled:opacity-30\"><ChevronRight className=\"h-5 w-5\" /></button>\n          </div>\n        </div>\n        <LayoutGroup id=\"rsdays\">\n          <div className=\"mt-3 grid grid-cols-7 gap-1.5\">\n            {days.map((d, i) => {\n              const fc = times(d).filter(free).length;\n              const on = day === i;\n              return (\n                <button key={d} disabled={fc === 0} onClick={() => { setDay(i); setPick(0); }} className=\"relative flex flex-col items-center rounded-2xl py-2.5 disabled:opacity-35\">\n                  {on && <motion.span layoutId=\"rspill\" transition={spring} className=\"absolute inset-0 rounded-2xl bg-[#12A594]\" />}\n                  <span className={\"relative text-[11px] font-extrabold uppercase \" + (on ? \"text-white/80\" : \"text-[#7A9A95]\")}>{WD[new Date(d).getUTCDay()]}</span>\n                  <span className={\"relative text-lg font-extrabold \" + (on ? \"text-white\" : \"\")}>{new Date(d).getUTCDate()}</span>\n                </button>\n              );\n            })}\n          </div>\n        </LayoutGroup>\n        <AnimatePresence mode=\"wait\" initial={false}>\n          <motion.div key={selDay} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-5 grid grid-cols-4 gap-2 sm:grid-cols-5\">\n            {times(selDay).map((t, i) => {\n              const f = free(t);\n              const on = pick === t;\n              return (\n                <motion.button key={t} disabled={!f} onClick={() => setPick(t)} initial={reduce ? false : { opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.012 }} whileTap={f ? { scale: 0.93 } : undefined} className={\"rounded-xl border py-2.5 text-sm font-extrabold \" + (on ? \"border-[#12A594] bg-[#12A594] text-white\" : f ? \"border-[#D6ECE8] bg-white text-[#27504B]\" : \"border-transparent bg-[#F4F8F8] text-[#C3D4D1] line-through\")}>{hm(t)}</motion.button>\n              );\n            })}\n          </motion.div>\n        </AnimatePresence>\n        <AnimatePresence>{err && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"mt-4 flex gap-2 rounded-2xl bg-[#FDECEC] px-4 py-3 text-sm font-bold text-[#B42318]\"><AlertCircle className=\"h-4 w-4 shrink-0\" /> {err}</motion.div>}</AnimatePresence>\n        <motion.button whileTap={{ scale: 0.97 }} disabled={!pick || busy} onClick={() => void save()} className=\"mt-5 w-full rounded-2xl bg-[#12A594] py-4 text-[16px] font-extrabold text-white shadow-[0_14px_28px_-12px_rgba(18,165,148,0.8)] disabled:bg-[#BFE3DD] disabled:shadow-none\">{pick ? (busy ? \"Saving…\" : \"Move to \" + dateLong(pick) + \" at \" + hm(pick)) : \"Choose a new time\"}</motion.button>\n      </motion.div>\n    </motion.div>\n  );\n}\n"
+    },
+    {
+      "name": "ClinicLogin",
+      "kind": "code",
+      "purpose": "Centred sign-in card on a teal wash with breathing circles, Google sign-in and trust facts",
+      "props": {},
+      "sample": {},
+      "source": "import { useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { HeartPulse, ShieldCheck, Calendar, Sparkles, RefreshCw } from \"lucide-react\";\n\nconst FONT = \"'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif\";\n\nfunction GoogleG() {\n  return (\n    <svg viewBox=\"0 0 48 48\" className=\"h-5 w-5\" aria-hidden=\"true\">\n      <path fill=\"#FFC107\" d=\"M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z\" />\n      <path fill=\"#FF3D00\" d=\"M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z\" />\n      <path fill=\"#4CAF50\" d=\"M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z\" />\n      <path fill=\"#1976D2\" d=\"M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.7-.4-3.9z\" />\n    </svg>\n  );\n}\n\nconst FACTS = [\n  { i: ShieldCheck, t: \"Private records\" },\n  { i: Calendar, t: \"No double booking\" },\n  { i: Sparkles, t: \"Gentle reminders\" },\n];\n\nexport default function ClinicLogin({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const auth = app?.auth;\n  const [localMode, setLocalMode] = useState<\"in\" | \"up\">(\"in\");\n  const rawMode = auth ? (auth as { mode?: string }).mode : undefined;\n  const mode: \"in\" | \"up\" = rawMode === \"up\" || rawMode === \"signUp\" || rawMode === \"signup\" ? \"up\" : rawMode ? \"in\" : localMode;\n  const canSignUp = auth ? (auth as { canSignUp?: boolean }).canSignUp !== false : true;\n  const providers = ((auth as { providers?: { name: string; label: string }[] } | undefined)?.providers || []) as { name: string; label: string }[];\n  const [name, setName] = useState(\"\");\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n\n  const flip = () => {\n    setErr(\"\");\n    const next = mode === \"in\" ? \"up\" : \"in\";\n    setLocalMode(next);\n    const sm = (auth as { setMode?: (m: string) => void } | undefined)?.setMode;\n    if (sm) sm(next);\n  };\n\n  const submit = async () => {\n    if (!auth || busy) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      if (mode === \"in\") await auth.signIn(email, password);\n      else await auth.signUp({ name: name || email.split(\"@\")[0], email, password });\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Something went wrong. Please try again.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  const provider = async (p: string) => {\n    setErr(\"\");\n    try {\n      const sp = (auth as { startProvider?: (n: string) => Promise<unknown> } | undefined)?.startProvider;\n      if (sp) await sp(p);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Could not start that sign-in. Please try again.\");\n    }\n  };\n\n  const inputCls =\n    \"w-full rounded-2xl border border-[#D6ECE8] bg-white px-4 py-3.5 text-[15px] text-[#0E2B29] outline-none transition placeholder:text-[#9BB8B3] focus:border-[#12A594] focus:ring-4 focus:ring-[#12A594]/15\";\n\n  return (\n    <div className=\"relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-10\" style={{ fontFamily: FONT, background: \"radial-gradient(120% 90% at 50% 0%, #D5F3EE 0%, #EAF9F6 45%, #FFFFFF 100%)\" }}>\n      <div className=\"pointer-events-none absolute inset-0 flex items-center justify-center\" aria-hidden=\"true\">\n        {[0, 1, 2].map((k) => (\n          <motion.span\n            key={k}\n            className=\"absolute rounded-full border border-[#12A594]/25 bg-[#12A594]/[0.06]\"\n            style={{ width: 360 + k * 260, height: 360 + k * 260 }}\n            animate={reduce ? undefined : { scale: [1, 1.12, 1], opacity: [0.9, 0.45, 0.9] }}\n            transition={{ duration: 8, delay: k * 1.6, repeat: Infinity, ease: \"easeInOut\" }}\n          />\n        ))}\n      </div>\n\n      <div className=\"relative z-10 w-full max-w-[420px]\">\n        <motion.div\n          initial={reduce ? false : { opacity: 0, y: 24 }}\n          animate={{ opacity: 1, y: 0 }}\n          transition={{ type: \"spring\", stiffness: 100, damping: 18 }}\n          className=\"rounded-[32px] border border-white bg-white/90 p-6 shadow-[0_1px_2px_rgba(14,43,41,0.04),0_30px_70px_-24px_rgba(18,165,148,0.45)] backdrop-blur sm:p-8\"\n        >\n          <div className=\"mb-6 flex flex-col items-center text-center\">\n            <span className=\"mb-4 flex h-14 w-14 items-center justify-center rounded-[20px] bg-[#12A594] text-white shadow-[0_12px_30px_-8px_rgba(18,165,148,0.6)]\">\n              <HeartPulse className=\"h-7 w-7\" />\n            </span>\n            <div className=\"text-sm font-extrabold uppercase tracking-widest text-[#0E8A7C]\">Clinicly</div>\n            <h1 className=\"mt-1 text-[26px] font-extrabold leading-tight text-[#0E2B29]\">{mode === \"in\" ? \"Welcome back\" : \"Create your account\"}</h1>\n            <p className=\"mt-1.5 text-[15px] font-semibold text-[#5B7C77]\">{mode === \"in\" ? \"Sign in to see your appointments.\" : \"Join Clinicly as a patient in under a minute.\"}</p>\n          </div>\n\n          <div className=\"space-y-4\">\n            <AnimatePresence initial={false}>\n              {mode === \"up\" && (\n                <motion.div key=\"name\" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"overflow-hidden\">\n                  <label htmlFor=\"cl-name\" className=\"mb-1.5 block text-sm font-bold text-[#27504B]\">Full name</label>\n                  <input id=\"cl-name\" aria-label=\"Full name\" className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder=\"Maya Chen\" />\n                </motion.div>\n              )}\n            </AnimatePresence>\n            <div>\n              <label htmlFor=\"cl-email\" className=\"mb-1.5 block text-sm font-bold text-[#27504B]\">Email</label>\n              <input id=\"cl-email\" type=\"email\" aria-label=\"Email\" autoComplete=\"email\" className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} placeholder=\"you@example.com\" />\n            </div>\n            <div>\n              <label htmlFor=\"cl-pass\" className=\"mb-1.5 block text-sm font-bold text-[#27504B]\">Password</label>\n              <input\n                id=\"cl-pass\"\n                type=\"password\"\n                aria-label=\"Password\"\n                autoComplete={mode === \"in\" ? \"current-password\" : \"new-password\"}\n                className={inputCls}\n                value={password}\n                onChange={(e) => setPassword(e.target.value)}\n                onKeyDown={(e) => { if (e.key === \"Enter\") void submit(); }}\n                placeholder=\"••••••••\"\n              />\n            </div>\n          </div>\n\n          <AnimatePresence>\n            {err && (\n              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-4 rounded-2xl bg-[#FDECEC] px-4 py-3 text-sm font-bold text-[#B42318]\">\n                {err}\n              </motion.div>\n            )}\n          </AnimatePresence>\n\n          <motion.button\n            type=\"button\"\n            whileTap={reduce ? undefined : { scale: 0.97 }}\n            onClick={() => void submit()}\n            disabled={busy}\n            className=\"mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#12A594] py-3.5 text-[16px] font-extrabold text-white shadow-[0_12px_24px_-10px_rgba(18,165,148,0.7)] transition hover:bg-[#0F9484] disabled:opacity-70\"\n          >\n            {busy && <RefreshCw className=\"h-4 w-4 animate-spin\" />}\n            {mode === \"in\" ? \"Sign in\" : \"Create account\"}\n          </motion.button>\n\n          {providers.length > 0 && (\n            <div className=\"mt-5\">\n              <div className=\"mb-5 flex items-center gap-3 text-xs font-extrabold uppercase text-[#9BB8B3]\">\n                <span className=\"h-px flex-1 bg-[#E2F2EF]\" /> or <span className=\"h-px flex-1 bg-[#E2F2EF]\" />\n              </div>\n              <div className=\"space-y-2.5\">\n                {providers.map((p) => (\n                  <button\n                    key={p.name}\n                    type=\"button\"\n                    onClick={() => void provider(p.name)}\n                    className=\"flex w-full items-center justify-center gap-3 rounded-2xl border border-[#D6ECE8] bg-white py-3 text-[15px] font-extrabold text-[#0E2B29] transition hover:bg-[#F4FBFA]\"\n                  >\n                    {p.name === \"google\" && <GoogleG />}\n                    Continue with {p.label}\n                  </button>\n                ))}\n              </div>\n            </div>\n          )}\n\n          {(canSignUp || mode === \"up\") && (\n            <div className=\"mt-5 text-center text-sm font-bold text-[#5B7C77]\">\n              {mode === \"in\" ? \"New to Clinicly? \" : \"Already have an account? \"}\n              <button type=\"button\" className=\"text-[#0E8A7C] underline-offset-4 hover:underline\" onClick={flip}>\n                {mode === \"in\" ? \"Create an account\" : \"Sign in instead\"}\n              </button>\n            </div>\n          )}\n        </motion.div>\n\n        <ul className=\"mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2\">\n          {FACTS.map((f, k) => (\n            <motion.li\n              key={f.t}\n              initial={reduce ? false : { opacity: 0, y: 10 }}\n              animate={{ opacity: 1, y: 0 }}\n              transition={{ delay: 0.3 + k * 0.1 }}\n              className=\"flex items-center gap-1.5 text-xs font-bold text-[#27504B]\"\n            >\n              <f.i className=\"h-4 w-4 text-[#12A594]\" /> {f.t}\n            </motion.li>\n          ))}\n        </ul>\n        <p className=\"mt-3 text-center text-xs font-semibold text-[#6F8F8A]\">Doctors and front-desk staff are invited by the clinic.</p>\n      </div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "BookDoctor",
+      "kind": "code",
+      "purpose": "Full-page booking: doctor profile, animated week calendar, slot grid, confirmation",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, LayoutGroup, useReducedMotion } from \"motion/react\";\nimport { Star, Clock, ChevronLeft, ChevronRight, Check, Lightbulb, Award, MapPin } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif\";\nconst DUR = 30 * 60000;\nconst DAY = 86400000;\nconst WD = [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"];\nconst MO = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"];\nconst PREP: Record<string, string> = {\n  \"General Practice\": \"Bring your insurance card and a list of current medications.\",\n  Cardiology: \"Avoid caffeine for 4 hours before and bring any recent ECG results.\",\n  Dermatology: \"Come with clean skin, no makeup on the area we will look at.\",\n  Pediatrics: \"Bring the vaccination card. A parent or guardian should attend.\",\n  Neurology: \"Keep a short symptom diary and bring a list of medications.\",\n  Orthopedics: \"Wear loose clothing and bring any previous scans or X-rays.\",\n  \"Mental Health\": \"No preparation needed. Arrive a few minutes early to settle in.\",\n};\nconst REASONS = [\"Check-up\", \"Follow-up\", \"New symptoms\", \"Test results\", \"Prescription\"];\n\nconst s = (v: unknown): string => (v === null || v === undefined ? \"\" : String(v));\nconst pad = (n: number) => String(n).padStart(2, \"0\");\nconst ms = (v: unknown) => {\n  const t = Date.parse(s(v));\n  return Number.isNaN(t) ? 0 : t;\n};\nconst hm = (t: number) => {\n  const d = new Date(t);\n  return pad(d.getUTCHours()) + \":\" + pad(d.getUTCMinutes());\n};\nconst dayStart = (t: number) => t - (((t % DAY) + DAY) % DAY);\nconst dateLong = (t: number) => {\n  const d = new Date(t);\n  return WD[d.getUTCDay()] + \" \" + d.getUTCDate() + \" \" + MO[d.getUTCMonth()];\n};\nconst rel = (t: number, now: number) => {\n  const d = Math.round((dayStart(t) - dayStart(now)) / DAY);\n  if (d === 0) return \"Today\";\n  if (d === 1) return \"Tomorrow\";\n  return dateLong(t);\n};\nconst initials = (n: string) => n.replace(\"Dr. \", \"\").split(\" \").map((p) => p[0] || \"\").join(\"\").slice(0, 2);\n\nfunction Photo({ src, name, className }: { src: string; name: string; className: string }) {\n  const [bad, setBad] = useState(false);\n  if (!src || bad || /\\.svg(\\?|$)/i.test(src)) {\n    return <div className={className + \" flex items-center justify-center bg-gradient-to-br from-[#BFEDE6] to-[#7FD6C9] text-6xl font-extrabold text-[#0B6F63]\"}>{initials(name)}</div>;\n  }\n  return <img src={src} alt={name} onError={() => setBad(true)} className={className + \" object-cover\"} />;\n}\n\nexport default function BookDoctor({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const appRef = useRef(app);\n  appRef.current = app;\n  const [now, setNow] = useState(0);\n  const [week, setWeek] = useState(0);\n  const [day, setDay] = useState(0);\n  const [slot, setSlot] = useState(0);\n  const [reason, setReason] = useState(\"Check-up\");\n  const [custom, setCustom] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const [done, setDone] = useState(0);\n  const [mine, setMine] = useState<{ s: number }[]>([]);\n\n  useEffect(() => {\n    setNow(Date.now());\n    const t = setInterval(() => setNow(Date.now()), 30000);\n    return () => clearInterval(t);\n  }, []);\n  useEffect(() => {\n    const a = appRef.current;\n    if (!a) return;\n    const offs = [\"slot\", \"appointment\"].map((e) => a.live(e));\n    return () => offs.forEach((o) => o());\n  }, []);\n\n  const id = s(app?.params.id);\n  const doctors = (app?.rows(\"doctor\") || []) as Row[];\n  const doctor = doctors.find((d) => s(d.id) === id);\n  const slots = (app?.rows(\"slot\") || []) as Row[];\n  const me = ((app?.rows(\"patient\") || []) as Row[])[0];\n  const spec = s(doctor?.specialty);\n\n  const busyList = useMemo(() => {\n    const l: { s: number; e: number }[] = [];\n    slots.forEach((r) => {\n      if (r.active !== false && s(r.doctor_id) === id) l.push({ s: ms(r.starts_at), e: ms(r.ends_at) });\n    });\n    mine.forEach((m) => l.push({ s: m.s, e: m.s + DUR }));\n    return l;\n  }, [slots, mine, id]);\n\n  const isFree = (t: number) => (!now || t > now) && !busyList.some((b) => b.s < t + DUR && b.e > t);\n  const base = now ? dayStart(now) : dayStart(Date.UTC(2026, 9, 11));\n  const days = [0, 1, 2, 3, 4, 5, 6].map((i) => base + (week * 7 + i) * DAY);\n  const selDay = days[Math.min(day, 6)];\n  const dayTimes = (d: number) => {\n    const out: number[] = [];\n    for (let m = 480; m < 1080; m += 30) out.push(d + m * 60000);\n    return out;\n  };\n  const times = dayTimes(selDay);\n  const dm = new Date(days[0]);\n  const spring = reduce ? { duration: 0 } : { type: \"spring\" as const, stiffness: 320, damping: 30 };\n  const groups: [string, number[]][] = [\n    [\"Morning\", times.filter((t) => new Date(t).getUTCHours() < 12)],\n    [\"Afternoon\", times.filter((t) => new Date(t).getUTCHours() >= 12)],\n  ];\n\n  const confirm = async () => {\n    const a = appRef.current;\n    if (!a || !slot || busy || !doctor) return;\n    setBusy(true);\n    setErr(\"\");\n    const born = s(me?.dob).slice(0, 4);\n    try {\n      await a.create(\"appointment\", {\n        patient_id: a.me(\"patient\"),\n        doctor_id: id,\n        patient_name: s(me?.name || a.user.name),\n        patient_photo: s(me?.photo) || null,\n        patient_info: (born ? \"b. \" + born + \" · \" : \"\") + (s(me?.allergies) ? s(me?.allergies) + \" allergy\" : \"No known allergies\"),\n        doctor_name: s(doctor.name),\n        starts_at: new Date(slot).toISOString(),\n        ends_at: new Date(slot + DUR).toISOString(),\n        reason: custom.trim() || reason,\n        status: \"booked\",\n        prep_notes: PREP[spec] || \"Arrive 10 minutes early to check in.\",\n      });\n      setMine((m) => m.concat([{ s: slot }]));\n      setDone(slot);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"That time could not be booked.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  return (\n    <div className=\"min-h-screen w-full bg-[#F4FBFA] text-[#0E2B29]\" style={{ fontFamily: FONT }}>\n      <header className=\"sticky top-0 z-20 border-b border-[#E2F2EF] bg-white/80 backdrop-blur-xl\">\n        <div className=\"mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 lg:px-8\">\n          <motion.button whileTap={{ scale: 0.92 }} aria-label=\"Back\" onClick={() => app?.navigate(\"/book\")} className=\"flex h-10 w-10 items-center justify-center rounded-full bg-[#E3F6F3] text-[#0E8A7C]\">\n            <ChevronLeft className=\"h-5 w-5\" />\n          </motion.button>\n          <div className=\"text-[16px] font-extrabold\">Book a visit</div>\n        </div>\n      </header>\n\n      <main className=\"mx-auto grid max-w-5xl gap-5 px-4 pb-16 pt-5 lg:grid-cols-[340px_1fr] lg:gap-8 lg:px-8 lg:pt-8\">\n        {!doctor ? (\n          <div className=\"col-span-full h-64 animate-pulse rounded-[28px] bg-[#EAF6F4]\" />\n        ) : (\n          <>\n            <motion.aside initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={spring} className=\"h-fit overflow-hidden rounded-[32px] border border-[#E2F2EF] bg-white shadow-[0_1px_2px_rgba(14,43,41,0.04),0_20px_44px_-22px_rgba(18,165,148,0.4)] lg:sticky lg:top-20\">\n              <div className=\"relative h-60 w-full lg:h-72\">\n                <Photo src={s(doctor.photo)} name={s(doctor.name)} className=\"h-full w-full\" />\n                <div className=\"absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-sm font-extrabold shadow\">\n                  <Star className=\"h-4 w-4 fill-[#F5B544] text-[#F5B544]\" /> {Number(doctor.rating).toFixed(1)} <span className=\"font-semibold text-[#7A9A95]\">({s(doctor.review_count)} reviews)</span>\n                </div>\n              </div>\n              <div className=\"p-5\">\n                <div className=\"text-[22px] font-extrabold leading-tight\">{s(doctor.name)}</div>\n                <div className=\"mt-1 text-[15px] font-bold text-[#0B7A6D]\">{spec}</div>\n                <div className=\"mt-3 flex flex-wrap gap-3 text-[13px] font-bold text-[#5B7C77]\">\n                  <span className=\"flex items-center gap-1\"><Award className=\"h-4 w-4\" /> {s(doctor.years_experience)} years</span>\n                  <span className=\"flex items-center gap-1\"><MapPin className=\"h-4 w-4\" /> {s(doctor.room)}</span>\n                </div>\n                <p className=\"mt-3 text-sm font-semibold leading-relaxed text-[#5B7C77]\">{s(doctor.bio)}</p>\n                <div className=\"mt-4 flex gap-3 rounded-2xl bg-[#FFF7E8] p-3.5\">\n                  <Lightbulb className=\"mt-0.5 h-4 w-4 shrink-0 text-[#C98410]\" />\n                  <div className=\"text-[13px] font-semibold leading-snug text-[#7A5A12]\"><span className=\"font-extrabold\">Prepare:</span> {PREP[spec] || \"Arrive 10 minutes early.\"}</div>\n                </div>\n              </div>\n            </motion.aside>\n\n            <motion.section initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }} className=\"rounded-[32px] border border-[#E2F2EF] bg-white p-5 shadow-[0_1px_2px_rgba(14,43,41,0.04),0_20px_44px_-22px_rgba(18,165,148,0.4)] lg:p-7\">\n              {done ? (\n                <div className=\"py-8 text-center\">\n                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: \"spring\", stiffness: 200, damping: 14 }} className=\"mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#E3F6F3]\">\n                    <svg viewBox=\"0 0 24 24\" className=\"h-12 w-12 text-[#12A594]\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"2.5\" strokeLinecap=\"round\" strokeLinejoin=\"round\">\n                      <motion.path d=\"M5 12.5l4.5 4.5L19 7.5\" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.25, duration: 0.5 }} />\n                    </svg>\n                  </motion.div>\n                  <div className=\"mt-5 text-2xl font-extrabold\">You are booked!</div>\n                  <div className=\"mt-2 text-[15px] font-bold text-[#5B7C77]\">{rel(done, now)}, {dateLong(done)} at {hm(done)} with {s(doctor.name)}</div>\n                  <div className=\"mt-1 text-sm font-semibold text-[#7A9A95]\">We will send you a reminder the day before.</div>\n                  <div className=\"mt-6 flex flex-col justify-center gap-3 sm:flex-row\">\n                    <motion.button whileTap={{ scale: 0.96 }} onClick={() => app?.navigate(\"/visits\")} className=\"rounded-2xl bg-[#12A594] px-8 py-3.5 text-[15px] font-extrabold text-white shadow-[0_12px_24px_-10px_rgba(18,165,148,0.8)]\">View my visits</motion.button>\n                    <motion.button whileTap={{ scale: 0.96 }} onClick={() => app?.navigate(\"/book\")} className=\"rounded-2xl bg-[#F0F7F6] px-8 py-3.5 text-[15px] font-extrabold text-[#27504B]\">Back to doctors</motion.button>\n                  </div>\n                </div>\n              ) : (\n                <>\n                  <div className=\"flex items-center justify-between\">\n                    <div>\n                      <div className=\"text-[18px] font-extrabold\">Pick a day</div>\n                      <div className=\"text-[13px] font-bold text-[#7A9A95]\">{MO[dm.getUTCMonth()]} {dm.getUTCFullYear()} · clinic hours 08:00–18:00</div>\n                    </div>\n                    <div className=\"flex gap-2\">\n                      <button aria-label=\"Previous week\" disabled={week === 0} onClick={() => { setWeek(week - 1); setDay(0); setSlot(0); }} className=\"flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F7F6] text-[#27504B] disabled:opacity-30\"><ChevronLeft className=\"h-5 w-5\" /></button>\n                      <button aria-label=\"Next week\" disabled={week >= 3} onClick={() => { setWeek(week + 1); setDay(0); setSlot(0); }} className=\"flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F7F6] text-[#27504B] disabled:opacity-30\"><ChevronRight className=\"h-5 w-5\" /></button>\n                    </div>\n                  </div>\n                  <LayoutGroup id=\"days\">\n                    <AnimatePresence mode=\"wait\" initial={false}>\n                      <motion.div key={week} initial={{ opacity: 0, x: reduce ? 0 : 28 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: reduce ? 0 : -28 }} transition={{ duration: 0.2 }} className=\"mt-4 grid grid-cols-7 gap-1.5 sm:gap-2\">\n                        {days.map((d, i) => {\n                          const fc = dayTimes(d).filter(isFree).length;\n                          const on = day === i;\n                          return (\n                            <button key={d} disabled={fc === 0} onClick={() => { setDay(i); setSlot(0); }} className=\"relative flex flex-col items-center rounded-2xl py-3 disabled:opacity-35\">\n                              {on && <motion.span layoutId=\"daypill\" transition={spring} className=\"absolute inset-0 rounded-2xl bg-[#12A594] shadow-[0_10px_20px_-8px_rgba(18,165,148,0.8)]\" />}\n                              <span className={\"relative text-[11px] font-extrabold uppercase \" + (on ? \"text-white/80\" : \"text-[#7A9A95]\")}>{WD[new Date(d).getUTCDay()]}</span>\n                              <span className={\"relative text-xl font-extrabold \" + (on ? \"text-white\" : \"text-[#0E2B29]\")}>{new Date(d).getUTCDate()}</span>\n                              <span className={\"relative mt-1 h-1.5 w-1.5 rounded-full \" + (fc === 0 ? \"bg-transparent\" : on ? \"bg-white\" : fc < 6 ? \"bg-[#F5B544]\" : \"bg-[#12A594]\")} />\n                            </button>\n                          );\n                        })}\n                      </motion.div>\n                    </AnimatePresence>\n                  </LayoutGroup>\n\n                  <AnimatePresence mode=\"wait\" initial={false}>\n                    <motion.div key={selDay} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-6 space-y-5\">\n                      {groups.map(([label, ts]) => (\n                        <div key={label}>\n                          <div className=\"mb-2 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-[#7A9A95]\"><Clock className=\"h-3.5 w-3.5\" /> {label}</div>\n                          <div className=\"grid grid-cols-4 gap-2 sm:grid-cols-5\">\n                            {ts.map((t, i) => {\n                              const free = isFree(t);\n                              const on = slot === t;\n                              return (\n                                <motion.button\n                                  key={t}\n                                  disabled={!free}\n                                  onClick={() => setSlot(t)}\n                                  initial={reduce ? false : { opacity: 0, scale: 0.9 }}\n                                  animate={{ opacity: 1, scale: 1 }}\n                                  transition={{ delay: i * 0.015 }}\n                                  whileTap={free ? { scale: 0.93 } : undefined}\n                                  className={\"rounded-xl border py-2.5 text-sm font-extrabold transition-colors \" + (on ? \"border-[#12A594] bg-[#12A594] text-white shadow-[0_8px_16px_-8px_rgba(18,165,148,0.9)]\" : free ? \"border-[#D6ECE8] bg-white text-[#27504B] hover:border-[#12A594]\" : \"border-transparent bg-[#F4F8F8] text-[#C3D4D1] line-through\")}\n                                >\n                                  {hm(t)}\n                                </motion.button>\n                              );\n                            })}\n                          </div>\n                        </div>\n                      ))}\n                    </motion.div>\n                  </AnimatePresence>\n\n                  <div className=\"mt-7\">\n                    <div className=\"mb-2 text-[15px] font-extrabold\">Reason for visit</div>\n                    <div className=\"flex flex-wrap gap-2\">\n                      {REASONS.map((r) => (\n                        <button key={r} onClick={() => { setReason(r); setCustom(\"\"); }} className={\"rounded-full border px-3.5 py-1.5 text-sm font-bold \" + (reason === r && !custom ? \"border-[#12A594] bg-[#E3F6F3] text-[#0B6F63]\" : \"border-[#D6ECE8] text-[#5B7C77]\")}>{r}</button>\n                      ))}\n                    </div>\n                    <input aria-label=\"Describe your reason\" value={custom} onChange={(e) => setCustom(e.target.value)} placeholder=\"Or describe it in a few words\" className=\"mt-3 w-full rounded-2xl border border-[#D6ECE8] px-4 py-3 text-[15px] font-semibold outline-none focus:border-[#12A594] focus:ring-4 focus:ring-[#12A594]/15\" />\n                  </div>\n\n                  <AnimatePresence>\n                    {err && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-4 rounded-2xl bg-[#FDECEC] px-4 py-3 text-sm font-bold text-[#B42318]\">{err}</motion.div>}\n                  </AnimatePresence>\n\n                  <motion.button whileTap={{ scale: 0.97 }} disabled={!slot || busy} onClick={() => void confirm()} className=\"mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#12A594] py-4 text-[16px] font-extrabold text-white shadow-[0_14px_28px_-12px_rgba(18,165,148,0.8)] disabled:bg-[#BFE3DD] disabled:shadow-none\">\n                    {slot ? <><Check className=\"h-5 w-5\" /> {busy ? \"Booking…\" : \"Confirm \" + rel(slot, now) + \" at \" + hm(slot)}</> : \"Choose a time\"}\n                  </motion.button>\n                </>\n              )}\n            </motion.section>\n          </>\n        )}\n      </main>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "TeamHeader",
+      "kind": "code",
+      "purpose": "Team page header with back button",
+      "props": {},
+      "sample": {},
+      "source": "import type { AppHandle } from \"@app/kit/primitives\";\nimport { HeartPulse, ChevronLeft } from \"lucide-react\";\n\nconst FONT = \"'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif\";\n\nexport default function TeamHeader({ app }: { app?: AppHandle }) {\n  return (\n    <div data-team-root=\"1\" className=\"w-full bg-[#F4FBFA] text-[#0E2B29]\" style={{ fontFamily: FONT }}>\n      <style>{\"[data-team-root] ~ * { max-width: 64rem; margin-left: auto; margin-right: auto; padding: 0 16px 48px; box-sizing: border-box; } @media (min-width: 1024px) { [data-team-root] ~ * { padding-left: 32px; padding-right: 32px; } }\"}</style>\n      <header className=\"sticky top-0 z-20 border-b border-[#E2F2EF] bg-white/85 backdrop-blur-xl\">\n        <div className=\"mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 lg:px-8\">\n          <button type=\"button\" aria-label=\"Back\" onClick={() => app?.navigate(\"/day\")} className=\"flex h-10 w-10 items-center justify-center rounded-full bg-[#E3F6F3] text-[#0E8A7C]\">\n            <ChevronLeft className=\"h-5 w-5\" />\n          </button>\n          <span className=\"flex h-9 w-9 items-center justify-center rounded-xl bg-[#12A594] text-white\"><HeartPulse className=\"h-5 w-5\" /></span>\n          <div className=\"text-[16px] font-extrabold\">Team &amp; access</div>\n        </div>\n      </header>\n      <main className=\"mx-auto max-w-5xl px-4 pb-2 pt-6 lg:px-8\">\n        <h1 className=\"text-[28px] font-extrabold leading-tight lg:text-[34px]\">Team &amp; access</h1>\n        <p className=\"text-sm font-bold text-[#7A9A95]\">Who can sign in, and what they can do.</p>\n      </main>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "demo_logins": [
+    {
+      "persona": "doctor",
+      "row": "e9547eba-11e5-5342-900a-3fe51d4bc70f"
+    },
+    {
+      "persona": "desk",
+      "row": "415a4671-035c-54c3-b931-63949be5815e"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "slot-on-create",
+      "title": "Reserve the doctor's slot when an appointment is booked",
+      "on": {
+        "entity": "appointment",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "await ctx.db.create('slot', { appointment_id: String(row.id), doctor_id: String(row.doctor_id), starts_at: row.starts_at, ends_at: row.ends_at, active: true });",
+          "checked": "03faade6ea6f35ca"
+        }
+      ]
+    },
+    {
+      "id": "slot-on-update",
+      "title": "Keep the slot in step when an appointment moves or is cancelled",
+      "on": {
+        "entity": "appointment",
+        "event": "updated"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const all = await ctx.db.list('slot'); const s = all.find((x) => String(x.appointment_id) === String(row.id)); if (s) { await ctx.db.update('slot', String(s.id), { starts_at: row.starts_at, ends_at: row.ends_at, active: String(row.status) !== 'cancelled' }); }",
+          "checked": "0a32bd6e41dc7831"
+        }
+      ]
+    },
+    {
+      "id": "hourly-reminders",
+      "title": "Hourly: remind patients of appointments in the next 24 hours",
+      "on": {
+        "schedule": "hourly",
+        "entity": "appointment"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const now = ctx.now().getTime(); const rows = await ctx.db.list('appointment'); let n = 0; for (const a of rows) { const t = new Date(String(a.starts_at)).getTime(); if (String(a.status) === 'booked' && !a.reminded && t > now && t - now <= 86400000) { const hh = new Date(t).toISOString(); await ctx.db.create('reminder', { appointment_id: String(a.id), patient_id: String(a.patient_id), message: 'Reminder: ' + String(a.reason) + ' with ' + String(a.doctor_name) + ' on ' + hh.slice(0, 10) + ' at ' + hh.slice(11, 16) + '.' }); await ctx.db.update('appointment', String(a.id), { reminded: true }); n++; } } ctx.log('reminders created: ' + n);",
+          "checked": "cc35caf04c50be69"
+        }
+      ]
+    },
+    {
+      "id": "notify-reminder",
+      "title": "Deliver the reminder to the patient",
+      "on": {
+        "entity": "reminder",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "patient_id",
+            "entity": "patient"
+          },
+          "title": "Appointment reminder",
+          "body": "{{message}}"
+        }
+      ]
+    },
+    {
+      "id": "notes-ready",
+      "title": "Tell the patient their visit notes are ready",
+      "on": {
+        "entity": "appointment",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "completed"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "patient_id",
+            "entity": "patient"
+          },
+          "title": "Your visit notes are ready",
+          "body": "{{doctor_name}} has added notes from your visit. Open History to read them."
+        }
+      ]
+    }
+  ]
+}

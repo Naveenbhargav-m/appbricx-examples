@@ -1,0 +1,44 @@
+/* Appbricx brand tokens for video and slide compositions.
+   Accent: emerald #0b7a4e on light, #5dcb98 on dark. Type: Schibsted Grotesk. */
+@font-face {
+  font-family: "Schibsted Grotesk";
+  src: url("fonts/SchibstedGrotesk-latin.woff2") format("woff2");
+  font-weight: 400 900;
+  font-display: block;
+}
+:root, [data-theme="dark"] {
+  --bg: #06110c;
+  --bg-2: #0b1d15;
+  --surface: #10251b;
+  --ink: #eef6f1;
+  --ink-2: #a9c2b5;
+  --line: rgba(238, 246, 241, 0.12);
+  --accent: #5dcb98;
+  --accent-ink: #04140c;
+  --glow: rgba(93, 203, 152, 0.28);
+}
+[data-theme="light"] {
+  --bg: #f6faf7;
+  --bg-2: #e8f2ec;
+  --surface: #ffffff;
+  --ink: #0d1a14;
+  --ink-2: #4a5f55;
+  --line: rgba(13, 26, 20, 0.12);
+  --accent: #0b7a4e;
+  --accent-ink: #ffffff;
+  --glow: rgba(11, 122, 78, 0.16);
+}
+.brand-font { font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-latin-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+.mono { font-family: "JetBrains Mono", ui-monospace, monospace; }

@@ -1,0 +1,14 @@
+{
+  "footage": [
+    { "slot": "ch1", "file": "out/learnly-build.mp4", "from": 12.6, "start": 11.5, "dur": 5.6 },
+    { "slot": "ch2", "cues": "clips/builder.cues.json", "cue": "Edit any row", "skip": 2.5, "start": 17.5, "dur": 5.6 },
+    { "slot": "ch3", "cues": "clips/builder.cues.json", "cue": "Run any workflow", "skip": 1.5, "start": 23.5, "dur": 5.6 },
+    { "slot": "ch4", "file": "out/learnly-build.mp4", "from": 44.2, "start": 29.5, "dur": 5.6 },
+    { "slot": "ch5", "cues": "clips/builder.cues.json", "cue": "Changed your mind", "skip": 0.2, "start": 35.5, "dur": 5.5 },
+    { "slot": "cut", "cues": "clips/tablefor.cues.json", "cue": "In-app AI", "after": true, "start": 41.6, "dur": 2.1, "label": "Tablefor: AI reads the menu" },
+    { "slot": "cut", "cues": "clips/stride.cues.json", "cue": "In-app AI", "after": true, "start": 43.6, "dur": 2.1, "label": "Stride: AI drafts coach notes" },
+    { "slot": "cut", "cues": "clips/eventra.cues.json", "cue": "sign-in screen", "skip": 0.5, "start": 45.6, "dur": 2.0, "label": "Eventra: its own sign-in" },
+    { "slot": "cut", "cues": "clips/relay.cues.json", "cue": "In-app AI", "after": true, "start": 47.5, "dur": 2.0, "label": "Relay: AI suggests replies" },
+    { "slot": "cut", "cues": "clips/nook.cues.json", "cue": "In-app AI", "after": true, "start": 49.4, "dur": 2.1, "label": "Nook: AI answers from the listing" }
+  ]
+}

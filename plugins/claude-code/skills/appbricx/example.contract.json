@@ -1,0 +1,68 @@
+{
+  "app": { "name": "Field Desk", "tagline": "Jobs, sites and the people who fix them" },
+  "personas": [
+    { "id": "dispatcher", "label": "Dispatcher", "description": "creates and assigns jobs", "kind": "staff" },
+    { "id": "technician", "label": "Technician", "description": "works the jobs assigned to them", "kind": "staff" }
+  ],
+  "entities": [
+    {
+      "name": "technician",
+      "label_field": "name",
+      "fields": [
+        { "name": "name", "type": "text" },
+        { "name": "email", "type": "email" },
+        { "name": "phone", "type": "text", "optional": true }
+      ]
+    },
+    {
+      "name": "site",
+      "label_field": "name",
+      "fields": [
+        { "name": "name", "type": "text" },
+        { "name": "address", "type": "text" }
+      ]
+    },
+    {
+      "name": "job",
+      "label_field": "title",
+      "fields": [
+        { "name": "title", "type": "text" },
+        { "name": "site", "type": "ref", "ref": "site" },
+        { "name": "technician", "type": "ref", "ref": "technician", "optional": true },
+        { "name": "status", "type": "enum", "enum_values": ["open", "assigned", "done"] },
+        { "name": "due", "type": "date", "optional": true }
+      ],
+      "owner_refs": ["technician"],
+      "access": { "technician": { "read": "own", "update": "own", "delete": "none" } }
+    }
+  ],
+  "seeds": {
+    "technician": [
+      { "id": "t1", "name": "Asha Rao", "email": "asha@example.com" },
+      { "id": "t2", "name": "Ben Ortiz", "email": "ben@example.com" }
+    ],
+    "site": [
+      { "id": "s1", "name": "Harbor Mall", "address": "1 Quay St" },
+      { "id": "s2", "name": "Northside Clinic", "address": "40 Elm Ave" }
+    ],
+    "job": [
+      { "id": "j1", "title": "Boiler pressure drop", "site": "s1", "technician": "t1", "status": "assigned", "due": "2026-10-10" },
+      { "id": "j2", "title": "Replace door closer", "site": "s2", "status": "open" }
+    ]
+  },
+  "workflows": [
+    {
+      "id": "job-assigned",
+      "title": "Tell the technician about a new assignment",
+      "on": { "entity": "job", "event": "updated" },
+      "when": { "field": "status", "equals": "assigned" },
+      "do": [ { "action": "notify", "to": "technician", "role": "technician", "title": "New job: {{title}}", "body": "Due {{due}}" } ]
+    },
+    {
+      "id": "overdue-digest",
+      "title": "Morning digest of new jobs",
+      "on": { "schedule": "daily 08:00", "entity": "job" },
+      "do": [ { "action": "notify", "role": "dispatcher", "title": "{{count}} new job(s) since yesterday", "body": "{{items}}" } ]
+    }
+  ]
+}

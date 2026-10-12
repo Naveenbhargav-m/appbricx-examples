@@ -1,0 +1,104 @@
+// Assemble a "build story" HyperFrames project: a condensed terminal replay of a real
+// coding-agent session, then the resulting live app.
+//
+//   node scripts/build-story.mjs --session sessions/learnly --clip clips/learnly.cues.json \
+//        --out out/learnly-build [--live 20] [--intro 3.6] [--outro 4.5]
+//
+// --session: output of scripts/extract-session.py (replay.json + shots/)
+// --clip:    a recording of the live app (scripts/record.mjs); its first --live seconds
+//            of kept footage are used, with its captions.
+// Timing of every terminal line is computed here and written to assets/session/replay.js.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const { values: a } = parseArgs({ options: {
+  template: { type: 'string', default: 'build-story' },
+  session: { type: 'string' }, clip: { type: 'string' }, out: { type: 'string' },
+  live: { type: 'string', default: '20' }, intro: { type: 'string', default: '3.6' },
+  outro: { type: 'string', default: '4.5' }, xfade: { type: 'string', default: '0.3' },
+  pace: { type: 'string', default: '1' },
+} });
+const r2 = (n) => +n.toFixed(3);
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const out = path.resolve(a.out);
+const rep = JSON.parse(fs.readFileSync(path.join(a.session, 'replay.json'), 'utf8'));
+const pace = +a.pace;
+
+fs.rmSync(out, { recursive: true, force: true });
+fs.cpSync(path.join(root, 'templates', a.template), out, { recursive: true });
+fs.cpSync(path.join(root, 'templates', 'shared'), path.join(out, 'assets'), { recursive: true });
+fs.cpSync(a.session, path.join(out, 'assets', 'session'), { recursive: true });
+
+// ---- terminal timing ----
+const intro = +a.intro;
+const termStart = intro - 0.2;
+let t = termStart + 0.9;
+const lines = [], chapters = [], shots = [], counters = [];
+const add = (cls, html, dt) => { lines.push({ cls, html, t: r2(t) }); t += dt * pace; };
+for (const st of rep.steps) {
+  if (st.chapter) chapters.push({ ch: st.chapter, t: r2(t) });
+  if (st.kind === 'prompt') {
+    add('user', '<span class="tag">PROMPT</span>' + esc('The real prompt the agent was given (excerpt):'), 0.5);
+    st.lines.forEach((l) => add('uline', esc(l), 0.32));
+    t += 1.2 * pace;
+  } else if (st.kind === 'say') {
+    add('say', esc('“' + st.text + '”'), 2.0);
+  } else {
+    if (st.n) counters.push({ t: r2(t), text: `tool call ${st.n} of ${rep.toolCalls}` });
+    add('call', '<span class="dot">●</span><span class="srv">appbricx</span>' + esc(st.call), 0.55);
+    const many = st.out.length > 6;
+    st.out.forEach((o) => add('out ' + o[0], esc(o[1]), many ? 0.2 : 0.42));
+    if (st.shot) {
+      const isPhone = /390/.test(st.out.map((o) => o[1]).join(' '));
+      shots.push({ src: st.shot, t: r2(t - 0.3), dur: 2.6 * pace, phone: isPhone });
+      t += 2.3 * pace;
+    } else t += (many ? 1.4 : 0.5) * pace;
+  }
+  add('gap', '', 0);
+}
+const liveStart = r2(t + 0.6);
+const termLen = r2(liveStart - termStart);
+
+// ---- live footage ----
+const rec = JSON.parse(fs.readFileSync(a.clip, 'utf8'));
+fs.mkdirSync(path.join(out, 'assets', 'clips'), { recursive: true });
+const clipFile = `assets/clips/${rec.source}`;
+fs.copyFileSync(path.join(path.dirname(a.clip), rec.source), path.join(out, clipFile));
+const xfade = +a.xfade;
+let budget = +a.live, lt = liveStart + 0.1;
+const placed = [];
+for (const [sin, sout] of rec.segments) {
+  if (budget <= 0.5) break;
+  const dur = Math.min(sout - sin, budget);
+  const start = placed.length ? lt - xfade : lt;
+  placed.push({ sin, sout: sin + dur, start: r2(start), dur: r2(dur) });
+  lt = start + dur; budget -= dur;
+}
+const liveEnd = lt;
+const endStart = r2(liveEnd - 0.2);
+const total = r2(endStart + +a.outro);
+const toOut = (ts) => { const p = placed.find((q) => ts >= q.sin - 1e-6 && ts <= q.sout + 1e-6); return p ? { at: p.start + (ts - p.sin), seg: p } : null; };
+const track = [];
+placed.forEach((p, i) => track.push(`      <video id="rec-${i + 1}" class="rec" src="${clipFile}" muted playsinline data-start="${p.start}" data-duration="${p.dur}" data-media-start="${r2(p.sin)}" data-track-index="3"${i ? ` data-xfade="${xfade}"` : ''}></video>`));
+rec.cues.forEach((c, i) => {
+  if (!c.text) return;
+  const from = toOut(c.t); if (!from) return;
+  const nx = rec.cues.slice(i + 1).map((n) => toOut(n.t)).find(Boolean);
+  const end = Math.min(from.seg.start + from.seg.dur, nx ? nx.at : Infinity);
+  const start = Math.max(from.at, placed[0].start + 0.5);
+  if (end - start < 0.8) return;
+  track.push(`      <div id="cap-${i + 1}" class="clip caption" data-start="${r2(start)}" data-duration="${r2(end - start - 0.05)}" data-track-index="5"><span>${esc(c.text)}</span></div>`);
+});
+
+fs.writeFileSync(path.join(out, 'assets', 'session', 'replay.js'),
+  '// Generated by scripts/build-story.mjs from replay.json (a real session, condensed).\nwindow.REPLAY = ' + JSON.stringify({ lines, chapters, shots, counters }) + ';\n');
+let html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
+html = html.replace(/<!-- @CLIP_TRACK[^>]*-->/, track.join('\n'));
+const tokens = { __TOTAL__: total, __INTRO__: intro, __TERM_START__: r2(termStart), __TERM_LEN__: termLen, __LIVE_START__: liveStart, __LIVE_LEN__: r2(endStart + 0.2 - liveStart), __END_START__: endStart, __OUTRO__: r2(total - endStart) };
+for (const [k, v] of Object.entries(tokens)) html = html.replaceAll(k, String(v));
+fs.writeFileSync(path.join(out, 'index.html'), html);
+fs.writeFileSync(path.join(out, 'build.json'), JSON.stringify({ template: a.template, session: a.session, clip: a.clip, ...tokens, lines: lines.length, shots: shots.length, segments: placed }, null, 2));
+console.log(`built ${path.relative(root, out)}: ${total}s (terminal ${termLen}s with ${lines.length} lines, live ${r2(liveEnd - liveStart)}s)`);

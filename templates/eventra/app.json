@@ -1,0 +1,1225 @@
+{
+  "app": {
+    "name": "Eventra",
+    "tagline": "Own the night.",
+    "theme": "cosmic-night",
+    "nav_style": "topbar",
+    "density": "comfortable",
+    "brand_icon": "Ticket",
+    "brand_color": "#FF3D7F",
+    "direction": "techno"
+  },
+  "personas": [
+    {
+      "id": "attendee",
+      "label": "Attendee",
+      "description": "discovers events and holds tickets",
+      "kind": "consumer"
+    },
+    {
+      "id": "organizer",
+      "label": "Organizer",
+      "description": "creates events and watches sales live",
+      "kind": "staff"
+    },
+    {
+      "id": "door",
+      "label": "Door staff",
+      "description": "checks tickets in at the venue",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": null,
+  "basket": null,
+  "entities": [
+    {
+      "name": "attendee",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "organizer",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "company",
+          "type": "text",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "door",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "event",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "organizer_id",
+          "type": "ref",
+          "ref": "organizer"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "tagline",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "genre",
+          "type": "enum",
+          "enum_values": [
+            "electronic",
+            "rock",
+            "jazz",
+            "hiphop",
+            "indie",
+            "festival",
+            "pop"
+          ]
+        },
+        {
+          "name": "venue",
+          "type": "text"
+        },
+        {
+          "name": "city",
+          "type": "text"
+        },
+        {
+          "name": "lat",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "lng",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "starts_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "poster",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "lineup",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "capacity",
+          "type": "number"
+        },
+        {
+          "name": "sold",
+          "type": "number"
+        },
+        {
+          "name": "checked_in",
+          "type": "number"
+        }
+      ],
+      "access": {
+        "organizer": {
+          "create": true,
+          "read": "all",
+          "update": "own",
+          "delete": "own"
+        },
+        "door": {
+          "create": false,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "organizer_id"
+      ]
+    },
+    {
+      "name": "ticket_tier",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "event_id",
+          "type": "ref",
+          "ref": "event"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "name": "perks",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "organizer": {
+          "create": true,
+          "read": "all",
+          "update": "own",
+          "delete": "own"
+        },
+        "door": {
+          "create": false,
+          "read": "all",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "event_id"
+      ]
+    },
+    {
+      "name": "ticket",
+      "label_field": "code",
+      "fields": [
+        {
+          "name": "code",
+          "type": "text"
+        },
+        {
+          "name": "event_id",
+          "type": "ref",
+          "ref": "event"
+        },
+        {
+          "name": "tier_id",
+          "type": "ref",
+          "ref": "ticket_tier"
+        },
+        {
+          "name": "attendee_id",
+          "type": "ref",
+          "ref": "attendee"
+        },
+        {
+          "name": "organizer_id",
+          "type": "ref",
+          "ref": "organizer"
+        },
+        {
+          "name": "event_title",
+          "type": "text"
+        },
+        {
+          "name": "tier_name",
+          "type": "text"
+        },
+        {
+          "name": "holder_name",
+          "type": "text"
+        },
+        {
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "name": "used",
+          "type": "boolean"
+        },
+        {
+          "name": "checked_in_at",
+          "type": "timestamp",
+          "optional": true
+        }
+      ],
+      "unique": [
+        [
+          "code"
+        ]
+      ],
+      "access": {
+        "attendee": {
+          "create": true,
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        },
+        "organizer": {
+          "create": false,
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        },
+        "door": {
+          "create": false,
+          "read": "all",
+          "update": "all",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "attendee_id",
+        "event_id"
+      ],
+      "actor_ref": "attendee_id",
+      "rules": [
+        {
+          "id": "not-sold-out",
+          "on": "create",
+          "message": "Sold out — this event has no tickets left.",
+          "check": "const r = await ctx.db.query('select capacity, sold from event where id = $1', [row.event_id]); const rows = Array.isArray(r) ? r : (r && r.rows) || []; const e = rows[0]; if (!e) return 'Event not found'; if (Number(e.sold) >= Number(e.capacity)) return 'Sold out — this event has no tickets left.'; return true;"
+        },
+        {
+          "id": "no-double-check-in",
+          "on": "update",
+          "message": "Already checked in — this ticket was used.",
+          "check": "if (ctx.old && ctx.old.used && row.used) return 'Already checked in — this ticket was used.'; return true;"
+        }
+      ]
+    },
+    {
+      "name": "reminder",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "attendee_id",
+          "type": "ref",
+          "ref": "attendee"
+        },
+        {
+          "name": "event_id",
+          "type": "ref",
+          "ref": "event"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "message",
+          "type": "text"
+        }
+      ],
+      "access": {
+        "attendee": {
+          "create": false,
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "attendee_id"
+      ]
+    }
+  ],
+  "seeds": {
+    "attendee": [
+      {
+        "id": "50314ea9-623d-53c9-b05f-05b0b473a24f",
+        "name": "Leo Marchetti",
+        "email": "leo@example.com"
+      },
+      {
+        "id": "99656c07-ce51-5f1f-a5bb-efbd5b0293f4",
+        "name": "Priya Nair",
+        "email": "priya@example.com"
+      },
+      {
+        "id": "c25c4481-4d34-5fdd-92fa-d980eb89c04f",
+        "name": "Tomás Rivera",
+        "email": "tomas@example.com"
+      },
+      {
+        "id": "79f9a495-d95b-5f88-9700-32dc3007cd9d",
+        "name": "Zoe Lindqvist",
+        "email": "zoe@example.com"
+      },
+      {
+        "id": "3509056b-23a0-542c-a063-bf060c094580",
+        "name": "Kai Tanaka",
+        "email": "kai@example.com"
+      },
+      {
+        "id": "94d2ae76-8a8e-51be-9723-d33f5582a278",
+        "name": "Nia Johnson",
+        "email": "nia@example.com"
+      },
+      {
+        "id": "423a1f65-f266-5b10-956f-c34e63e637bd",
+        "name": "Felix Brandt",
+        "email": "felix@example.com"
+      },
+      {
+        "id": "8d5475ab-86aa-5eec-8223-dad1cf836f61",
+        "name": "Maya Okafor",
+        "email": "maya@example.com"
+      }
+    ],
+    "organizer": [
+      {
+        "id": "eaaa7782-276a-5989-9e27-f1f47d7b3171",
+        "name": "Ana Souza",
+        "company": "Low Tide Collective"
+      },
+      {
+        "id": "bf5fe221-b060-540d-9895-c9164e95c939",
+        "name": "Dre Callahan",
+        "company": "Open Road Live"
+      },
+      {
+        "id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "name": "Jules Hartman",
+        "company": "Nightshift Presents"
+      }
+    ],
+    "door": [
+      {
+        "id": "25c5ff08-d282-50a6-92ac-5f4749bacc41",
+        "name": "Imani Brooks"
+      },
+      {
+        "id": "fd3f773f-16d9-5dfe-b003-b88d03ffb5a0",
+        "name": "Sam Reyes"
+      }
+    ],
+    "event": [
+      {
+        "id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "title": "Midnight Static",
+        "tagline": "Eight hours of analog synths and strobes",
+        "genre": "electronic",
+        "venue": "The Warehouse",
+        "city": "Manchester",
+        "lat": 53.4721,
+        "lng": -2.2417,
+        "starts_at": "2026-10-12T20:00:00.000Z",
+        "poster": "/assets/888255043d7c7292.webp",
+        "description": "A full-night analog takeover. Modular rigs, a 40-speaker sound system and a light show built for the room. Doors 8pm, curfew 4am.",
+        "lineup": "Vera Kline|20:30\nHollow Atlas|22:00\nDJ Marrow|23:30\nSolène (headline)|01:00",
+        "capacity": 1200,
+        "sold": 1134,
+        "checked_in": 0
+      },
+      {
+        "id": "1be61cbe-a3ed-523d-904b-35591492b65c",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "title": "Velvet Riot Live",
+        "tagline": "Loud guitars. Louder crowd.",
+        "genre": "rock",
+        "venue": "Electric Ballroom",
+        "city": "London",
+        "lat": 51.5392,
+        "lng": -0.1426,
+        "starts_at": "2026-10-12T19:30:00.000Z",
+        "poster": "/assets/f641eddf03ac9777.webp",
+        "description": "The Riot return to the Ballroom for a one-night-only run through the whole of their second album, plus a surprise encore.",
+        "lineup": "The Paper Saints|19:45\nGlass Animals Club|20:45\nVelvet Riot|22:00",
+        "capacity": 800,
+        "sold": 612,
+        "checked_in": 0
+      },
+      {
+        "id": "808de38c-edc9-5529-b00a-90266aa7e5df",
+        "organizer_id": "eaaa7782-276a-5989-9e27-f1f47d7b3171",
+        "title": "Sunset Sessions",
+        "tagline": "Lo-fi beats above the skyline",
+        "genre": "hiphop",
+        "venue": "Skyline Terrace",
+        "city": "Brooklyn",
+        "lat": 40.7061,
+        "lng": -73.9969,
+        "starts_at": "2026-10-14T18:00:00.000Z",
+        "poster": "/assets/10c25e44fcb89bda.webp",
+        "description": "Golden-hour rooftop with dusty drums, vinyl-only sets and a view you will not forget. Tiny capacity, so this one is gone.",
+        "lineup": "Kofi Beats|18:30\nMellow Ghost|19:45\nTanaka & Friends|21:00",
+        "capacity": 300,
+        "sold": 300,
+        "checked_in": 0
+      },
+      {
+        "id": "055d052c-020c-5961-8ae2-76b3b30d4f8c",
+        "organizer_id": "eaaa7782-276a-5989-9e27-f1f47d7b3171",
+        "title": "Bass Cathedral",
+        "tagline": "Drum & bass in a former church",
+        "genre": "electronic",
+        "venue": "Subterra",
+        "city": "Berlin",
+        "lat": 52.5106,
+        "lng": 13.4412,
+        "starts_at": "2026-10-17T23:00:00.000Z",
+        "poster": "/assets/63dd494133e36b3b.webp",
+        "description": "Rolling basslines, a stained-glass laser rig and the heaviest system in the city. Strictly 18+.",
+        "lineup": "Kraken|23:00\nNova Drift|00:30\nSub Zero Ministry|02:00",
+        "capacity": 1500,
+        "sold": 905,
+        "checked_in": 0
+      },
+      {
+        "id": "b85e7147-1fc2-5948-ac76-9809f369a93f",
+        "organizer_id": "bf5fe221-b060-540d-9895-c9164e95c939",
+        "title": "Jazz & Smoke",
+        "tagline": "Late set, low light, deep groove",
+        "genre": "jazz",
+        "venue": "The Blue Room",
+        "city": "Chicago",
+        "lat": 41.8781,
+        "lng": -87.6298,
+        "starts_at": "2026-10-22T20:00:00.000Z",
+        "poster": "/assets/e4b62c1312b8a66c.webp",
+        "description": "An intimate quartet night in Chicago's best-kept listening room. Two sets, one encore, zero phones.",
+        "lineup": "Marcus Bell Quartet|20:00\nEllie Voss Trio|21:45",
+        "capacity": 220,
+        "sold": 148,
+        "checked_in": 0
+      },
+      {
+        "id": "55dab7ec-0666-5eb5-b52d-c7248a48fdad",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "title": "Hyperpop Hospital",
+        "tagline": "Glitter, glitch and a lot of feelings",
+        "genre": "pop",
+        "venue": "Nova Hall",
+        "city": "Los Angeles",
+        "lat": 34.0522,
+        "lng": -118.2437,
+        "starts_at": "2026-10-25T21:00:00.000Z",
+        "poster": "/assets/e2c6bd9ea6b59669.webp",
+        "description": "The loudest, brightest, most extra night of the year. Dress code: chaos.",
+        "lineup": "PixelPunk|21:00\nLuna Vex|22:15\nCandy Static|23:30",
+        "capacity": 950,
+        "sold": 410,
+        "checked_in": 0
+      },
+      {
+        "id": "9861fa27-c2d8-517e-b636-9efb069941cf",
+        "organizer_id": "bf5fe221-b060-540d-9895-c9164e95c939",
+        "title": "Desert Drums Festival",
+        "tagline": "Three stages under open sky",
+        "genre": "festival",
+        "venue": "Mesa Grounds",
+        "city": "Phoenix",
+        "lat": 33.4484,
+        "lng": -112.074,
+        "starts_at": "2026-10-30T16:00:00.000Z",
+        "poster": "/assets/02fd048cee911856.webp",
+        "description": "Sun-down to sun-up across three stages, food trucks and art installations in the Arizona desert.",
+        "lineup": "Sahara Collective|16:30\nThe Nomads|19:00\nAurora Rey|21:30\nDust & Bone|23:30",
+        "capacity": 4000,
+        "sold": 2210,
+        "checked_in": 0
+      },
+      {
+        "id": "f4ea4e67-ef2e-51fe-8d33-4f63aadbbd78",
+        "organizer_id": "eaaa7782-276a-5989-9e27-f1f47d7b3171",
+        "title": "Indie Lanterns",
+        "tagline": "Acoustic evening, paper lanterns",
+        "genre": "indie",
+        "venue": "The Lantern Hall",
+        "city": "Austin",
+        "lat": 30.2672,
+        "lng": -97.7431,
+        "starts_at": "2026-11-06T19:00:00.000Z",
+        "poster": "/assets/1703987cd209af74.webp",
+        "description": "Singer-songwriters, string lights and a hall full of paper lanterns.",
+        "lineup": "June Alder|19:30\nThe Quiet Orchard|20:30\nMiles Harbor|21:45",
+        "capacity": 450,
+        "sold": 190,
+        "checked_in": 0
+      },
+      {
+        "id": "79df355b-47eb-591e-b822-8ca820df1df1",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "title": "Hip-Hop Heatwave",
+        "tagline": "The summer tour, in November",
+        "genre": "hiphop",
+        "venue": "Dome 9",
+        "city": "Atlanta",
+        "lat": 33.749,
+        "lng": -84.388,
+        "starts_at": "2026-11-14T20:00:00.000Z",
+        "poster": "/assets/2b16bb7ac9671511.webp",
+        "description": "Five of the hottest MCs on one bill with a full live band and pyro.",
+        "lineup": "Lil Meridian|20:30\nQueen Ash|21:30\nTheo Blaze|22:30",
+        "capacity": 2500,
+        "sold": 1320,
+        "checked_in": 0
+      },
+      {
+        "id": "a8aee419-3c97-514b-970e-9b5e82f4851b",
+        "organizer_id": "bf5fe221-b060-540d-9895-c9164e95c939",
+        "title": "Concrete — Techno Tuesday",
+        "tagline": "Raw. Minimal. Relentless.",
+        "genre": "electronic",
+        "venue": "Concrete Hall",
+        "city": "Amsterdam",
+        "lat": 52.3676,
+        "lng": 4.9041,
+        "starts_at": "2026-10-27T22:00:00.000Z",
+        "poster": "/assets/42d46c0dfb826e63.webp",
+        "description": "Hypnotic minimal techno in a bare concrete shell. Lights stay low, the groove stays high.",
+        "lineup": "Oskar Veld|22:00\nMirra|00:00\nNull Set|02:00",
+        "capacity": 600,
+        "sold": 233,
+        "checked_in": 0
+      }
+    ],
+    "ticket_tier": [
+      {
+        "id": "020f62dc-6e0b-5743-b0fd-39605c765f3e",
+        "event_id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "name": "General",
+        "price": 35,
+        "perks": "Entry · Main floor"
+      },
+      {
+        "id": "69dbb01a-a2b5-5e55-94ea-155ac99b6767",
+        "event_id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "name": "VIP",
+        "price": 85,
+        "perks": "Fast lane · Balcony bar · Free drink"
+      },
+      {
+        "id": "dd00b2d4-9491-5423-b58f-ddb8154576c0",
+        "event_id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "name": "Backstage",
+        "price": 180,
+        "perks": "Artist meet · Merch pack · Lounge"
+      },
+      {
+        "id": "de1f8ae4-8622-5a71-acf2-70d4440b75c5",
+        "event_id": "1be61cbe-a3ed-523d-904b-35591492b65c",
+        "name": "General",
+        "price": 42,
+        "perks": "Entry · Standing"
+      },
+      {
+        "id": "38af16f3-0dca-5b07-9482-b52e427f2b15",
+        "event_id": "1be61cbe-a3ed-523d-904b-35591492b65c",
+        "name": "Front Pit",
+        "price": 95,
+        "perks": "Barrier spot · Poster"
+      },
+      {
+        "id": "c1431d42-75a4-58f1-b2b7-b21c26987213",
+        "event_id": "1be61cbe-a3ed-523d-904b-35591492b65c",
+        "name": "Backstage",
+        "price": 210,
+        "perks": "Soundcheck · Meet the band"
+      },
+      {
+        "id": "745dcb4e-4804-5920-ae83-7f7c04268e69",
+        "event_id": "808de38c-edc9-5529-b00a-90266aa7e5df",
+        "name": "General",
+        "price": 28,
+        "perks": "Rooftop entry"
+      },
+      {
+        "id": "d782c691-885b-5c44-98e4-f8c8a9676d11",
+        "event_id": "808de38c-edc9-5529-b00a-90266aa7e5df",
+        "name": "Sunset VIP",
+        "price": 70,
+        "perks": "Reserved sofa · Welcome cocktail"
+      },
+      {
+        "id": "fe8054c0-2a0e-575d-baf0-49b7f23b8f5e",
+        "event_id": "808de38c-edc9-5529-b00a-90266aa7e5df",
+        "name": "Crew",
+        "price": 120,
+        "perks": "DJ booth view · Drinks"
+      },
+      {
+        "id": "605acbb8-b135-5da2-af75-af9cd66da152",
+        "event_id": "055d052c-020c-5961-8ae2-76b3b30d4f8c",
+        "name": "General",
+        "price": 30,
+        "perks": "Entry"
+      },
+      {
+        "id": "5464cf8a-b1fd-5c02-80e5-fe51c42260b1",
+        "event_id": "055d052c-020c-5961-8ae2-76b3b30d4f8c",
+        "name": "Fast Lane",
+        "price": 55,
+        "perks": "Skip the queue · Cloakroom"
+      },
+      {
+        "id": "ef145dd4-bfdd-5ca1-a3cb-e7ac9f4b5746",
+        "event_id": "055d052c-020c-5961-8ae2-76b3b30d4f8c",
+        "name": "Booth",
+        "price": 160,
+        "perks": "Booth table · Bottle service"
+      },
+      {
+        "id": "ded5380b-596f-5bf7-98e2-3e558258c34e",
+        "event_id": "b85e7147-1fc2-5948-ac76-9809f369a93f",
+        "name": "General",
+        "price": 45,
+        "perks": "Entry · Standing room"
+      },
+      {
+        "id": "efb59dc4-6862-5088-8b46-7c8d866220a7",
+        "event_id": "b85e7147-1fc2-5948-ac76-9809f369a93f",
+        "name": "Table Seat",
+        "price": 90,
+        "perks": "Reserved table · Candle service"
+      },
+      {
+        "id": "42fa7f8e-5b71-5c41-ae2b-761e3c802a22",
+        "event_id": "b85e7147-1fc2-5948-ac76-9809f369a93f",
+        "name": "Front Row",
+        "price": 140,
+        "perks": "Stage-side · Dinner plate"
+      },
+      {
+        "id": "22c7d169-d2c7-5249-b6c7-afb231f6935a",
+        "event_id": "55dab7ec-0666-5eb5-b52d-c7248a48fdad",
+        "name": "General",
+        "price": 38,
+        "perks": "Entry"
+      },
+      {
+        "id": "b006d4b4-729f-5c21-adec-c83b5cdc4b54",
+        "event_id": "55dab7ec-0666-5eb5-b52d-c7248a48fdad",
+        "name": "Glitter VIP",
+        "price": 88,
+        "perks": "Balcony · Glitter kit"
+      },
+      {
+        "id": "860626e5-6113-57a1-a374-de911e496e39",
+        "event_id": "55dab7ec-0666-5eb5-b52d-c7248a48fdad",
+        "name": "Meet & Greet",
+        "price": 150,
+        "perks": "Photo op · Signed print"
+      },
+      {
+        "id": "2dc68d19-6a10-5cd4-8f03-82ee1a9b91f3",
+        "event_id": "9861fa27-c2d8-517e-b636-9efb069941cf",
+        "name": "Day Pass",
+        "price": 79,
+        "perks": "All stages"
+      },
+      {
+        "id": "4e0bdea7-600f-529c-88a0-bbd7a5985bd1",
+        "event_id": "9861fa27-c2d8-517e-b636-9efb069941cf",
+        "name": "VIP Oasis",
+        "price": 199,
+        "perks": "Shade lounge · Fast entry · Free water"
+      },
+      {
+        "id": "e8a4ab39-20de-5347-a625-08a117165c74",
+        "event_id": "9861fa27-c2d8-517e-b636-9efb069941cf",
+        "name": "Camper",
+        "price": 320,
+        "perks": "Camping spot · All stages"
+      },
+      {
+        "id": "202ce4fa-bd49-5179-a8a9-7765d86a13c4",
+        "event_id": "f4ea4e67-ef2e-51fe-8d33-4f63aadbbd78",
+        "name": "General",
+        "price": 32,
+        "perks": "Seated entry"
+      },
+      {
+        "id": "9bab1888-8818-53ee-b5b0-c2eced78a2b1",
+        "event_id": "f4ea4e67-ef2e-51fe-8d33-4f63aadbbd78",
+        "name": "Lantern Circle",
+        "price": 65,
+        "perks": "Front seats · Tea & sweets"
+      },
+      {
+        "id": "5df9f058-b905-5516-ba5e-9b0042db0441",
+        "event_id": "f4ea4e67-ef2e-51fe-8d33-4f63aadbbd78",
+        "name": "Patron",
+        "price": 120,
+        "perks": "Reserved row · Signed vinyl"
+      },
+      {
+        "id": "a9a0586f-5ed2-523d-8cc8-193f4f001632",
+        "event_id": "79df355b-47eb-591e-b822-8ca820df1df1",
+        "name": "General",
+        "price": 55,
+        "perks": "Floor entry"
+      },
+      {
+        "id": "938e9545-da0c-56ac-b186-5f5e786f89af",
+        "event_id": "79df355b-47eb-591e-b822-8ca820df1df1",
+        "name": "Courtside",
+        "price": 140,
+        "perks": "Barrier · Merch tee"
+      },
+      {
+        "id": "09899f14-8a7f-5ba1-9bfe-32c0aabbba01",
+        "event_id": "79df355b-47eb-591e-b822-8ca820df1df1",
+        "name": "Suite",
+        "price": 260,
+        "perks": "Private suite · Catering"
+      },
+      {
+        "id": "80ec38e7-979e-524e-9843-338a5f021111",
+        "event_id": "a8aee419-3c97-514b-970e-9b5e82f4851b",
+        "name": "General",
+        "price": 25,
+        "perks": "Entry"
+      },
+      {
+        "id": "2a149477-6033-5f76-bf0e-8cdb23e56a62",
+        "event_id": "a8aee419-3c97-514b-970e-9b5e82f4851b",
+        "name": "Early Bird",
+        "price": 18,
+        "perks": "Entry before midnight"
+      },
+      {
+        "id": "670319b1-2809-562e-9508-6d4a8c74688c",
+        "event_id": "a8aee419-3c97-514b-970e-9b5e82f4851b",
+        "name": "Supporter",
+        "price": 60,
+        "perks": "Entry · Poster · Priority line"
+      }
+    ],
+    "ticket": [
+      {
+        "id": "323f9d61-9076-5589-96d2-137e73ae06aa",
+        "code": "EVT-MS01-VIPA",
+        "event_id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "tier_id": "69dbb01a-a2b5-5e55-94ea-155ac99b6767",
+        "attendee_id": "8d5475ab-86aa-5eec-8223-dad1cf836f61",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "event_title": "Midnight Static",
+        "tier_name": "VIP",
+        "holder_name": "Maya Okafor",
+        "price": 85,
+        "used": false
+      },
+      {
+        "id": "d56cad4a-943e-54e0-8064-b773b2761641",
+        "code": "EVT-VR02-GENA",
+        "event_id": "1be61cbe-a3ed-523d-904b-35591492b65c",
+        "tier_id": "de1f8ae4-8622-5a71-acf2-70d4440b75c5",
+        "attendee_id": "8d5475ab-86aa-5eec-8223-dad1cf836f61",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "event_title": "Velvet Riot Live",
+        "tier_name": "General",
+        "holder_name": "Maya Okafor",
+        "price": 42,
+        "used": false
+      },
+      {
+        "id": "7a9fbdb6-8b49-54ea-aa87-b8ecb79b27fe",
+        "code": "EVT-BC04-FSTL",
+        "event_id": "055d052c-020c-5961-8ae2-76b3b30d4f8c",
+        "tier_id": "5464cf8a-b1fd-5c02-80e5-fe51c42260b1",
+        "attendee_id": "8d5475ab-86aa-5eec-8223-dad1cf836f61",
+        "organizer_id": "eaaa7782-276a-5989-9e27-f1f47d7b3171",
+        "event_title": "Bass Cathedral",
+        "tier_name": "Fast Lane",
+        "holder_name": "Maya Okafor",
+        "price": 55,
+        "used": false
+      },
+      {
+        "id": "1b66217a-62c3-5101-9aaa-ef3dc22d80a2",
+        "code": "EVT-MS01-GEN2",
+        "event_id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "tier_id": "020f62dc-6e0b-5743-b0fd-39605c765f3e",
+        "attendee_id": "50314ea9-623d-53c9-b05f-05b0b473a24f",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "event_title": "Midnight Static",
+        "tier_name": "General",
+        "holder_name": "Leo Marchetti",
+        "price": 35,
+        "used": false
+      },
+      {
+        "id": "7ac75810-777d-5ce4-8f70-926ad058ba45",
+        "code": "EVT-MS01-GEN3",
+        "event_id": "66ed858e-9106-52ca-8e97-1b1531cfbd02",
+        "tier_id": "020f62dc-6e0b-5743-b0fd-39605c765f3e",
+        "attendee_id": "99656c07-ce51-5f1f-a5bb-efbd5b0293f4",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "event_title": "Midnight Static",
+        "tier_name": "General",
+        "holder_name": "Priya Nair",
+        "price": 35,
+        "used": true,
+        "checked_in_at": "2026-10-11T08:12:00.000Z"
+      },
+      {
+        "id": "f0ed0d09-d92f-58fe-a9e5-6dbab5b18b73",
+        "code": "EVT-VR02-PIT1",
+        "event_id": "1be61cbe-a3ed-523d-904b-35591492b65c",
+        "tier_id": "38af16f3-0dca-5b07-9482-b52e427f2b15",
+        "attendee_id": "c25c4481-4d34-5fdd-92fa-d980eb89c04f",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "event_title": "Velvet Riot Live",
+        "tier_name": "Front Pit",
+        "holder_name": "Tomás Rivera",
+        "price": 95,
+        "used": false
+      },
+      {
+        "id": "4397b909-89a8-5f3f-923b-b9c64367ac9d",
+        "code": "EVT-JS05-TBL1",
+        "event_id": "b85e7147-1fc2-5948-ac76-9809f369a93f",
+        "tier_id": "efb59dc4-6862-5088-8b46-7c8d866220a7",
+        "attendee_id": "79f9a495-d95b-5f88-9700-32dc3007cd9d",
+        "organizer_id": "bf5fe221-b060-540d-9895-c9164e95c939",
+        "event_title": "Jazz & Smoke",
+        "tier_name": "Table Seat",
+        "holder_name": "Zoe Lindqvist",
+        "price": 90,
+        "used": false
+      },
+      {
+        "id": "5732516f-b960-530f-8e41-7c33f1454287",
+        "code": "EVT-DD07-DAY1",
+        "event_id": "9861fa27-c2d8-517e-b636-9efb069941cf",
+        "tier_id": "2dc68d19-6a10-5cd4-8f03-82ee1a9b91f3",
+        "attendee_id": "3509056b-23a0-542c-a063-bf060c094580",
+        "organizer_id": "bf5fe221-b060-540d-9895-c9164e95c939",
+        "event_title": "Desert Drums Festival",
+        "tier_name": "Day Pass",
+        "holder_name": "Kai Tanaka",
+        "price": 79,
+        "used": false
+      },
+      {
+        "id": "f9598d37-5a2c-56f0-8968-8fbf9af2f955",
+        "code": "EVT-HH09-GEN1",
+        "event_id": "79df355b-47eb-591e-b822-8ca820df1df1",
+        "tier_id": "a9a0586f-5ed2-523d-8cc8-193f4f001632",
+        "attendee_id": "94d2ae76-8a8e-51be-9723-d33f5582a278",
+        "organizer_id": "429f6fb8-d715-5cd0-976e-f22042bc6e8f",
+        "event_title": "Hip-Hop Heatwave",
+        "tier_name": "General",
+        "holder_name": "Nia Johnson",
+        "price": 55,
+        "used": false
+      },
+      {
+        "id": "0e87f9a3-e74b-5dfe-ab94-6a6f03c5b0d4",
+        "code": "EVT-SS03-GEN1",
+        "event_id": "808de38c-edc9-5529-b00a-90266aa7e5df",
+        "tier_id": "745dcb4e-4804-5920-ae83-7f7c04268e69",
+        "attendee_id": "423a1f65-f266-5b10-956f-c34e63e637bd",
+        "organizer_id": "eaaa7782-276a-5989-9e27-f1f47d7b3171",
+        "event_title": "Sunset Sessions",
+        "tier_name": "General",
+        "holder_name": "Felix Brandt",
+        "price": 28,
+        "used": false
+      }
+    ],
+    "reminder": []
+  },
+  "pages": [
+    {
+      "name": "discover",
+      "route": "/discover",
+      "title": "Discover",
+      "icon": "Ticket",
+      "personas": [
+        "attendee"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "EventraDiscover"
+      }
+    },
+    {
+      "name": "event-detail",
+      "route": "/event/:id",
+      "title": "Event",
+      "icon": "Ticket",
+      "personas": [
+        "attendee"
+      ],
+      "chrome": "none",
+      "detailOf": "event",
+      "layout": {
+        "kind": "custom",
+        "custom": "EventraEvent"
+      }
+    },
+    {
+      "name": "tickets",
+      "route": "/tickets",
+      "title": "My tickets",
+      "icon": "Ticket",
+      "personas": [
+        "attendee"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "EventraTickets"
+      }
+    },
+    {
+      "name": "backstage",
+      "route": "/backstage",
+      "title": "Backstage",
+      "icon": "LayoutDashboard",
+      "personas": [
+        "organizer"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "EventraOrganizer"
+      }
+    },
+    {
+      "name": "gate",
+      "route": "/gate",
+      "title": "Check-in",
+      "icon": "QrCode",
+      "personas": [
+        "door"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "EventraDoor"
+      }
+    },
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "organizer"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Team & access",
+            "subtitle": "Who can sign in, and what they can do."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It's just you so far — add the people who work in the app and pick their role."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "auth": {
+    "screen": "EventraAuth",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "EventraAuth",
+      "kind": "code",
+      "purpose": "Eventra sign-in as a perforated ticket stub over a dark stage with drifting spotlights",
+      "props": {},
+      "sample": {},
+      "source": "import { useState } from \"react\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { Ticket, ArrowRight, RefreshCw } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\nconst DEMOS = [\n  { label: \"Attendee\", email: \"maya@eventra.test\", pw: \"otter-badge-comet-50\" },\n  { label: \"Organizer\", email: \"jules@eventra.test\", pw: \"cobalt-harbor-zest-76\" },\n  { label: \"Door\", email: \"sam@eventra.test\", pw: \"teal-lemon-quartz-62\" },\n];\n\nconst BARS = Array.from({ length: 46 }, (_, i) => 1 + ((i * 7 + (i % 3) * 5) % 4));\n\nconst notch = (pos: \"top\" | \"bottom\") => {\n  const y = pos === \"top\" ? \"0\" : \"100%\";\n  const g = (x: string) => `radial-gradient(circle 13px at ${x} ${y}, #0000 97%, #000)`;\n  return {\n    WebkitMaskImage: `${g(\"0\")}, ${g(\"100%\")}`,\n    maskImage: `${g(\"0\")}, ${g(\"100%\")}`,\n    WebkitMaskComposite: \"source-in\",\n    maskComposite: \"intersect\",\n  } as React.CSSProperties;\n};\n\nfunction GoogleG() {\n  return (\n    <svg viewBox=\"0 0 48 48\" className=\"h-5 w-5\" aria-hidden=\"true\">\n      <path fill=\"#EA4335\" d=\"M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z\" />\n      <path fill=\"#4285F4\" d=\"M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.3 5.7c4.3-4 6.8-9.9 7-17.1z\" />\n      <path fill=\"#FBBC05\" d=\"M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z\" />\n      <path fill=\"#34A853\" d=\"M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.3-5.7c-2 1.4-4.8 2.3-8.6 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z\" />\n    </svg>\n  );\n}\n\nexport default function EventraAuth({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const a = app?.auth;\n  const signup = a?.mode === \"signup\";\n  const providers = a?.providers ?? [];\n  const [name, setName] = useState(\"\");\n  const [email, setEmail] = useState(\"\");\n  const [pw, setPw] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n\n  const submit = async () => {\n    if (!a || busy) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      if (signup) await a.signUp({ email, password: pw, name: name || email.split(\"@\")[0] });\n      else await a.signIn(email, pw);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Something went wrong. Try again.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  const provider = async (n: string) => {\n    if (!a) return;\n    setErr(\"\");\n    try {\n      await a.startProvider(n);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Could not start that sign-in. Try again.\");\n    }\n  };\n\n  const inputCls =\n    \"w-full rounded-xl border border-[#150A1F]/15 bg-white px-4 py-3 text-[15px] text-[#150A1F] placeholder:text-[#150A1F]/40 outline-none transition focus:border-[#FF3D7F] focus:ring-4 focus:ring-[#FF3D7F]/20\";\n\n  const beam = (left: string, color: string, dur: number, from: number, to: number) => (\n    <motion.div\n      className=\"absolute top-[-10%] h-[120%] w-[38vw] min-w-[260px] origin-top\"\n      style={{ left, background: `linear-gradient(180deg, ${color} 0%, transparent 75%)`, clipPath: \"polygon(46% 0, 54% 0, 100% 100%, 0 100%)\", filter: \"blur(10px)\" }}\n      initial={{ rotate: from }}\n      animate={reduce ? { rotate: from } : { rotate: [from, to, from] }}\n      transition={{ duration: dur, repeat: Infinity, ease: \"easeInOut\" }}\n    />\n  );\n\n  return (\n    <div className=\"relative min-h-screen w-full overflow-hidden bg-[#07040D] text-white\">\n      <div className=\"pointer-events-none absolute inset-0\">\n        {beam(\"-6%\", \"rgba(255,61,127,0.45)\", 11, -18, 14)}\n        {beam(\"34%\", \"rgba(176,107,255,0.35)\", 14, 12, -16)}\n        {beam(\"66%\", \"rgba(255,122,89,0.32)\", 17, -10, 20)}\n        <div className=\"absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-[#FF3D7F]/25 via-[#6D3BFF]/10 to-transparent\" />\n        <div className=\"absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#07040D_95%)]\" />\n      </div>\n\n      <div className=\"relative mx-auto flex min-h-screen w-full max-w-[460px] flex-col justify-center px-4 py-8 sm:max-w-[520px]\">\n        <motion.div\n          initial={reduce ? false : { opacity: 0, y: 60, rotate: -3 }}\n          animate={reduce ? undefined : { opacity: 1, y: 0, rotate: 0 }}\n          transition={{ type: \"spring\", stiffness: 80, damping: 14 }}\n          className=\"drop-shadow-[0_30px_60px_rgba(0,0,0,0.75)]\"\n        >\n          <motion.div animate={reduce ? undefined : { y: [0, -6, 0] }} transition={{ duration: 7, repeat: Infinity, ease: \"easeInOut\" }}>\n            <div style={notch(\"bottom\")} className=\"relative overflow-hidden rounded-t-[26px] bg-gradient-to-br from-[#FF3D7F] via-[#E0307F] to-[#7B3BFF] px-6 pb-7 pt-5\">\n              <div className=\"flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.25em] text-white/85\">\n                <span className=\"flex items-center gap-1.5\"><Ticket className=\"h-4 w-4\" />Eventra</span>\n                <span>Admit one</span>\n              </div>\n              <h1 className=\"mt-3 text-[56px] font-black uppercase leading-[0.82] tracking-tighter sm:text-[72px]\">\n                Own the<br /><span className=\"text-[#07040D]\">night.</span>\n              </h1>\n              <div className=\"mt-4 flex gap-5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/80\">\n                <span>Doors 20:00</span><span>Row ∞</span><span>Seat: front</span>\n              </div>\n            </div>\n            <div className=\"relative h-0\">\n              <div className=\"absolute inset-x-5 top-0 border-t-2 border-dashed border-white/25\" />\n            </div>\n            <div style={notch(\"top\")} className=\"rounded-b-[26px] bg-[#FBF7F2] px-6 pb-5 pt-7 text-[#150A1F]\">\n              {a?.canSignUp !== false ? (\n                <div className=\"mb-4 flex rounded-full p-1\" style={{ background: \"rgba(21,10,31,0.08)\" }}>\n                  {[{ k: false, t: \"Returning\" }, { k: true, t: \"New here\" }].map((o) => (\n                    <button key={o.t} type=\"button\" onClick={() => a?.setMode(o.k ? \"signup\" : \"login\")} className=\"relative flex-1 rounded-full py-2 text-sm font-bold\" style={{ color: signup === o.k ? \"#fff\" : \"rgba(21,10,31,0.55)\" }}>\n                      {signup === o.k && <motion.span layoutId=\"eventra-tab\" className=\"absolute inset-0 rounded-full bg-[#150A1F]\" transition={{ type: \"spring\", stiffness: 400, damping: 30 }} />}\n                      <span className=\"relative\">{o.t}</span>\n                    </button>\n                  ))}\n                </div>\n              ) : null}\n\n              <form onSubmit={(e) => { e.preventDefault(); void submit(); }} className=\"space-y-2.5\">\n                <AnimatePresence initial={false}>\n                  {signup && (\n                    <motion.div key=\"n\" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"overflow-hidden\">\n                      <input aria-label=\"Name\" type=\"text\" placeholder=\"Your name\" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />\n                    </motion.div>\n                  )}\n                </AnimatePresence>\n                <input aria-label=\"Email\" type=\"email\" autoComplete=\"email\" placeholder=\"Email\" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />\n                <input aria-label=\"Password\" type=\"password\" autoComplete={signup ? \"new-password\" : \"current-password\"} placeholder=\"Password\" value={pw} onChange={(e) => setPw(e.target.value)} className={inputCls} />\n                <AnimatePresence>\n                  {err && <motion.p initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role=\"alert\" className=\"rounded-xl bg-red-500/15 px-3 py-2 text-sm text-red-700\">{err}</motion.p>}\n                </AnimatePresence>\n                <motion.button type=\"submit\" whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }} className=\"flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF3D7F] to-[#FF6A3D] py-3.5 text-base font-black uppercase tracking-wide text-white shadow-[0_10px_30px_-8px_rgba(255,61,127,0.8)]\">\n                  {busy ? <RefreshCw className=\"h-5 w-5 animate-spin\" /> : null}\n                  {signup ? \"Create account\" : \"Sign in\"}\n                  {!busy && <ArrowRight className=\"h-5 w-5\" />}\n                </motion.button>\n              </form>\n\n              {providers.length > 0 && (\n                <div className=\"mt-4\">\n                  <div className=\"mb-3 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.25em] text-[#150A1F]/40\">\n                    <span className=\"h-px flex-1 bg-[#150A1F]/15\" />or<span className=\"h-px flex-1 bg-[#150A1F]/15\" />\n                  </div>\n                  <div className=\"space-y-2\">\n                    {providers.map((p) => (\n                      <motion.button key={p.name} type=\"button\" whileTap={{ scale: 0.97 }} onClick={() => void provider(p.name)} className=\"flex w-full items-center justify-center gap-3 rounded-xl border border-[#150A1F]/20 bg-white py-3 text-[15px] font-bold text-[#150A1F]\">\n                        {p.name === \"google\" ? <GoogleG /> : null}\n                        Continue with {p.label}\n                      </motion.button>\n                    ))}\n                  </div>\n                </div>\n              )}\n\n              {!signup && (\n                <div className=\"mt-4 flex flex-wrap items-center justify-center gap-2\">\n                  <span className=\"text-[10px] font-bold uppercase tracking-[0.2em] text-[#150A1F]/45\">Demo</span>\n                  {DEMOS.map((d) => (\n                    <motion.button key={d.label} type=\"button\" whileTap={{ scale: 0.93 }} onClick={() => { setEmail(d.email); setPw(d.pw); }} className=\"rounded-full border border-[#150A1F]/20 px-3 py-1.5 text-xs font-bold text-[#150A1F]/80 hover:border-[#FF3D7F] hover:text-[#FF3D7F]\">{d.label}</motion.button>\n                  ))}\n                </div>\n              )}\n\n              <div className=\"mt-5 flex h-9 items-stretch justify-center gap-[2px] opacity-80\" aria-hidden=\"true\">\n                {BARS.map((w, i) => (\n                  <i key={i} className=\"block bg-[#150A1F]\" style={{ width: w }} />\n                ))}\n              </div>\n              <p className=\"mt-1 text-center font-mono text-[9px] uppercase tracking-[0.35em] text-[#150A1F]/40\">EVT-0001 · no refunds on a good time</p>\n            </div>\n          </motion.div>\n        </motion.div>\n      </div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "EventraDiscover",
+      "kind": "code",
+      "purpose": "Attendee home: hero, genre filter, parallax poster cards with live capacity bars",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from \"motion/react\";\nimport { Ticket, Flame, MapPin, Calendar, ArrowRight, LogOut, Bell, Zap } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\nconst s = (v: unknown) => String(v ?? \"\");\nconst n = (v: unknown) => Number(v) || 0;\nconst day = (v: unknown) => {\n  const d = new Date(s(v));\n  if (isNaN(d.getTime())) return { wd: \"TBA\", d: \"--\", m: \"\", t: \"\" };\n  return {\n    wd: d.toLocaleDateString(\"en-US\", { weekday: \"short\", timeZone: \"UTC\" }),\n    d: d.toLocaleDateString(\"en-US\", { day: \"numeric\", timeZone: \"UTC\" }),\n    m: d.toLocaleDateString(\"en-US\", { month: \"short\", timeZone: \"UTC\" }),\n    t: d.toLocaleTimeString(\"en-US\", { hour: \"numeric\", minute: \"2-digit\", timeZone: \"UTC\" }),\n  };\n};\nconst GENRES = [\"all\", \"electronic\", \"rock\", \"hiphop\", \"pop\", \"jazz\", \"indie\", \"festival\"];\nconst GRAD = [\"from-[#FF3D7F] to-[#6D3BFF]\", \"from-[#FF8A3D] to-[#FF3D7F]\", \"from-[#22D3EE] to-[#6D3BFF]\", \"from-[#B6FF3B] to-[#22D3EE]\"];\n\nfunction Nav({ app, active }: { app?: AppHandle; active: \"discover\" | \"tickets\" }) {\n  const items = [\n    { k: \"discover\", label: \"Discover\", Icon: Flame, to: \"/discover\" },\n    { k: \"tickets\", label: \"My tickets\", Icon: Ticket, to: \"/tickets\" },\n  ] as const;\n  return (\n    <>\n      <header className=\"sticky top-0 z-40 border-b border-white/10 bg-[#09050F]/80 backdrop-blur-xl\">\n        <div className=\"mx-auto flex h-16 max-w-7xl items-center justify-between px-5\">\n          <button type=\"button\" onClick={() => app?.navigate(\"/discover\")} className=\"flex items-center gap-2 text-lg font-black uppercase tracking-tight\">\n            <span className=\"grid h-8 w-8 place-items-center rounded-xl bg-[#FF3D7F] shadow-[0_0_24px_rgba(255,61,127,0.7)]\"><Ticket className=\"h-4 w-4\" /></span>\n            Eventra\n          </button>\n          <nav className=\"hidden items-center gap-1 md:flex\">\n            {items.map((i) => (\n              <button key={i.k} type=\"button\" onClick={() => app?.navigate(i.to)} className=\"relative rounded-full px-4 py-2 text-sm font-semibold\" style={{ color: active === i.k ? \"#fff\" : \"rgba(255,255,255,0.55)\" }}>\n                {active === i.k && <motion.span layoutId=\"navpill\" className=\"absolute inset-0 rounded-full bg-white/10\" />}\n                <span className=\"relative\">{i.label}</span>\n              </button>\n            ))}\n          </nav>\n          <div className=\"flex items-center gap-3\">\n            <span className=\"hidden text-sm text-white/60 sm:block\">{app?.user.name}</span>\n            <button type=\"button\" aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-white/70 hover:text-white\"><LogOut className=\"h-4 w-4\" /></button>\n          </div>\n        </div>\n      </header>\n      <nav className=\"fixed inset-x-3 bottom-3 z-40 flex rounded-full border border-white/10 bg-[#140B22]/90 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl md:hidden\">\n        {items.map((i) => (\n          <button key={i.k} type=\"button\" onClick={() => app?.navigate(i.to)} className=\"relative flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-bold\" style={{ color: active === i.k ? \"#fff\" : \"rgba(255,255,255,0.5)\" }}>\n            {active === i.k && <motion.span layoutId=\"tabpill\" className=\"absolute inset-0 rounded-full bg-[#FF3D7F]\" transition={{ type: \"spring\", stiffness: 400, damping: 32 }} />}\n            <i.Icon className=\"relative h-4 w-4\" /><span className=\"relative\">{i.label}</span>\n          </button>\n        ))}\n      </nav>\n    </>\n  );\n}\n\nfunction Cap({ sold, cap }: { sold: number; cap: number }) {\n  const pct = cap > 0 ? Math.min(100, Math.round((sold / cap) * 100)) : 0;\n  const out = sold >= cap && cap > 0;\n  return (\n    <div>\n      <div className=\"h-1.5 w-full overflow-hidden rounded-full bg-white/15\">\n        <motion.div className=\"h-full rounded-full\" style={{ background: out ? \"#ef4444\" : pct > 85 ? \"linear-gradient(90deg,#FF8A3D,#FF3D7F)\" : \"linear-gradient(90deg,#FF3D7F,#B06BFF)\" }} initial={{ width: 0 }} animate={{ width: pct + \"%\" }} transition={{ duration: 1, ease: \"easeOut\" }} />\n      </div>\n      <div className=\"mt-1.5 flex justify-between text-[11px] font-semibold uppercase tracking-wider text-white/60\">\n        <span>{out ? \"Sold out\" : pct > 85 ? \"Almost gone\" : pct + \"% sold\"}</span>\n        <span>{sold.toLocaleString(\"en-US\")} / {cap.toLocaleString(\"en-US\")}</span>\n      </div>\n    </div>\n  );\n}\n\nfunction PosterCard({ ev, i, app, tiers }: { ev: R; i: number; app?: AppHandle; tiers: R[] }) {\n  const reduce = useReducedMotion();\n  const ref = useRef<HTMLDivElement>(null);\n  const { scrollYProgress } = useScroll({ target: ref, offset: [\"start end\", \"end start\"] });\n  const y = useTransform(scrollYProgress, [0, 1], [\"-9%\", \"9%\"]);\n  const dt = day(ev.starts_at);\n  const out = n(ev.sold) >= n(ev.capacity);\n  const from = tiers.filter((t) => s(t.event_id) === s(ev.id)).reduce((m, t) => Math.min(m, n(t.price)), 9999);\n  return (\n    <motion.div\n      ref={ref}\n      layout\n      initial={{ opacity: 0, y: 50 }}\n      whileInView={{ opacity: 1, y: 0 }}\n      viewport={{ once: true, margin: \"-40px\" }}\n      exit={{ opacity: 0, scale: 0.9 }}\n      transition={{ type: \"spring\", stiffness: 90, damping: 16, delay: (i % 3) * 0.07 }}\n      whileHover={reduce ? undefined : { y: -6 }}\n      whileTap={{ scale: 0.97 }}\n      onClick={() => app?.navigate(\"/event/\" + s(ev.id))}\n      className=\"group relative cursor-pointer overflow-hidden rounded-[28px] border border-white/10 bg-[#140B22] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)]\"\n    >\n      <div className=\"relative aspect-[4/5] overflow-hidden\">\n        <motion.img src={s(ev.poster)} alt={s(ev.title)} style={reduce ? undefined : { y, scale: 1.2 }} className=\"absolute inset-0 h-full w-full object-cover\" />\n        <div className={\"absolute inset-0 bg-gradient-to-br opacity-30 mix-blend-overlay \" + GRAD[i % GRAD.length]} />\n        <div className=\"absolute inset-0 bg-gradient-to-t from-[#09050F] via-[#09050F]/40 to-transparent\" />\n        <div className=\"absolute left-4 top-4 rounded-2xl bg-white px-3 py-2 text-center text-[#09050F] shadow-lg\">\n          <div className=\"text-[10px] font-bold uppercase tracking-widest text-[#FF3D7F]\">{dt.m}</div>\n          <div className=\"text-2xl font-black leading-none\">{dt.d}</div>\n        </div>\n        <div className=\"absolute right-4 top-4 rounded-full bg-black/50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest backdrop-blur\">{s(ev.genre)}</div>\n        {out && <div className=\"absolute inset-x-0 top-1/2 -rotate-6 bg-[#ef4444] py-1 text-center text-sm font-black uppercase tracking-[0.4em]\">Sold out</div>}\n        <div className=\"absolute inset-x-0 bottom-0 p-5\">\n          <h3 className=\"text-3xl font-black uppercase leading-[0.95] tracking-tight\">{s(ev.title)}</h3>\n          <p className=\"mt-1 flex items-center gap-1.5 text-sm text-white/70\"><MapPin className=\"h-3.5 w-3.5 text-[#FF3D7F]\" />{s(ev.venue)} · {s(ev.city)}</p>\n        </div>\n      </div>\n      <div className=\"space-y-3 p-5\">\n        <Cap sold={n(ev.sold)} cap={n(ev.capacity)} />\n        <div className=\"flex items-center justify-between\">\n          <span className=\"text-sm text-white/60\">{dt.wd} · {dt.t}</span>\n          <span className=\"flex items-center gap-1 text-sm font-bold text-[#FF3D7F]\">{out ? \"Sold out\" : from < 9999 ? \"from $\" + from : \"Tickets\"}<ArrowRight className=\"h-4 w-4 transition group-hover:translate-x-1\" /></span>\n        </div>\n      </div>\n    </motion.div>\n  );\n}\n\nexport default function EventraDiscover({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [genre, setGenre] = useState(\"all\");\n  useEffect(() => (app ? app.live(\"event\") : undefined), [app]);\n  const events = useMemo(() => ((app?.rows(\"event\") ?? []) as R[]).slice().sort((a, b) => s(a.starts_at).localeCompare(s(b.starts_at))), [app]);\n  const tiers = (app?.rows(\"ticket_tier\") ?? []) as R[];\n  const reminders = (app?.rows(\"reminder\") ?? []) as R[];\n  const loading = app?.loading(\"event\") && events.length === 0;\n  const shown = events.filter((e) => genre === \"all\" || s(e.genre) === genre);\n  const hero = events.find((e) => n(e.sold) < n(e.capacity)) ?? events[0];\n  const { scrollY } = useScroll();\n  const heroY = useTransform(scrollY, [0, 500], [0, 120]);\n  const hd = hero ? day(hero.starts_at) : null;\n  return (\n    <div className=\"min-h-screen bg-[#09050F] pb-28 text-white md:pb-16\">\n      <Nav app={app} active=\"discover\" />\n      {hero && hd && (\n        <section className=\"relative isolate overflow-hidden\">\n          <motion.img src={s(hero.poster)} alt=\"\" style={reduce ? undefined : { y: heroY }} className=\"absolute inset-0 -z-10 h-[115%] w-full object-cover opacity-60\" />\n          <div className=\"absolute inset-0 -z-10 bg-gradient-to-t from-[#09050F] via-[#09050F]/60 to-[#09050F]/20\" />\n          <div className=\"absolute inset-0 -z-10 bg-gradient-to-r from-[#FF3D7F]/30 to-transparent\" />\n          <div className=\"mx-auto max-w-7xl px-5 pb-12 pt-20 md:pb-20 md:pt-32\">\n            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className=\"mb-4 inline-flex items-center gap-2 rounded-full bg-[#FF3D7F] px-3 py-1 text-xs font-black uppercase tracking-widest\"><Zap className=\"h-3.5 w-3.5\" />Next up · {hd.wd} {hd.m} {hd.d}</motion.div>\n            <motion.h1 style={{ lineHeight: 0.88 }} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ type: \"spring\", stiffness: 70, damping: 15, delay: 0.1 }} className=\"max-w-4xl break-words text-[56px] font-black uppercase leading-[0.85] tracking-tighter sm:text-8xl lg:text-[140px]\">{s(hero.title)}</motion.h1>\n            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className=\"mt-4 max-w-lg text-lg text-white/75\">{s(hero.tagline)}</motion.p>\n            <div className=\"mt-6 flex flex-wrap items-center gap-4\">\n              <motion.button type=\"button\" whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.04 }} onClick={() => app?.navigate(\"/event/\" + s(hero.id))} className=\"flex items-center gap-2 rounded-full bg-white px-7 py-4 text-base font-black uppercase tracking-wide text-[#09050F] shadow-[0_10px_40px_rgba(255,61,127,0.5)]\">Get tickets <ArrowRight className=\"h-5 w-5\" /></motion.button>\n              <span className=\"flex items-center gap-2 text-sm text-white/70\"><Calendar className=\"h-4 w-4\" />{hd.t} · {s(hero.venue)}, {s(hero.city)}</span>\n            </div>\n            <div className=\"mt-8 max-w-md\"><Cap sold={n(hero.sold)} cap={n(hero.capacity)} /></div>\n          </div>\n        </section>\n      )}\n\n      <main className=\"mx-auto max-w-7xl px-5\">\n        <AnimatePresence>\n          {reminders.length > 0 && (\n            <motion.button type=\"button\" onClick={() => app?.navigate(\"/tickets\")} initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-6 flex w-full items-center gap-3 rounded-3xl border border-[#FF3D7F]/40 bg-[#FF3D7F]/10 p-4 text-left\">\n              <span className=\"grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#FF3D7F]\"><Bell className=\"h-5 w-5\" /></span>\n              <span><span className=\"block font-bold\">{s(reminders[0].title)}</span><span className=\"block text-sm text-white/70\">{s(reminders[0].message)}</span></span>\n            </motion.button>\n          )}\n        </AnimatePresence>\n\n        <div className=\"mt-8 flex items-end justify-between\">\n          <h2 className=\"text-4xl font-black uppercase tracking-tight sm:text-5xl\">On sale <span className=\"text-[#FF3D7F]\">now</span></h2>\n          <span className=\"hidden items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/50 sm:flex\"><span className=\"h-2 w-2 animate-pulse rounded-full bg-[#B6FF3B]\" />Live availability</span>\n        </div>\n        <div className=\"-mx-5 mt-5 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none]\">\n          {GENRES.map((g) => (\n            <button key={g} type=\"button\" onClick={() => setGenre(g)} className=\"relative shrink-0 rounded-full border border-white/10 px-4 py-2 text-sm font-bold capitalize\" style={{ color: genre === g ? \"#09050F\" : \"rgba(255,255,255,0.7)\" }}>\n              {genre === g && <motion.span layoutId=\"genrepill\" className=\"absolute inset-0 rounded-full bg-white\" transition={{ type: \"spring\", stiffness: 400, damping: 30 }} />}\n              <span className=\"relative\">{g === \"hiphop\" ? \"hip-hop\" : g}</span>\n            </button>\n          ))}\n        </div>\n\n        {loading ? (\n          <div className=\"mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3\">{[0, 1, 2].map((k) => <div key={k} className=\"aspect-[4/6] animate-pulse rounded-[28px] bg-white/5\" />)}</div>\n        ) : shown.length === 0 ? (\n          <div className=\"mt-10 rounded-3xl border border-dashed border-white/15 p-12 text-center text-white/60\">No {genre} nights yet. Try another genre.</div>\n        ) : (\n          <motion.div layout className=\"mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3\">\n            <AnimatePresence mode=\"popLayout\">\n              {shown.map((ev, i) => <PosterCard key={s(ev.id)} ev={ev} i={i} app={app} tiers={tiers} />)}\n            </AnimatePresence>\n          </motion.div>\n        )}\n      </main>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "EventraEvent",
+      "kind": "code",
+      "purpose": "Event detail: lineup, venue, live capacity, ticket tiers and purchase",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, animate, useReducedMotion, useScroll, useTransform } from \"motion/react\";\nimport { QRCodeSVG } from \"qrcode.react\";\nimport { ArrowLeft, MapPin, Clock, Ticket, Plus, Check, X, AlertTriangle, Users, Mic } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\nconst s = (v: unknown) => String(v ?? \"\");\nconst n = (v: unknown) => Number(v) || 0;\nconst fmt = (v: unknown, o: Intl.DateTimeFormatOptions) => {\n  const d = new Date(s(v));\n  return isNaN(d.getTime()) ? \"TBA\" : d.toLocaleString(\"en-US\", { ...o, timeZone: \"UTC\" });\n};\nconst ALPHA = \"ABCDEFGHJKLMNPQRSTUVWXYZ23456789\";\nconst rnd = (k: number) => Array.from({ length: k }, () => ALPHA[Math.floor(Math.random() * ALPHA.length)]).join(\"\");\nconst wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));\n\nfunction Counter({ value }: { value: number }) {\n  const [d, setD] = useState(value);\n  const from = useRef(value);\n  useEffect(() => {\n    const c = animate(from.current, value, { duration: 0.9, ease: \"easeOut\", onUpdate: (v) => setD(Math.round(v)) });\n    from.current = value;\n    return () => c.stop();\n  }, [value]);\n  return <>{d.toLocaleString(\"en-US\")}</>;\n}\n\nexport default function EventraEvent({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const id = app?.params.id ?? \"\";\n  useEffect(() => (app ? app.live(\"event\") : undefined), [app]);\n  const ev = ((app?.rows(\"event\") ?? []) as R[]).find((e) => s(e.id) === id);\n  const tiers = ((app?.rows(\"ticket_tier\") ?? []) as R[]).filter((t) => s(t.event_id) === id).sort((a, b) => n(a.price) - n(b.price));\n  const [tierId, setTierId] = useState(\"\");\n  const [qty, setQty] = useState(1);\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const [done, setDone] = useState<string[]>([]);\n  const { scrollY } = useScroll();\n  const y = useTransform(scrollY, [0, 500], [0, 100]);\n  const tier = tiers.find((t) => s(t.id) === tierId) ?? tiers[0];\n  const sold = n(ev?.sold);\n  const cap = n(ev?.capacity);\n  const left = Math.max(0, cap - sold);\n  const out = !!ev && left <= 0;\n  const pct = cap > 0 ? Math.min(100, (sold / cap) * 100) : 0;\n  const maxQty = Math.max(1, Math.min(4, left));\n  const total = tier ? n(tier.price) * qty : 0;\n  const lineup = s(ev?.lineup).split(\"\\n\").filter(Boolean).map((l) => { const [a, b] = l.split(\"|\"); return { a: a ?? \"\", t: b ?? \"\" }; });\n\n  useEffect(() => { if (qty > maxQty) setQty(maxQty); }, [maxQty, qty]);\n\n  const buy = async () => {\n    if (!app || !ev || !tier || busy || out) return;\n    setBusy(true);\n    setErr(\"\");\n    const codes: string[] = [];\n    try {\n      for (let i = 0; i < qty; i++) {\n        const code = \"EVT-\" + rnd(4) + \"-\" + rnd(4);\n        await app.create(\"ticket\", { code, event_id: s(ev.id), tier_id: s(tier.id), attendee_id: app.me(\"attendee\") ?? \"\", organizer_id: s(ev.organizer_id), event_title: s(ev.title), tier_name: s(tier.name), holder_name: app.user.name || \"Guest\", price: n(tier.price), used: false });\n        codes.push(code);\n        if (i < qty - 1) await wait(700);\n      }\n      setDone(codes);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Could not complete the purchase.\");\n      if (codes.length) setDone(codes);\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  if (!ev) {\n    return (\n      <div className=\"grid min-h-screen place-items-center bg-[#09050F] px-5 text-white\">\n        <div className=\"w-full max-w-md animate-pulse space-y-4\"><div className=\"h-64 rounded-3xl bg-white/5\" /><div className=\"h-8 w-2/3 rounded-xl bg-white/5\" /><div className=\"h-24 rounded-3xl bg-white/5\" /></div>\n      </div>\n    );\n  }\n\n  const buyBtn = (cls: string) => (\n    <motion.button type=\"button\" disabled={busy || out || !tier} whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.03 }} onClick={() => void buy()} className={\"items-center justify-center gap-2 rounded-full px-7 py-4 text-base font-black uppercase tracking-wide shadow-[0_12px_40px_-8px_rgba(255,61,127,0.8)] disabled:opacity-60 \" + cls} style={{ background: out ? \"#3b2a4d\" : \"linear-gradient(90deg,#FF3D7F,#FF6A3D)\" }}>\n      {out ? \"Sold out\" : busy ? \"Securing…\" : \"Buy \" + qty + (qty > 1 ? \" tickets\" : \" ticket\") + \" · $\" + total}\n    </motion.button>\n  );\n\n  return (\n    <div className=\"min-h-screen bg-[#09050F] pb-36 text-white lg:pb-16\">\n      <section className=\"relative isolate h-[58vh] min-h-[380px] overflow-hidden lg:h-[520px]\">\n        <motion.img src={s(ev.poster)} alt={s(ev.title)} style={reduce ? undefined : { y }} className=\"absolute inset-0 -z-10 h-[120%] w-full object-cover\" />\n        <div className=\"absolute inset-0 -z-10 bg-gradient-to-t from-[#09050F] via-[#09050F]/50 to-black/30\" />\n        <button type=\"button\" aria-label=\"Back\" onClick={() => app?.navigate(\"/discover\")} className=\"absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-black/50 backdrop-blur\"><ArrowLeft className=\"h-5 w-5\" /></button>\n        <div className=\"absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-5 pb-8\">\n          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className=\"rounded-full bg-[#FF3D7F] px-3 py-1 text-xs font-black uppercase tracking-widest\">{s(ev.genre)}</motion.span>\n          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: \"spring\", stiffness: 80, damping: 16 }} className=\"mt-3 break-words text-5xl font-black uppercase leading-[0.88] tracking-tighter sm:text-7xl lg:text-8xl\">{s(ev.title)}</motion.h1>\n          <p className=\"mt-3 text-lg text-white/75\">{s(ev.tagline)}</p>\n        </div>\n      </section>\n\n      <div className=\"mx-auto grid max-w-6xl gap-8 px-5 pt-6 lg:grid-cols-[1fr_400px]\">\n        <div className=\"space-y-8\">\n          <div className=\"grid grid-cols-2 gap-3\">\n            <div className=\"rounded-3xl border border-white/10 bg-white/5 p-4\"><Clock className=\"mb-2 h-5 w-5 text-[#FF3D7F]\" /><div className=\"font-bold\">{fmt(ev.starts_at, { weekday: \"long\", month: \"short\", day: \"numeric\" })}</div><div className=\"text-sm text-white/60\">{fmt(ev.starts_at, { hour: \"numeric\", minute: \"2-digit\" })}</div></div>\n            <div className=\"rounded-3xl border border-white/10 bg-white/5 p-4\"><MapPin className=\"mb-2 h-5 w-5 text-[#FF3D7F]\" /><div className=\"font-bold\">{s(ev.venue)}</div><div className=\"text-sm text-white/60\">{s(ev.city)}</div></div>\n          </div>\n\n          <div className=\"rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] p-5\">\n            <div className=\"flex items-end justify-between\">\n              <div>\n                <div className=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/50\"><span className=\"h-2 w-2 animate-pulse rounded-full bg-[#B6FF3B]\" />Live capacity</div>\n                <div className=\"mt-1 text-4xl font-black\"><Counter value={sold} /><span className=\"text-xl text-white/40\"> / {cap.toLocaleString(\"en-US\")}</span></div>\n              </div>\n              <div className=\"flex items-center gap-1.5 text-sm font-bold\" style={{ color: out ? \"#f87171\" : left < cap * 0.15 ? \"#FF8A3D\" : \"#B6FF3B\" }}><Users className=\"h-4 w-4\" />{out ? \"Sold out\" : <><Counter value={left} /> left</>}</div>\n            </div>\n            <div className=\"mt-4 h-3 overflow-hidden rounded-full bg-white/10\">\n              <motion.div className=\"h-full rounded-full\" style={{ background: out ? \"#ef4444\" : \"linear-gradient(90deg,#FF3D7F,#B06BFF)\" }} initial={{ width: 0 }} animate={{ width: pct + \"%\" }} transition={{ duration: 1, ease: \"easeOut\" }} />\n            </div>\n          </div>\n\n          {ev.description ? <p className=\"text-base leading-relaxed text-white/75\">{s(ev.description)}</p> : null}\n\n          {lineup.length > 0 && (\n            <div>\n              <h2 className=\"mb-4 flex items-center gap-2 text-2xl font-black uppercase tracking-tight\"><Mic className=\"h-5 w-5 text-[#FF3D7F]\" />Lineup</h2>\n              <div className=\"space-y-2\">\n                {lineup.map((l, i) => (\n                  <motion.div key={l.a + i} initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.08, type: \"spring\", stiffness: 100, damping: 16 }} className=\"flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4\">\n                    <span className={i === lineup.length - 1 ? \"text-2xl font-black uppercase text-[#FF3D7F]\" : \"text-xl font-bold\"}>{l.a}</span>\n                    <span className=\"text-sm tabular-nums text-white/50\">{l.t}</span>\n                  </motion.div>\n                ))}\n              </div>\n            </div>\n          )}\n        </div>\n\n        <aside className=\"lg:sticky lg:top-6 lg:self-start\">\n          <div className=\"rounded-[28px] border border-white/10 bg-[#140B22] p-5 shadow-[0_30px_80px_-30px_rgba(255,61,127,0.4)]\">\n            <h2 className=\"mb-4 flex items-center gap-2 text-xl font-black uppercase\"><Ticket className=\"h-5 w-5 text-[#FF3D7F]\" />Choose your pass</h2>\n            <div className=\"space-y-2.5\">\n              {tiers.map((t) => {\n                const on = tier && s(t.id) === s(tier.id);\n                return (\n                  <motion.button key={s(t.id)} type=\"button\" layout whileTap={{ scale: 0.98 }} onClick={() => setTierId(s(t.id))} className=\"relative w-full overflow-hidden rounded-2xl border p-4 text-left\" style={{ borderColor: on ? \"#FF3D7F\" : \"rgba(255,255,255,0.1)\", background: on ? \"rgba(255,61,127,0.12)\" : \"rgba(255,255,255,0.03)\" }}>\n                    <div className=\"flex items-center justify-between\">\n                      <span className=\"text-lg font-black uppercase\">{s(t.name)}</span>\n                      <span className=\"text-xl font-black\">${n(t.price)}</span>\n                    </div>\n                    <div className=\"mt-0.5 text-sm text-white/60\">{s(t.perks)}</div>\n                  </motion.button>\n                );\n              })}\n            </div>\n            <div className=\"mt-5 flex items-center justify-between\">\n              <span className=\"text-sm font-semibold uppercase tracking-widest text-white/50\">Quantity</span>\n              <div className=\"flex items-center gap-3 rounded-full bg-white/10 p-1\">\n                <motion.button type=\"button\" aria-label=\"Fewer\" whileTap={{ scale: 0.85 }} onClick={() => setQty(Math.max(1, qty - 1))} className=\"grid h-9 w-9 place-items-center rounded-full bg-white/10 text-xl font-black leading-none\">−</motion.button>\n                <span className=\"w-5 text-center text-lg font-black\">{qty}</span>\n                <motion.button type=\"button\" aria-label=\"More\" whileTap={{ scale: 0.85 }} onClick={() => setQty(Math.min(maxQty, qty + 1))} className=\"grid h-9 w-9 place-items-center rounded-full bg-[#FF3D7F]\"><Plus className=\"h-4 w-4\" /></motion.button>\n              </div>\n            </div>\n            <AnimatePresence>\n              {err && <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"mt-4 overflow-hidden\"><div className=\"flex items-start gap-2 rounded-2xl bg-red-500/15 p-3 text-sm text-red-300\"><AlertTriangle className=\"mt-0.5 h-4 w-4 shrink-0\" />{err}</div></motion.div>}\n            </AnimatePresence>\n            <div className=\"mt-5 hidden lg:block\">{buyBtn(\"flex w-full\")}</div>\n          </div>\n        </aside>\n      </div>\n\n      <div className=\"fixed inset-x-3 bottom-3 z-30 lg:hidden\">\n        <div className=\"rounded-full border border-white/10 bg-[#140B22]/95 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-xl\">{buyBtn(\"flex w-full\")}</div>\n      </div>\n\n      <AnimatePresence>\n        {done.length > 0 && (\n          <motion.div key=\"ok\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"fixed inset-0 z-50 grid place-items-center bg-black/80 p-5 backdrop-blur-md\">\n            <motion.div initial={{ scale: 0.8, y: 60, rotate: -3 }} animate={{ scale: 1, y: 0, rotate: 0 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: \"spring\", stiffness: 160, damping: 15 }} className=\"w-full max-w-sm overflow-hidden rounded-[32px] bg-gradient-to-br from-[#FF3D7F] to-[#6D3BFF] p-1\">\n              <div className=\"rounded-[28px] bg-[#140B22] p-6 text-center\">\n                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.25, type: \"spring\", stiffness: 300, damping: 12 }} className=\"mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-[#B6FF3B] text-[#09050F]\"><Check className=\"h-8 w-8\" /></motion.div>\n                <h3 className=\"text-3xl font-black uppercase\">You're in!</h3>\n                <p className=\"mt-1 text-sm text-white/60\">{done.length} × {tier ? s(tier.name) : \"\"} for {s(ev.title)}</p>\n                <div className=\"mx-auto mt-5 w-fit rounded-2xl bg-white p-3\"><QRCodeSVG value={done[0]} size={150} /></div>\n                <div className=\"mt-2 font-mono text-sm tracking-widest text-white/70\">{done[0]}</div>\n                <button type=\"button\" onClick={() => app?.navigate(\"/tickets\")} className=\"mt-5 w-full rounded-full bg-white py-3.5 font-black uppercase text-[#09050F]\">View my tickets</button>\n                <button type=\"button\" aria-label=\"Close\" onClick={() => setDone([])} className=\"mt-3 inline-flex items-center gap-1 text-sm text-white/50\"><X className=\"h-4 w-4\" />Keep browsing</button>\n              </div>\n            </motion.div>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "EventraTickets",
+      "kind": "code",
+      "purpose": "My tickets: QR passes with flip animation and add-to-wallet",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useState } from \"react\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { QRCodeSVG } from \"qrcode.react\";\nimport { Ticket, Flame, LogOut, Wallet, Check, MapPin, Clock, Bell, RefreshCw, User } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\nconst s = (v: unknown) => String(v ?? \"\");\nconst n = (v: unknown) => Number(v) || 0;\nconst fmt = (v: unknown, o: Intl.DateTimeFormatOptions) => {\n  const d = new Date(s(v));\n  return isNaN(d.getTime()) ? \"TBA\" : d.toLocaleString(\"en-US\", { ...o, timeZone: \"UTC\" });\n};\nconst TONES = [\"from-[#FF3D7F] to-[#6D3BFF]\", \"from-[#FF8A3D] to-[#FF3D7F]\", \"from-[#22D3EE] to-[#6D3BFF]\", \"from-[#B6FF3B] to-[#22D3EE]\"];\n\nfunction Nav({ app, active }: { app?: AppHandle; active: \"discover\" | \"tickets\" }) {\n  const items = [\n    { k: \"discover\", label: \"Discover\", Icon: Flame, to: \"/discover\" },\n    { k: \"tickets\", label: \"My tickets\", Icon: Ticket, to: \"/tickets\" },\n  ] as const;\n  return (\n    <>\n      <header className=\"sticky top-0 z-40 border-b border-white/10 bg-[#09050F]/80 backdrop-blur-xl\">\n        <div className=\"mx-auto flex h-16 max-w-7xl items-center justify-between px-5\">\n          <button type=\"button\" onClick={() => app?.navigate(\"/discover\")} className=\"flex items-center gap-2 text-lg font-black uppercase tracking-tight\">\n            <span className=\"grid h-8 w-8 place-items-center rounded-xl bg-[#FF3D7F] shadow-[0_0_24px_rgba(255,61,127,0.7)]\"><Ticket className=\"h-4 w-4\" /></span>\n            Eventra\n          </button>\n          <nav className=\"hidden items-center gap-1 md:flex\">\n            {items.map((i) => (\n              <button key={i.k} type=\"button\" onClick={() => app?.navigate(i.to)} className=\"relative rounded-full px-4 py-2 text-sm font-semibold\" style={{ color: active === i.k ? \"#fff\" : \"rgba(255,255,255,0.55)\" }}>\n                {active === i.k && <motion.span layoutId=\"navpill\" className=\"absolute inset-0 rounded-full bg-white/10\" />}\n                <span className=\"relative\">{i.label}</span>\n              </button>\n            ))}\n          </nav>\n          <div className=\"flex items-center gap-3\">\n            <span className=\"hidden text-sm text-white/60 sm:block\">{app?.user.name}</span>\n            <button type=\"button\" aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5 text-white/70 hover:text-white\"><LogOut className=\"h-4 w-4\" /></button>\n          </div>\n        </div>\n      </header>\n      <nav className=\"fixed inset-x-3 bottom-3 z-40 flex rounded-full border border-white/10 bg-[#140B22]/90 p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl md:hidden\">\n        {items.map((i) => (\n          <button key={i.k} type=\"button\" onClick={() => app?.navigate(i.to)} className=\"relative flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-bold\" style={{ color: active === i.k ? \"#fff\" : \"rgba(255,255,255,0.5)\" }}>\n            {active === i.k && <motion.span layoutId=\"tabpill\" className=\"absolute inset-0 rounded-full bg-[#FF3D7F]\" transition={{ type: \"spring\", stiffness: 400, damping: 32 }} />}\n            <i.Icon className=\"relative h-4 w-4\" /><span className=\"relative\">{i.label}</span>\n          </button>\n        ))}\n      </nav>\n    </>\n  );\n}\n\nfunction Pass({ tk, ev, i }: { tk: R; ev?: R; i: number }) {\n  const reduce = useReducedMotion();\n  const [flip, setFlip] = useState(false);\n  const [wallet, setWallet] = useState(false);\n  const used = tk.used === true || tk.used === \"true\";\n  const face: React.CSSProperties = { backfaceVisibility: \"hidden\", WebkitBackfaceVisibility: \"hidden\" };\n  return (\n    <motion.div initial={{ opacity: 0, y: 50, rotate: i % 2 ? 2 : -2 }} animate={{ opacity: 1, y: 0, rotate: 0 }} transition={{ type: \"spring\", stiffness: 90, damping: 15, delay: i * 0.1 }} style={{ perspective: 1400 }} className=\"mx-auto w-full max-w-[380px]\">\n      <motion.div onClick={() => setFlip(!flip)} animate={{ rotateY: flip ? 180 : 0 }} transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 70, damping: 14 }} whileTap={{ scale: 0.98 }} style={{ transformStyle: \"preserve-3d\" }} className=\"relative h-[560px] cursor-pointer\">\n        <div style={face} className={\"absolute inset-0 overflow-hidden rounded-[32px] bg-gradient-to-br p-[2px] shadow-[0_30px_70px_-20px_rgba(255,61,127,0.55)] \" + TONES[i % TONES.length]}>\n          <div className=\"relative flex h-full flex-col overflow-hidden rounded-[30px] bg-[#120A1F]\">\n            <div className=\"relative h-[210px] shrink-0\">\n              <img src={s(ev?.poster)} alt=\"\" className=\"absolute inset-0 h-full w-full object-cover\" />\n              <div className=\"absolute inset-0 bg-gradient-to-t from-[#120A1F] via-[#120A1F]/30 to-transparent\" />\n              <span className=\"absolute left-4 top-4 rounded-full bg-[#FF3D7F] px-3 py-1 text-[11px] font-black uppercase tracking-widest\">{s(tk.tier_name)}</span>\n              <div className=\"absolute inset-x-0 bottom-0 px-5 pb-3\"><h3 className=\"text-3xl font-black uppercase leading-[0.9] tracking-tight\">{s(tk.event_title)}</h3></div>\n            </div>\n            <div className=\"flex justify-between px-5 pt-2 text-sm\">\n              <div><div className=\"text-[10px] uppercase tracking-widest text-white/40\">Date</div><div className=\"font-bold\">{fmt(ev?.starts_at, { month: \"short\", day: \"numeric\" })} · {fmt(ev?.starts_at, { hour: \"numeric\", minute: \"2-digit\" })}</div></div>\n              <div className=\"text-right\"><div className=\"text-[10px] uppercase tracking-widest text-white/40\">Venue</div><div className=\"font-bold\">{s(ev?.venue)}</div></div>\n            </div>\n            <div className=\"relative my-3 flex items-center\">\n              <span className=\"-ml-3 h-6 w-6 rounded-full bg-[#09050F]\" />\n              <span className=\"mx-1 flex-1 border-t-2 border-dashed border-white/15\" />\n              <span className=\"-mr-3 h-6 w-6 rounded-full bg-[#09050F]\" />\n            </div>\n            <div className=\"flex flex-1 flex-col items-center justify-center pb-4\">\n              <div className=\"relative rounded-3xl bg-white p-3\">\n                <QRCodeSVG value={s(tk.code)} size={150} />\n                <AnimatePresence>\n                  {used && <motion.div initial={{ opacity: 0, scale: 1.6, rotate: -20 }} animate={{ opacity: 1, scale: 1, rotate: -12 }} className=\"absolute inset-0 grid place-items-center rounded-3xl bg-white/85\"><span className=\"rounded-xl border-4 border-[#16a34a] px-3 py-1 text-xl font-black uppercase tracking-widest text-[#16a34a]\">Used</span></motion.div>}\n                </AnimatePresence>\n              </div>\n              <div className=\"mt-3 font-mono text-base font-bold tracking-[0.25em]\">{s(tk.code)}</div>\n              <div className=\"mt-1 flex items-center gap-1.5 text-xs text-white/40\"><RefreshCw className=\"h-3 w-3\" />Tap to flip for details</div>\n            </div>\n          </div>\n        </div>\n\n        <div style={{ ...face, transform: \"rotateY(180deg)\" }} className=\"absolute inset-0 overflow-hidden rounded-[32px] bg-gradient-to-br from-[#2a1245] to-[#120A1F] p-6 shadow-[0_30px_70px_-20px_rgba(109,59,255,0.5)] ring-1 ring-white/15\">\n          <div className=\"flex items-center justify-between\">\n            <span className=\"text-xs font-bold uppercase tracking-[0.25em] text-[#FF3D7F]\">Pass details</span>\n            <span className=\"rounded-full px-3 py-1 text-xs font-black uppercase\" style={{ background: used ? \"#16a34a\" : \"#B6FF3B\", color: \"#09050F\" }}>{used ? \"Checked in\" : \"Valid\"}</span>\n          </div>\n          <h3 className=\"mt-3 text-3xl font-black uppercase leading-[0.9]\">{s(tk.event_title)}</h3>\n          <div className=\"mt-5 space-y-3.5 text-sm\">\n            <div className=\"flex items-center gap-3\"><User className=\"h-4 w-4 text-[#FF3D7F]\" /><div><div className=\"text-[10px] uppercase tracking-widest text-white/40\">Holder</div><div className=\"font-bold\">{s(tk.holder_name)}</div></div></div>\n            <div className=\"flex items-center gap-3\"><Clock className=\"h-4 w-4 text-[#FF3D7F]\" /><div><div className=\"text-[10px] uppercase tracking-widest text-white/40\">When</div><div className=\"font-bold\">{fmt(ev?.starts_at, { weekday: \"long\", month: \"long\", day: \"numeric\", hour: \"numeric\", minute: \"2-digit\" })}</div></div></div>\n            <div className=\"flex items-center gap-3\"><MapPin className=\"h-4 w-4 text-[#FF3D7F]\" /><div><div className=\"text-[10px] uppercase tracking-widest text-white/40\">Where</div><div className=\"font-bold\">{s(ev?.venue)}, {s(ev?.city)}</div></div></div>\n            <div className=\"flex items-center gap-3\"><Ticket className=\"h-4 w-4 text-[#FF3D7F]\" /><div><div className=\"text-[10px] uppercase tracking-widest text-white/40\">Tier · Paid</div><div className=\"font-bold\">{s(tk.tier_name)} · ${n(tk.price)}</div></div></div>\n          </div>\n          {used && tk.checked_in_at ? <p className=\"mt-4 text-xs text-white/50\">Scanned {fmt(tk.checked_in_at, { month: \"short\", day: \"numeric\", hour: \"numeric\", minute: \"2-digit\" })} UTC</p> : null}\n          <motion.button type=\"button\" whileTap={{ scale: 0.95 }} onClick={(e) => { e.stopPropagation(); setWallet(true); }} className=\"absolute inset-x-6 bottom-6 flex items-center justify-center gap-2 rounded-full bg-black py-4 text-sm font-bold ring-1 ring-white/25\">\n            <AnimatePresence mode=\"wait\">\n              {wallet ? <motion.span key=\"a\" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className=\"flex items-center gap-2 text-[#B6FF3B]\"><Check className=\"h-4 w-4\" />Added to Wallet</motion.span> : <motion.span key=\"b\" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className=\"flex items-center gap-2\"><Wallet className=\"h-4 w-4\" />Add to Wallet</motion.span>}\n            </AnimatePresence>\n          </motion.button>\n        </div>\n      </motion.div>\n    </motion.div>\n  );\n}\n\nexport default function EventraTickets({ app }: { app?: AppHandle }) {\n  useEffect(() => (app ? app.live(\"ticket\") : undefined), [app]);\n  const events = (app?.rows(\"event\") ?? []) as R[];\n  const reminders = (app?.rows(\"reminder\") ?? []) as R[];\n  const evOf = (id: unknown) => events.find((e) => s(e.id) === s(id));\n  const tickets = ((app?.rows(\"ticket\") ?? []) as R[]).slice().sort((a, b) => s(evOf(a.event_id)?.starts_at).localeCompare(s(evOf(b.event_id)?.starts_at)));\n  const loading = app?.loading(\"ticket\") && tickets.length === 0;\n  return (\n    <div className=\"min-h-screen bg-[#09050F] pb-32 text-white md:pb-16\">\n      <Nav app={app} active=\"tickets\" />\n      <main className=\"mx-auto max-w-7xl px-5 pt-8\">\n        <div className=\"relative\">\n          <div className=\"pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-[#FF3D7F]/30 blur-[100px]\" />\n          <h1 className=\"relative text-5xl font-black uppercase leading-[0.9] tracking-tighter sm:text-7xl\">My <span className=\"bg-gradient-to-r from-[#FF3D7F] to-[#B06BFF] bg-clip-text text-transparent\">tickets</span></h1>\n          <p className=\"relative mt-2 text-white/60\">{tickets.length} pass{tickets.length === 1 ? \"\" : \"es\"} · tap a pass to flip it</p>\n        </div>\n        {reminders.length > 0 && (\n          <div className=\"mt-6 space-y-2\">\n            {reminders.slice(0, 2).map((r) => (\n              <motion.div key={s(r.id)} initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className=\"flex items-center gap-3 rounded-3xl border border-[#FF3D7F]/40 bg-[#FF3D7F]/10 p-4\">\n                <span className=\"grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#FF3D7F]\"><Bell className=\"h-5 w-5\" /></span>\n                <div><div className=\"font-bold\">{s(r.title)}</div><div className=\"text-sm text-white/70\">{s(r.message)}</div></div>\n              </motion.div>\n            ))}\n          </div>\n        )}\n        {loading ? (\n          <div className=\"mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3\">{[0, 1, 2].map((k) => <div key={k} className=\"mx-auto h-[560px] w-full max-w-[380px] animate-pulse rounded-[32px] bg-white/5\" />)}</div>\n        ) : tickets.length === 0 ? (\n          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className=\"mx-auto mt-12 max-w-md rounded-[32px] border border-dashed border-white/20 p-10 text-center\">\n            <div className=\"mx-auto mb-4 grid h-16 w-16 place-items-center rounded-3xl bg-[#FF3D7F]/20\"><Ticket className=\"h-8 w-8 text-[#FF3D7F]\" /></div>\n            <h2 className=\"text-2xl font-black uppercase\">No passes yet</h2>\n            <p className=\"mt-1 text-white/60\">Your next night out is one tap away.</p>\n            <button type=\"button\" onClick={() => app?.navigate(\"/discover\")} className=\"mt-5 rounded-full bg-[#FF3D7F] px-6 py-3 font-black uppercase\">Find an event</button>\n          </motion.div>\n        ) : (\n          <div className=\"mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3\">\n            {tickets.map((tk, i) => <Pass key={s(tk.id)} tk={tk} ev={evOf(tk.event_id)} i={i} />)}\n          </div>\n        )}\n      </main>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "EventraOrganizer",
+      "kind": "code",
+      "purpose": "Organizer console: my events, live dashboard with animated counters, event editor",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, animate, useReducedMotion } from \"motion/react\";\nimport { Ticket, Plus, ArrowLeft, LogOut, Users, DollarSign, UserCheck, Pencil, MapPin, Check, Upload, Zap, Calendar, Sparkles } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\nconst s = (v: unknown) => String(v ?? \"\");\nconst n = (v: unknown) => Number(v) || 0;\nconst fmt = (v: unknown, o: Intl.DateTimeFormatOptions) => {\n  const d = new Date(s(v));\n  return isNaN(d.getTime()) ? \"TBA\" : d.toLocaleString(\"en-US\", { ...o, timeZone: \"UTC\" });\n};\nconst GENRES = [\"electronic\", \"rock\", \"jazz\", \"hiphop\", \"indie\", \"festival\", \"pop\"];\n\nfunction Counter({ value, prefix = \"\" }: { value: number; prefix?: string }) {\n  const [d, setD] = useState(value);\n  const from = useRef(value);\n  useEffect(() => {\n    const c = animate(from.current, value, { duration: 1, ease: \"easeOut\", onUpdate: (v) => setD(Math.round(v)) });\n    from.current = value;\n    return () => c.stop();\n  }, [value]);\n  return <>{prefix}{d.toLocaleString(\"en-US\")}</>;\n}\n\nfunction Ring({ a, b, max }: { a: number; b: number; max: number }) {\n  const r = 70;\n  const c = 2 * Math.PI * r;\n  const pa = max > 0 ? Math.min(1, a / max) : 0;\n  const pb = max > 0 ? Math.min(1, b / max) : 0;\n  return (\n    <svg viewBox=\"0 0 180 180\" className=\"h-44 w-44 -rotate-90\">\n      <circle cx=\"90\" cy=\"90\" r={r} fill=\"none\" stroke=\"rgba(255,255,255,0.08)\" strokeWidth=\"16\" />\n      <motion.circle cx=\"90\" cy=\"90\" r={r} fill=\"none\" stroke=\"#FF3D7F\" strokeWidth=\"16\" strokeLinecap=\"round\" strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - pa) }} transition={{ type: \"spring\", stiffness: 40, damping: 15 }} />\n      <circle cx=\"90\" cy=\"90\" r={r - 22} fill=\"none\" stroke=\"rgba(255,255,255,0.08)\" strokeWidth=\"12\" />\n      <motion.circle cx=\"90\" cy=\"90\" r={r - 22} fill=\"none\" stroke=\"#B6FF3B\" strokeWidth=\"12\" strokeLinecap=\"round\" strokeDasharray={2 * Math.PI * (r - 22)} initial={{ strokeDashoffset: 2 * Math.PI * (r - 22) }} animate={{ strokeDashoffset: 2 * Math.PI * (r - 22) * (1 - pb) }} transition={{ type: \"spring\", stiffness: 40, damping: 15 }} />\n    </svg>\n  );\n}\n\nconst inp = \"w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-[15px] text-white placeholder:text-white/30 outline-none focus:border-[#FF3D7F] focus:ring-4 focus:ring-[#FF3D7F]/20\";\nfunction F({ label, children }: { label: string; children: React.ReactNode }) {\n  return <label className=\"block\"><span className=\"mb-1.5 block text-[11px] font-bold uppercase tracking-widest text-white/50\">{label}</span>{children}</label>;\n}\n\ntype TierDraft = { id?: string; name: string; price: string; perks: string };\n\nfunction Editor({ app, ev, tiers, onDone }: { app?: AppHandle; ev?: R; tiers: R[]; onDone: (id?: string) => void }) {\n  const [f, setF] = useState({\n    title: s(ev?.title), tagline: s(ev?.tagline), genre: s(ev?.genre) || \"electronic\", venue: s(ev?.venue), city: s(ev?.city),\n    starts_at: ev ? s(ev.starts_at).slice(0, 16) : \"\", poster: s(ev?.poster), description: s(ev?.description), lineup: s(ev?.lineup), capacity: ev ? String(n(ev.capacity)) : \"500\",\n  });\n  const [td, setTd] = useState<TierDraft[]>(tiers.length ? tiers.map((t) => ({ id: s(t.id), name: s(t.name), price: String(n(t.price)), perks: s(t.perks) })) : [{ name: \"General\", price: \"30\", perks: \"Entry\" }, { name: \"VIP\", price: \"80\", perks: \"Fast lane · Free drink\" }]);\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));\n  const [ai, setAi] = useState<\"idle\" | \"busy\" | \"done\" | \"fail\">(\"idle\");\n  const blurb = async () => {\n    if (!app || ai === \"busy\") return;\n    if (!f.title || !f.venue || !f.starts_at) { setErr(\"Add a title, venue and date first, then let AI write the blurb.\"); return; }\n    setErr(\"\"); setAi(\"busy\");\n    try {\n      const when = new Date(f.starts_at + \":00Z\").toLocaleString(\"en-US\", { dateStyle: \"full\", timeStyle: \"short\", timeZone: \"UTC\" });\n      const out = await app.ai.ask(\n        \"Event: \" + f.title + \"\\nCategory: \" + f.genre + \"\\nVenue: \" + f.venue + (f.city ? \", \" + f.city : \"\") + \"\\nWhen: \" + when + \"\\n\\nWrite the blurb and hashtags.\",\n        { system: \"You write copy for gig posters. Reply with exactly two lines. Line 1: a punchy 2-sentence event description, no hashtags, no quotes. Line 2: exactly 3 hashtags separated by spaces.\", maxTokens: 200 },\n      );\n      const lines = out.split(\"\\n\").map((l) => l.trim()).filter(Boolean);\n      const tags = lines.filter((l) => l.startsWith(\"#\")).join(\" \");\n      const text = lines.filter((l) => !l.startsWith(\"#\")).join(\" \");\n      if (!text) throw new Error(\"empty\");\n      set(\"description\", tags ? text + \"\\n\\n\" + tags : text);\n      setAi(\"done\");\n    } catch { setAi(\"fail\"); }\n  };\n  const upload = async (file: File | undefined) => {\n    if (!file || !app) return;\n    try { const r = await app.upload(file); set(\"poster\", r.url); } catch { setErr(\"Upload failed — paste an image URL instead.\"); }\n  };\n  const save = async () => {\n    if (!app) return;\n    if (!f.title || !f.venue || !f.starts_at) { setErr(\"Title, venue and date are required.\"); return; }\n    setBusy(true); setErr(\"\");\n    try {\n      const body = { title: f.title, tagline: f.tagline, genre: f.genre, venue: f.venue, city: f.city, starts_at: new Date(f.starts_at + \":00Z\").toISOString(), poster: f.poster, description: f.description, lineup: f.lineup, capacity: n(f.capacity) };\n      let id = s(ev?.id);\n      if (ev) await app.update(\"event\", id, body);\n      else { const r = await app.create(\"event\", { ...body, organizer_id: app.me(\"organizer\") ?? \"\", sold: 0, checked_in: 0 }); id = s(r.id); }\n      for (const t of td) {\n        if (!t.name) continue;\n        const tb = { name: t.name, price: n(t.price), perks: t.perks };\n        if (t.id) await app.update(\"ticket_tier\", t.id, tb); else await app.create(\"ticket_tier\", { ...tb, event_id: id });\n      }\n      onDone(id);\n    } catch (e) { setErr(e instanceof Error ? e.message : \"Could not save.\"); } finally { setBusy(false); }\n  };\n  return (\n    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mx-auto max-w-3xl\">\n      <h2 className=\"text-4xl font-black uppercase tracking-tight\">{ev ? \"Edit event\" : \"New event\"}</h2>\n      <div className=\"mt-6 grid gap-4 sm:grid-cols-2\">\n        <div className=\"sm:col-span-2\"><F label=\"Title\"><input className={inp} value={f.title} onChange={(e) => set(\"title\", e.target.value)} placeholder=\"Midnight Static\" /></F></div>\n        <div className=\"sm:col-span-2\"><F label=\"Tagline\"><input className={inp} value={f.tagline} onChange={(e) => set(\"tagline\", e.target.value)} placeholder=\"One line that sells it\" /></F></div>\n        <F label=\"Genre\"><select className={inp} value={f.genre} onChange={(e) => set(\"genre\", e.target.value)}>{GENRES.map((g) => <option key={g} value={g} className=\"bg-[#140B22]\">{g}</option>)}</select></F>\n        <F label=\"Capacity\"><input className={inp} type=\"number\" value={f.capacity} onChange={(e) => set(\"capacity\", e.target.value)} /></F>\n        <F label=\"Venue\"><input className={inp} value={f.venue} onChange={(e) => set(\"venue\", e.target.value)} /></F>\n        <F label=\"City\"><input className={inp} value={f.city} onChange={(e) => set(\"city\", e.target.value)} /></F>\n        <div className=\"sm:col-span-2\"><F label=\"Starts (venue time)\"><input className={inp} type=\"datetime-local\" value={f.starts_at} onChange={(e) => set(\"starts_at\", e.target.value)} /></F></div>\n        <div className=\"sm:col-span-2\"><F label=\"Poster image URL\"><div className=\"flex gap-2\"><input className={inp} value={f.poster} onChange={(e) => set(\"poster\", e.target.value)} placeholder=\"https://…\" /><label className=\"grid w-12 shrink-0 cursor-pointer place-items-center rounded-2xl bg-white/10\"><Upload className=\"h-4 w-4\" /><input type=\"file\" accept=\"image/*\" className=\"hidden\" onChange={(e) => void upload(e.target.files?.[0])} /></label></div></F></div>\n        <div className=\"flex flex-wrap items-center gap-3 sm:col-span-2\">\n          <motion.button type=\"button\" whileTap={{ scale: 0.95 }} onClick={() => void blurb()} disabled={ai === \"busy\"} className=\"flex items-center gap-2 rounded-full border border-[#FF3D7F]/50 bg-[#FF3D7F]/15 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60\"><Sparkles className={\"h-4 w-4 text-[#FF3D7F] \" + (ai === \"busy\" ? \"animate-pulse\" : \"\")} />{ai === \"busy\" ? \"Writing your blurb…\" : ai === \"done\" ? \"Rewrite with AI\" : \"Write blurb with AI\"}</motion.button>\n          {ai === \"fail\" && <span className=\"text-sm text-amber-300\">AI is resting right now, try again soon.</span>}\n          {ai === \"done\" && <span className=\"text-sm text-white/50\">Added to the description — edit freely.</span>}\n        </div>\n        <div className=\"sm:col-span-2\"><F label=\"Description\"><textarea className={inp} rows={3} value={f.description} onChange={(e) => set(\"description\", e.target.value)} /></F></div>\n        <div className=\"sm:col-span-2\"><F label=\"Lineup — one per line, Name|time\"><textarea className={inp + \" font-mono text-sm\"} rows={4} value={f.lineup} onChange={(e) => set(\"lineup\", e.target.value)} placeholder={\"Opener|20:00\\nHeadliner|22:00\"} /></F></div>\n      </div>\n      <h3 className=\"mt-8 text-xl font-black uppercase\">Ticket tiers</h3>\n      <div className=\"mt-3 space-y-3\">\n        {td.map((t, i) => (\n          <div key={i} className=\"grid grid-cols-[1fr_90px] gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-3 sm:grid-cols-[1fr_110px_2fr]\">\n            <input aria-label={\"Tier name \" + (i + 1)} className={inp} value={t.name} onChange={(e) => setTd(td.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} placeholder=\"Tier\" />\n            <input aria-label={\"Tier price \" + (i + 1)} className={inp} type=\"number\" value={t.price} onChange={(e) => setTd(td.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))} placeholder=\"$\" />\n            <input aria-label={\"Tier perks \" + (i + 1)} className={inp + \" col-span-2 sm:col-span-1\"} value={t.perks} onChange={(e) => setTd(td.map((x, j) => (j === i ? { ...x, perks: e.target.value } : x)))} placeholder=\"Perks\" />\n          </div>\n        ))}\n        <button type=\"button\" onClick={() => setTd([...td, { name: \"\", price: \"\", perks: \"\" }])} className=\"flex items-center gap-2 rounded-full border border-dashed border-white/25 px-4 py-2 text-sm font-semibold text-white/70\"><Plus className=\"h-4 w-4\" />Add tier</button>\n      </div>\n      {err && <p className=\"mt-4 rounded-xl bg-red-500/15 px-3 py-2 text-sm text-red-300\">{err}</p>}\n      <div className=\"mt-8 flex gap-3\">\n        <motion.button type=\"button\" whileTap={{ scale: 0.95 }} onClick={() => void save()} className=\"flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF3D7F] to-[#FF6A3D] px-8 py-4 font-black uppercase\"><Check className=\"h-5 w-5\" />{busy ? \"Saving…\" : ev ? \"Save changes\" : \"Publish event\"}</motion.button>\n        <button type=\"button\" onClick={() => onDone(ev ? s(ev.id) : undefined)} className=\"rounded-full border border-white/20 px-6 py-4 font-bold\">Cancel</button>\n      </div>\n    </motion.div>\n  );\n}\n\nfunction Live({ app, ev, tickets, onEdit }: { app?: AppHandle; ev: R; tickets: R[]; onEdit: () => void }) {\n  const sold = n(ev.sold);\n  const cap = n(ev.capacity);\n  const cin = n(ev.checked_in);\n  const mine = tickets.filter((t) => s(t.event_id) === s(ev.id));\n  const revenue = mine.reduce((m, t) => m + n(t.price), 0);\n  const byTier: Record<string, number> = {};\n  mine.forEach((t) => { byTier[s(t.tier_name)] = (byTier[s(t.tier_name)] ?? 0) + 1; });\n  const recent = mine.slice().sort((a, b) => s(b.created_at).localeCompare(s(a.created_at))).slice(0, 8);\n  void app;\n  const stat = (Icon: typeof Users, label: string, node: React.ReactNode, color: string, d: number) => (\n    <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: d, type: \"spring\", stiffness: 100, damping: 15 }} className=\"rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.02] p-5\">\n      <div className=\"flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/50\"><Icon className=\"h-4 w-4\" style={{ color }} />{label}</div>\n      <div className=\"mt-2 text-5xl font-black tabular-nums\">{node}</div>\n    </motion.div>\n  );\n  return (\n    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>\n      <div className=\"flex flex-wrap items-start justify-between gap-3\">\n        <div>\n          <div className=\"flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#B6FF3B]\"><span className=\"h-2 w-2 animate-pulse rounded-full bg-[#B6FF3B]\" />Live</div>\n          <h2 className=\"mt-1 text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl\">{s(ev.title)}</h2>\n          <p className=\"mt-2 flex items-center gap-2 text-white/60\"><MapPin className=\"h-4 w-4\" />{s(ev.venue)}, {s(ev.city)} · {fmt(ev.starts_at, { month: \"short\", day: \"numeric\", hour: \"numeric\", minute: \"2-digit\" })}</p>\n        </div>\n        <button type=\"button\" onClick={onEdit} className=\"flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-sm font-bold\"><Pencil className=\"h-4 w-4\" />Edit event</button>\n      </div>\n      <div className=\"mt-6 grid gap-4 lg:grid-cols-[1fr_auto_1fr]\">\n        <div className=\"grid grid-cols-2 gap-4 lg:col-span-1 lg:grid-cols-1\">\n          {stat(Users, \"Tickets sold\", <Counter value={sold} />, \"#FF3D7F\", 0.05)}\n          {stat(UserCheck, \"Checked in\", <Counter value={cin} />, \"#B6FF3B\", 0.12)}\n        </div>\n        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }} className=\"flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04] p-6\">\n          <div className=\"relative\"><Ring a={sold} b={cin} max={cap} /><div className=\"absolute inset-0 grid place-items-center text-center\"><div><div className=\"text-3xl font-black\">{cap > 0 ? Math.round((sold / cap) * 100) : 0}%</div><div className=\"text-[10px] uppercase tracking-widest text-white/50\">of {cap.toLocaleString(\"en-US\")}</div></div></div></div>\n          <div className=\"mt-3 flex gap-4 text-xs font-semibold\"><span className=\"flex items-center gap-1.5\"><i className=\"h-2.5 w-2.5 rounded-full bg-[#FF3D7F]\" />Sold</span><span className=\"flex items-center gap-1.5\"><i className=\"h-2.5 w-2.5 rounded-full bg-[#B6FF3B]\" />Checked in</span></div>\n        </motion.div>\n        <div className=\"grid grid-cols-2 gap-4 lg:grid-cols-1\">\n          {stat(DollarSign, \"Revenue (visible)\", <Counter value={revenue} prefix=\"$\" />, \"#22D3EE\", 0.2)}\n          {stat(Zap, \"Remaining\", <Counter value={Math.max(0, cap - sold)} />, \"#FF8A3D\", 0.27)}\n        </div>\n      </div>\n      <div className=\"mt-6 grid gap-4 lg:grid-cols-2\">\n        <div className=\"rounded-3xl border border-white/10 bg-white/[0.04] p-5\">\n          <h3 className=\"mb-4 text-lg font-black uppercase\">By tier</h3>\n          {Object.keys(byTier).length === 0 ? <p className=\"text-sm text-white/50\">No tickets visible yet.</p> : Object.entries(byTier).map(([k, v]) => (\n            <div key={k} className=\"mb-3\"><div className=\"mb-1 flex justify-between text-sm font-semibold\"><span>{k}</span><span>{v}</span></div><div className=\"h-2 overflow-hidden rounded-full bg-white/10\"><motion.div className=\"h-full rounded-full bg-gradient-to-r from-[#FF3D7F] to-[#B06BFF]\" initial={{ width: 0 }} animate={{ width: (v / Math.max(1, mine.length)) * 100 + \"%\" }} transition={{ type: \"spring\", stiffness: 60, damping: 16 }} /></div></div>\n          ))}\n        </div>\n        <div className=\"rounded-3xl border border-white/10 bg-white/[0.04] p-5\">\n          <h3 className=\"mb-4 text-lg font-black uppercase\">Guest list</h3>\n          {recent.length === 0 ? <p className=\"text-sm text-white/50\">Sales will pop in here live.</p> : (\n            <div className=\"space-y-2\"><AnimatePresence initial={false}>{recent.map((t) => (\n              <motion.div key={s(t.id)} layout initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className=\"flex items-center justify-between rounded-2xl bg-white/5 px-4 py-2.5 text-sm\">\n                <div><div className=\"font-bold\">{s(t.holder_name)}</div><div className=\"text-xs text-white/50\">{s(t.tier_name)} · {s(t.code)}</div></div>\n                <span className=\"rounded-full px-2.5 py-1 text-[10px] font-black uppercase\" style={{ background: t.used === true ? \"#B6FF3B\" : \"rgba(255,255,255,0.12)\", color: t.used === true ? \"#09050F\" : \"#fff\" }}>{t.used === true ? \"In\" : \"Valid\"}</span>\n              </motion.div>\n            ))}</AnimatePresence></div>\n          )}\n        </div>\n      </div>\n    </motion.div>\n  );\n}\n\nexport default function EventraOrganizer({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [view, setView] = useState<{ m: \"list\" | \"live\" | \"edit\"; id?: string }>({ m: \"list\" });\n  useEffect(() => { if (!app) return; const a = app.live(\"event\"); const b = app.live(\"ticket\"); return () => { a(); b(); }; }, [app]);\n  const me = app?.me(\"organizer\");\n  const all = (app?.rows(\"event\") ?? []) as R[];\n  const events = all.filter((e) => !me || s(e.organizer_id) === me).sort((a, b) => s(a.starts_at).localeCompare(s(b.starts_at)));\n  const tickets = (app?.rows(\"ticket\") ?? []) as R[];\n  const tiers = (app?.rows(\"ticket_tier\") ?? []) as R[];\n  const cur = events.find((e) => s(e.id) === view.id);\n  const totalSold = events.reduce((m, e) => m + n(e.sold), 0);\n  const totalIn = events.reduce((m, e) => m + n(e.checked_in), 0);\n  return (\n    <div className=\"min-h-screen bg-[#09050F] text-white\">\n      <header className=\"sticky top-0 z-40 border-b border-white/10 bg-[#09050F]/85 backdrop-blur-xl\">\n        <div className=\"mx-auto flex h-16 max-w-6xl items-center justify-between px-5\">\n          <button type=\"button\" onClick={() => setView({ m: \"list\" })} className=\"flex items-center gap-2 text-lg font-black uppercase tracking-tight\"><span className=\"grid h-8 w-8 place-items-center rounded-xl bg-[#FF3D7F]\"><Ticket className=\"h-4 w-4\" /></span>Eventra <span className=\"rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-widest text-white/60\">ORGANIZER</span></button>\n          <div className=\"flex items-center gap-2\">\n            <button type=\"button\" onClick={() => app?.navigate(\"/team\")} className=\"flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold\"><Users className=\"h-3.5 w-3.5\" />Team</button>\n            <button type=\"button\" aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5\"><LogOut className=\"h-4 w-4\" /></button>\n          </div>\n        </div>\n      </header>\n      <main className=\"mx-auto max-w-6xl px-5 pb-20 pt-6\">\n        {view.m !== \"list\" && <button type=\"button\" onClick={() => setView({ m: \"list\" })} className=\"mb-5 flex items-center gap-2 text-sm font-semibold text-white/60\"><ArrowLeft className=\"h-4 w-4\" />All events</button>}\n        <AnimatePresence mode=\"wait\">\n          {view.m === \"list\" && (\n            <motion.div key=\"list\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>\n              <div className=\"flex flex-wrap items-end justify-between gap-4\">\n                <div>\n                  <h1 className=\"text-5xl font-black uppercase leading-[0.9] tracking-tighter sm:text-7xl\">Your <span className=\"bg-gradient-to-r from-[#FF3D7F] to-[#B06BFF] bg-clip-text text-transparent\">nights</span></h1>\n                  <p className=\"mt-2 text-white/60\"><Counter value={totalSold} /> sold · <Counter value={totalIn} /> checked in across {events.length} events</p>\n                </div>\n                <motion.button type=\"button\" whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.04 }} onClick={() => setView({ m: \"edit\" })} className=\"flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF3D7F] to-[#FF6A3D] px-6 py-3.5 font-black uppercase shadow-[0_12px_40px_-8px_rgba(255,61,127,0.8)]\"><Plus className=\"h-5 w-5\" />New event</motion.button>\n              </div>\n              {events.length === 0 ? (\n                <div className=\"mt-10 rounded-[32px] border border-dashed border-white/20 p-12 text-center text-white/60\">No events yet — create your first one.</div>\n              ) : (\n                <div className=\"mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3\">\n                  {events.map((e, i) => {\n                    const pct = n(e.capacity) > 0 ? Math.min(100, (n(e.sold) / n(e.capacity)) * 100) : 0;\n                    return (\n                      <motion.div key={s(e.id)} layout initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06, type: \"spring\", stiffness: 100, damping: 15 }} whileHover={reduce ? undefined : { y: -6 }} whileTap={{ scale: 0.97 }} onClick={() => setView({ m: \"live\", id: s(e.id) })} className=\"cursor-pointer overflow-hidden rounded-[28px] border border-white/10 bg-[#140B22] shadow-[0_24px_60px_-24px_rgba(0,0,0,0.9)]\">\n                        <div className=\"relative h-40\"><img src={s(e.poster)} alt=\"\" className=\"h-full w-full object-cover\" /><div className=\"absolute inset-0 bg-gradient-to-t from-[#140B22] to-transparent\" /><div className=\"absolute bottom-3 left-4 right-4\"><div className=\"text-2xl font-black uppercase leading-none\">{s(e.title)}</div></div></div>\n                        <div className=\"p-4\">\n                          <div className=\"mb-3 flex items-center gap-2 text-sm text-white/60\"><Calendar className=\"h-4 w-4\" />{fmt(e.starts_at, { month: \"short\", day: \"numeric\", hour: \"numeric\", minute: \"2-digit\" })}</div>\n                          <div className=\"h-2 overflow-hidden rounded-full bg-white/10\"><motion.div className=\"h-full rounded-full bg-gradient-to-r from-[#FF3D7F] to-[#B06BFF]\" initial={{ width: 0 }} animate={{ width: pct + \"%\" }} transition={{ duration: 1, ease: \"easeOut\" }} /></div>\n                          <div className=\"mt-2 flex justify-between text-xs font-bold uppercase tracking-wider text-white/60\"><span><Counter value={n(e.sold)} /> / {n(e.capacity).toLocaleString(\"en-US\")} sold</span><span className=\"text-[#B6FF3B]\"><Counter value={n(e.checked_in)} /> in</span></div>\n                        </div>\n                      </motion.div>\n                    );\n                  })}\n                </div>\n              )}\n            </motion.div>\n          )}\n          {view.m === \"live\" && cur && <Live key=\"live\" app={app} ev={cur} tickets={tickets} onEdit={() => setView({ m: \"edit\", id: s(cur.id) })} />}\n          {view.m === \"edit\" && <Editor key={\"edit\" + s(view.id)} app={app} ev={cur} tiers={tiers.filter((t) => s(t.event_id) === s(view.id))} onDone={(id) => setView(id ? { m: \"live\", id } : { m: \"list\" })} />}\n        </AnimatePresence>\n      </main>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "EventraDoor",
+      "kind": "code",
+      "purpose": "Door staff full-screen check-in with big green/red results",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, animate } from \"motion/react\";\nimport { Ticket, LogOut, Check, X, QrCode, ArrowRight, UserCheck } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\nconst s = (v: unknown) => String(v ?? \"\");\nconst n = (v: unknown) => Number(v) || 0;\ntype Res = { ok: boolean; title: string; line1: string; line2: string };\n\nfunction Counter({ value }: { value: number }) {\n  const [d, setD] = useState(value);\n  const from = useRef(value);\n  useEffect(() => {\n    const c = animate(from.current, value, { duration: 0.8, onUpdate: (v) => setD(Math.round(v)) });\n    from.current = value;\n    return () => c.stop();\n  }, [value]);\n  return <>{d.toLocaleString(\"en-US\")}</>;\n}\n\nexport default function EventraDoor({ app }: { app?: AppHandle }) {\n  const [code, setCode] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [res, setRes] = useState<Res | null>(null);\n  const inputRef = useRef<HTMLInputElement>(null);\n  useEffect(() => { if (!app) return; const a = app.live(\"event\"); const b = app.live(\"ticket\"); return () => { a(); b(); }; }, [app]);\n  useEffect(() => {\n    if (!res) return;\n    const t = setTimeout(() => setRes(null), res.ok ? 3500 : 6000);\n    return () => clearTimeout(t);\n  }, [res]);\n  const events = (app?.rows(\"event\") ?? []) as R[];\n  const tickets = (app?.rows(\"ticket\") ?? []) as R[];\n  const totalIn = events.reduce((m, e) => m + n(e.checked_in), 0);\n  const totalSold = events.reduce((m, e) => m + n(e.sold), 0);\n  const sample = tickets.filter((t) => t.used !== true).slice(0, 5);\n\n  const run = async (raw?: string) => {\n    const c = (raw ?? code).trim().toUpperCase();\n    if (!app || !c || busy) return;\n    setBusy(true);\n    try {\n      const r = await app.query(\"ticket\", { where: { code: c }, limit: 1 });\n      const tk = r.rows[0] as R | undefined;\n      if (!tk) { setRes({ ok: false, title: \"Not found\", line1: c, line2: \"No ticket with this code.\" }); return; }\n      try {\n        await app.update(\"ticket\", s(tk.id), { used: true, checked_in_at: new Date().toISOString() });\n        setRes({ ok: true, title: \"Admit\", line1: s(tk.holder_name), line2: s(tk.tier_name) + \" · \" + s(tk.event_title) });\n        setCode(\"\");\n      } catch (e) {\n        setRes({ ok: false, title: \"Refused\", line1: s(tk.holder_name) + \" · \" + s(tk.event_title), line2: e instanceof Error ? e.message : \"Already checked in.\" });\n      }\n    } catch (e) {\n      setRes({ ok: false, title: \"Error\", line1: c, line2: e instanceof Error ? e.message : \"Could not look up ticket.\" });\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  return (\n    <div className=\"relative flex min-h-screen flex-col overflow-hidden bg-[#09050F] text-white\">\n      <div className=\"pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#FF3D7F]/30 blur-[120px]\" />\n      <header className=\"relative z-10 flex h-16 items-center justify-between px-5\">\n        <div className=\"flex items-center gap-2 text-lg font-black uppercase tracking-tight\"><span className=\"grid h-8 w-8 place-items-center rounded-xl bg-[#FF3D7F]\"><Ticket className=\"h-4 w-4\" /></span>Eventra <span className=\"rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-widest text-white/60\">DOOR</span></div>\n        <button type=\"button\" aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-white/5\"><LogOut className=\"h-4 w-4\" /></button>\n      </header>\n\n      <main className=\"relative z-10 mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-5 pb-10\">\n        <div className=\"mb-8 flex items-center justify-center gap-6\">\n          <div className=\"text-center\"><div className=\"text-5xl font-black tabular-nums text-[#B6FF3B]\"><Counter value={totalIn} /></div><div className=\"text-[11px] font-bold uppercase tracking-widest text-white/50\">Checked in</div></div>\n          <div className=\"h-10 w-px bg-white/15\" />\n          <div className=\"text-center\"><div className=\"text-5xl font-black tabular-nums\"><Counter value={totalSold} /></div><div className=\"text-[11px] font-bold uppercase tracking-widest text-white/50\">Tickets sold</div></div>\n        </div>\n\n        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: \"spring\", stiffness: 100, damping: 16 }} className=\"rounded-[32px] border border-white/10 bg-white/[0.06] p-6 backdrop-blur-xl\">\n          <div className=\"mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-white/50\"><QrCode className=\"h-4 w-4 text-[#FF3D7F]\" />Scan or type ticket code</div>\n          <input ref={inputRef} aria-label=\"Ticket code\" autoFocus value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === \"Enter\") void run(); }} placeholder=\"EVT-XXXX-XXXX\" className=\"w-full rounded-2xl border border-white/15 bg-black/40 px-4 py-5 text-center font-mono text-2xl font-bold tracking-[0.2em] text-white outline-none placeholder:text-white/20 focus:border-[#FF3D7F] focus:ring-4 focus:ring-[#FF3D7F]/20 sm:text-3xl\" />\n          <motion.button type=\"button\" whileTap={{ scale: 0.96 }} onClick={() => void run()} className=\"mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF3D7F] to-[#FF6A3D] py-5 text-lg font-black uppercase tracking-wide shadow-[0_12px_40px_-8px_rgba(255,61,127,0.8)]\">{busy ? \"Checking…\" : \"Check in\"}<ArrowRight className=\"h-5 w-5\" /></motion.button>\n        </motion.div>\n\n        {sample.length > 0 && (\n          <div className=\"mt-6\">\n            <div className=\"mb-2 text-center text-[11px] font-bold uppercase tracking-widest text-white/40\">Tap a waiting ticket</div>\n            <div className=\"flex flex-wrap justify-center gap-2\">\n              {sample.map((t, i) => (\n                <motion.button key={s(t.id)} type=\"button\" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }} whileTap={{ scale: 0.92 }} onClick={() => setCode(s(t.code))} className=\"rounded-full border border-white/15 bg-white/5 px-4 py-2 font-mono text-xs\">{s(t.code)}</motion.button>\n              ))}\n            </div>\n          </div>\n        )}\n      </main>\n\n      <AnimatePresence>\n        {res && (\n          <motion.div key=\"res\" role=\"alert\" onClick={() => { setRes(null); inputRef.current?.focus(); }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center px-6 text-center\" style={{ background: res.ok ? \"linear-gradient(160deg,#16a34a,#064e3b)\" : \"linear-gradient(160deg,#dc2626,#450a0a)\" }}>\n            <motion.div initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: \"spring\", stiffness: 220, damping: 14 }} className=\"grid h-36 w-36 place-items-center rounded-full bg-white text-[#09050F] shadow-[0_0_80px_rgba(255,255,255,0.5)]\">\n              {res.ok ? <Check className=\"h-20 w-20\" style={{ color: \"#16a34a\" }} /> : <X className=\"h-20 w-20\" style={{ color: \"#dc2626\" }} />}\n            </motion.div>\n            <motion.h2 initial={{ opacity: 0, y: 40, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: 0.15, type: \"spring\", stiffness: 140, damping: 14 }} className=\"mt-8 text-7xl font-black uppercase tracking-tighter sm:text-9xl\">{res.title}</motion.h2>\n            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className=\"mt-4 text-3xl font-bold sm:text-4xl\">{res.line1}</motion.p>\n            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className=\"mt-2 max-w-md text-lg text-white/80\">{res.line2}</motion.p>\n            <p className=\"mt-10 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-white/60\"><UserCheck className=\"h-4 w-4\" />Tap for next guest</p>\n          </motion.div>\n        )}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "ticket-confirm-attendee",
+      "title": "Confirm ticket to attendee",
+      "on": {
+        "entity": "ticket",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "attendee_id",
+            "entity": "attendee"
+          },
+          "title": "You're in! 🎟️",
+          "body": "Your {{tier_name}} ticket for {{event_title}} is confirmed. Code {{code}}."
+        },
+        {
+          "action": "email",
+          "to": {
+            "ref": "attendee_id",
+            "entity": "attendee",
+            "field": "email"
+          },
+          "subject": "Your ticket: {{event_title}}",
+          "body": "You're going to {{event_title}}! Tier: {{tier_name}}. Ticket code: {{code}}. Show the QR pass in the Eventra app at the door."
+        }
+      ]
+    },
+    {
+      "id": "ticket-notify-organizer",
+      "title": "Tell organizer about a sale",
+      "on": {
+        "entity": "ticket",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "organizer_id",
+            "entity": "organizer"
+          },
+          "title": "New ticket sold",
+          "body": "{{holder_name}} bought {{tier_name}} for {{event_title}}."
+        }
+      ]
+    },
+    {
+      "id": "ticket-count-sold",
+      "title": "Count sold tickets",
+      "on": {
+        "entity": "ticket",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const ev = await ctx.db.get('event', String(row.event_id)); if (!ev) return; await ctx.db.update('event', String(row.event_id), { sold: Number(ev.sold) + 1 });",
+          "checked": "fb3dc57089e1fef0"
+        }
+      ]
+    },
+    {
+      "id": "ticket-count-checkin",
+      "title": "Count check-ins",
+      "on": {
+        "entity": "ticket",
+        "event": "updated"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const ev = await ctx.db.get('event', String(row.event_id)); if (!ev) return; await ctx.db.update('event', String(row.event_id), { checked_in: Number(ev.checked_in) + 1 });",
+          "checked": "eca02e3deb390c23"
+        }
+      ]
+    },
+    {
+      "id": "remind-tomorrow",
+      "title": "Remind attendees of tomorrow's events",
+      "on": {
+        "schedule": "daily 10:00",
+        "entity": "ticket"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const t = new Date(ctx.now().getTime() + 86400000).toISOString().slice(0, 10); const events = await ctx.db.list('event'); const tickets = await ctx.db.list('ticket'); for (const ev of events) { if (new Date(ev.starts_at as string).toISOString().slice(0, 10) !== t) continue; for (const tk of tickets) { if (String(tk.event_id) !== String(ev.id) || tk.used) continue; await ctx.db.create('reminder', { attendee_id: tk.attendee_id, event_id: ev.id, title: 'Tomorrow: ' + String(ev.title), message: 'Doors at ' + String(ev.venue) + ' open tomorrow. Your ' + String(tk.tier_name) + ' pass is ready in My tickets.' }); } }",
+          "checked": "0a55689b859316a6"
+        }
+      ]
+    },
+    {
+      "id": "reminder-notify",
+      "title": "Push reminder to attendee",
+      "on": {
+        "entity": "reminder",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "attendee_id",
+            "entity": "attendee"
+          },
+          "title": "{{title}}",
+          "body": "{{message}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "appbricx",
+  "owner": { "name": "Appbricx" },
+  "plugins": [
+    {
+      "name": "appbricx",
+      "source": "./plugins/claude-code",
+      "description": "Build full-stack apps on Appbricx over MCP: contract, check, apply, verify, deploy."
+    }
+  ]
+}

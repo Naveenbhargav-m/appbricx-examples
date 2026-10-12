@@ -1,0 +1,77 @@
+{
+ "transcript": "../../demos/learnly/transcript.jsonl",
+ "prompt": "../../demos/learnly/prompt.txt",
+ "promptLines": 9,
+ "title": "Watch a coding agent build Learnly",
+ "app": "Learnly",
+ "steps": [
+  {
+   "prompt": true,
+   "chapter": 1
+  },
+  {
+   "use": 2,
+   "chapter": 2
+  },
+  {
+   "uses": [
+    3,
+    14
+   ],
+   "label": "get_guide() × 12"
+  },
+  {
+   "say": 15
+  },
+  {
+   "use": 15
+  },
+  {
+   "use": 16
+  },
+  {
+   "use": 21,
+   "chapter": 3
+  },
+  {
+   "use": 22
+  },
+  {
+   "use": 23
+  },
+  {
+   "say": 27,
+   "chapter": 4
+  },
+  {
+   "use": 36,
+   "shot": true
+  },
+  {
+   "use": 38,
+   "shot": true
+  },
+  {
+   "use": 42,
+   "shot": true
+  },
+  {
+   "use": 49,
+   "shot": true
+  },
+  {
+   "use": 72,
+   "chapter": 5
+  },
+  {
+   "use": 73
+  },
+  {
+   "use": 98
+  },
+  {
+   "use": 103,
+   "chapter": 6
+  }
+ ]
+}

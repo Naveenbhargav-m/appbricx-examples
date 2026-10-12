@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- Appbricx title card (HyperFrames, 1280x720, 4 s). Render on its own or copy the section into
+     a bigger composition. Copy it next to templates/shared as assets/ (scripts/make-block.sh does). -->
+<html lang="en" data-composition-variables='[
+  {"id":"theme","type":"enum","label":"Theme","options":[{"value":"dark","label":"Dark"},{"value":"light","label":"Light"}],"default":"dark","role":"style"},
+  {"id":"eyebrow","type":"string","label":"Eyebrow","default":"Live demo","role":"content"},
+  {"id":"title","type":"string","label":"Title","default":"Kanbo","role":"content"},
+  {"id":"subtitle","type":"string","label":"Subtitle","default":"A team board with sign-in, roles and live data.","role":"content"}
+]'>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=1280, height=720" />
+<script src="assets/vendor/gsap.min.js"></script><link rel="stylesheet" href="assets/brand.css" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 720px; overflow: hidden; background: var(--bg); }
+  #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Schibsted Grotesk", system-ui, sans-serif; }
+  .clip { position: absolute; inset: 0; }
+  .glow { position: absolute; width: 900px; height: 900px; left: 190px; top: -260px; border-radius: 50%; background: radial-gradient(circle, var(--glow) 0%, transparent 62%); }
+  #card { display: flex; flex-direction: column; justify-content: center; padding: 0 120px; }
+  .brandrow { position: absolute; top: 56px; left: 120px; display: flex; align-items: center; gap: 12px; font-weight: 650; font-size: 26px; }
+  .brandrow img { width: 40px; height: 40px; }
+  .eyebrow { align-self: flex-start; display: inline-flex; gap: 10px; align-items: center; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 18px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+  .eyebrow i { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px var(--glow); }
+  h1 { margin-top: 28px; font-size: 104px; line-height: .98; font-weight: 800; letter-spacing: -0.045em; max-width: 1040px; }
+  p { margin-top: 26px; max-width: 860px; font-size: 30px; line-height: 1.3; color: var(--ink-2); }
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1280" data-height="720" data-fps="30">
+  <div class="clip" data-start="0" data-duration="4" data-track-index="0"><div class="glow"></div></div>
+  <section id="card" class="clip" data-start="0" data-duration="4" data-track-index="1">
+    <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+    <div class="eyebrow"><i></i><span data-var-text="eyebrow">Live demo</span></div>
+    <h1 data-var-text="title">Kanbo</h1>
+    <p data-var-text="subtitle">A team board with sign-in, roles and live data.</p>
+  </section>
+</div>
+<script>
+  var v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  document.documentElement.setAttribute('data-theme', v.theme === 'light' ? 'light' : 'dark');
+  var tl = gsap.timeline({ paused: true });
+  tl.from('.brandrow', { opacity: 0, y: -12, duration: 0.5 }, 0.1).from('.eyebrow', { opacity: 0, y: 16, duration: 0.5 }, 0.2)
+    .from('h1', { opacity: 0, y: 40, duration: 0.7, ease: 'power3.out' }, 0.3).from('p', { opacity: 0, y: 24, duration: 0.6 }, 0.55)
+    .to('#card', { opacity: 0, y: -24, duration: 0.45, ease: 'power2.in' }, 3.55);
+  window.__timelines = { main: tl };
+</script>
+</body></html>

@@ -1,0 +1,200 @@
+<!doctype html>
+<!--
+  Appbricx "reel" template (HyperFrames composition, 1280x720).
+  Title card -> a montage of short clips from several recordings, each with an app chip
+  and its own address in the window bar -> end card. Built by scripts/build-reel.mjs.
+
+  Text and theme are HyperFrames variables: override with
+    npx hyperframes render --variables '{"title":"Ledgerly"}'
+  The clip track (videos + captions) and the timing tokens are filled in by
+  scripts/build.mjs from a recording's cues.json. Do not hand-edit the built copy;
+  edit this template and rebuild.
+-->
+<html
+  lang="en"
+  data-composition-variables='[
+    {"id":"theme","type":"enum","label":"Theme","options":[{"value":"dark","label":"Dark"},{"value":"light","label":"Light"}],"default":"dark","role":"style"},
+    {"id":"eyebrow","type":"string","label":"Eyebrow","default":"Ten live apps","role":"content"},
+    {"id":"title","type":"string","label":"App name","description":"Name of the showcase app shown in the clip","portrays":["host_identity"],"default":"Built by coding agents. Running on Appbricx.","role":"content"},
+    {"id":"subtitle","type":"string","label":"Subtitle","description":"One line on what the app does","default":"Each one has its own sign-in screen, real data and AI inside the app.","role":"content"},
+    {"id":"appUrl","type":"string","label":"App URL","description":"Address shown in the browser frame","default":"kanbo.apps.appbricx.com","role":"content"},
+    {"id":"endHeadline","type":"string","label":"End headline","default":"Describe your app. Ship it today.","role":"content"},
+    {"id":"ctaUrl","type":"string","label":"Call-to-action URL","portrays":["subject_domain"],"default":"appbricx.com","role":"content"},
+    {"id":"badge","type":"string","label":"Footage badge","description":"Honesty label shown on the window bar","default":"Real footage · waits trimmed","role":"content"},
+    {"id":"endNote","type":"string","label":"End note","default":"Try ten live demo apps at appbricx.com/showcase","role":"content"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, height=720" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <link rel="stylesheet" href="assets/brand.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1280px; height: 720px; overflow: hidden; background: var(--bg); }
+      #root {
+        position: relative; width: 1280px; height: 720px; overflow: hidden;
+        background: var(--bg); color: var(--ink);
+        font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+      }
+      .clip { position: absolute; inset: 0; }
+
+      /* Backdrop: soft emerald glow and a faint grid, always on. */
+      #backdrop { z-index: 0; }
+      #backdrop .glow {
+        position: absolute; width: 900px; height: 900px; left: 190px; top: -260px; border-radius: 50%;
+        background: radial-gradient(circle, var(--glow) 0%, transparent 62%);
+      }
+      #backdrop .grid {
+        position: absolute; inset: 0; opacity: .5;
+        background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse at 50% 40%, #000 0%, transparent 70%);
+      }
+
+      .brandrow { display: flex; align-items: center; gap: 12px; font-weight: 650; font-size: 26px; letter-spacing: -0.02em; }
+      .brandrow img { width: 40px; height: 40px; }
+
+      /* Title card */
+      #title-card { z-index: 2; display: flex; flex-direction: column; justify-content: center; padding: 0 120px; }
+      #title-card .brandrow { position: absolute; top: 56px; left: 120px; }
+      .eyebrow {
+        display: inline-flex; align-items: center; gap: 10px; align-self: flex-start;
+        padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
+        font-size: 18px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent);
+      }
+      .eyebrow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px var(--glow); }
+      #title { margin-top: 28px; font-size: 78px; max-width: 1000px; line-height: .95; font-weight: 800; letter-spacing: -0.045em; }
+      #subtitle { margin-top: 26px; max-width: 860px; font-size: 30px; line-height: 1.3; color: var(--ink-2); font-weight: 450; }
+
+      /* Browser window around the recording */
+      #window { z-index: 1; }
+      #window .frame {
+        position: absolute; left: 64px; top: 20px; width: 1152px; height: 680px; border-radius: 14px;
+        background: var(--surface); border: 1px solid var(--line);
+        box-shadow: 0 30px 80px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.05);
+      }
+      #window .bar { position: absolute; left: 0; right: 0; top: 0; height: 32px; display: flex; align-items: center; padding: 0 14px; gap: 7px; }
+      #window .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); display: block; }
+      #window .url {
+        position: absolute; left: 50%; top: 6px; transform: translateX(-50%); height: 20px; padding: 0 14px;
+        border-radius: 6px; background: var(--bg-2); color: var(--ink-2); font-size: 12.5px; line-height: 20px; font-weight: 500;
+      }
+      #window .badge {
+        position: absolute; right: 14px; top: 6px; height: 20px; padding: 0 10px; border-radius: 999px;
+        background: var(--glow); color: var(--accent); font-size: 11.5px; line-height: 20px; font-weight: 650; letter-spacing: .02em;
+      }
+      #window .url b { color: var(--accent); font-weight: 600; }
+      /* Recording sits inside the frame under the bar: 1152x648 at (64, 52). */
+      video.rec { position: absolute; left: 64px; top: 52px; width: 1152px; height: 648px; z-index: 2; border-radius: 0 0 14px 14px; object-fit: cover; }
+
+      .urlclip { z-index: 4; inset: auto; left: 0; right: 0; top: 26px; height: 20px; display: flex; justify-content: center; pointer-events: none; }
+      .urlclip span { height: 20px; padding: 0 14px; border-radius: 6px; background: var(--bg-2); color: var(--ink-2); font-size: 12.5px; line-height: 20px; font-weight: 500; }
+      .urlclip b { color: var(--accent); font-weight: 600; }
+      .chip { z-index: 6; inset: auto; left: 88px; top: 72px; }
+      .chip span { display: inline-flex; align-items: baseline; gap: 10px; padding: 10px 18px; border-radius: 12px; background: rgba(6,17,12,.88); color: #eef6f1; font-size: 26px; font-weight: 750; letter-spacing: -0.02em; border: 1px solid rgba(93,203,152,.45); box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+      .chip small { font-size: 15px; font-weight: 600; color: #5dcb98; letter-spacing: .04em; }
+      /* Captions */
+      .caption {
+        z-index: 5; inset: auto; left: 0; right: 0; bottom: 42px; display: flex; justify-content: center;
+      }
+      .caption span {
+        padding: 12px 24px; border-radius: 999px; font-size: 26px; font-weight: 650; letter-spacing: -0.01em;
+        background: rgba(6, 17, 12, .86); color: #eef6f1; border: 1px solid rgba(93,203,152,.45);
+        box-shadow: 0 12px 30px rgba(0,0,0,.3);
+      }
+      [data-theme="light"] .caption span { background: rgba(255,255,255,.94); color: #0d1a14; border-color: rgba(11,122,78,.4); }
+
+      /* End card */
+      #end-card { z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--bg); }
+      #end-card .brandrow { font-size: 34px; gap: 14px; }
+      #end-card .brandrow img { width: 56px; height: 56px; }
+      #end-headline { margin-top: 34px; font-size: 54px; font-weight: 750; letter-spacing: -0.035em; max-width: 1000px; line-height: 1.05; }
+      #cta {
+        margin-top: 34px; padding: 16px 38px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+        font-size: 44px; font-weight: 750; letter-spacing: -0.02em;
+      }
+      #end-note { margin-top: 26px; font-size: 22px; color: var(--ink-2); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="__TOTAL__" data-width="1280" data-height="720" data-fps="30">
+      <div id="backdrop" class="clip" data-start="0" data-duration="__TOTAL__" data-track-index="0">
+        <div class="glow"></div>
+        <div class="grid"></div>
+      </div>
+
+      <section id="title-card" class="clip" data-start="0" data-duration="__INTRO__" data-track-index="1">
+        <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+        <div class="eyebrow"><span class="dot"></span><span data-var-text="eyebrow">Live demo</span></div>
+        <h1 id="title" data-var-text="title">Kanbo</h1>
+        <p id="subtitle" data-var-text="subtitle">A team board with sign-in, roles and live data, built with Appbricx and a coding agent.</p>
+      </section>
+
+      <div id="window" class="clip" data-start="__CLIP_START__" data-duration="__CLIP_LEN__" data-track-index="2">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i></div>
+          
+          <div class="badge" data-var-text="badge">Real footage · waits trimmed</div>
+        </div>
+      </div>
+
+      <!-- @CLIP_TRACK: videos and captions are generated here by scripts/build.mjs -->
+
+      <section id="end-card" class="clip" data-start="__END_START__" data-duration="__OUTRO__" data-track-index="4">
+        <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+        <h2 id="end-headline" data-var-text="endHeadline">Describe your app. Ship it today.</h2>
+        <div id="cta" data-var-text="ctaUrl">appbricx.com</div>
+        <p id="end-note" data-var-text="endNote">Try ten live demo apps at appbricx.com/showcase</p>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        var vars = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+        document.documentElement.setAttribute('data-theme', vars.theme === 'light' ? 'light' : 'dark');
+
+        var T = { intro: __INTRO__, clipStart: __CLIP_START__, endStart: __END_START__, total: __TOTAL__ };
+        var tl = gsap.timeline({ paused: true });
+
+        // Title card in, then out.
+        tl.from('#title-card .brandrow', { opacity: 0, y: -12, duration: 0.5, ease: 'power2.out' }, 0.1)
+          .from('#title-card .eyebrow', { opacity: 0, y: 16, duration: 0.5, ease: 'power3.out' }, 0.2)
+          .from('#title', { opacity: 0, y: 40, duration: 0.7, ease: 'power3.out' }, 0.3)
+          .from('#subtitle', { opacity: 0, y: 24, duration: 0.6, ease: 'power3.out' }, 0.55)
+          .to('#title-card', { opacity: 0, y: -24, duration: 0.45, ease: 'power2.in' }, T.intro - 0.45);
+
+        // Window and the first recording rise in together.
+        tl.from(['#window', 'video.rec'], { opacity: 0, y: 40, scale: 0.97, transformOrigin: '50% 60%', duration: 0.6, ease: 'power3.out' }, T.clipStart);
+
+        // Later recording segments cross-fade in over the previous one.
+        document.querySelectorAll('video.rec[data-xfade]').forEach(function (v) {
+          tl.fromTo(v, { opacity: 0 }, { opacity: 1, duration: parseFloat(v.dataset.xfade), ease: 'none' }, parseFloat(v.dataset.start));
+        });
+
+        document.querySelectorAll('.chip').forEach(function (c) {
+          var s = parseFloat(c.dataset.start), d = parseFloat(c.dataset.duration);
+          tl.fromTo(c.firstElementChild, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power3.out' }, s)
+            .to(c.firstElementChild, { opacity: 0, duration: 0.2 }, s + d - 0.2);
+        });
+        // Each caption pops in and fades out at its own clip edges.
+        document.querySelectorAll('.caption').forEach(function (c) {
+          var s = parseFloat(c.dataset.start), d = parseFloat(c.dataset.duration);
+          tl.fromTo(c.firstElementChild, { opacity: 0, y: 14, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(1.6)' }, s)
+            .to(c.firstElementChild, { opacity: 0, y: -6, duration: 0.25, ease: 'power1.in' }, s + d - 0.25);
+        });
+
+        // End card.
+        tl.from('#end-card', { opacity: 0, duration: 0.45, ease: 'power1.out' }, T.endStart)
+          .from('#end-card .brandrow', { opacity: 0, y: 20, duration: 0.5, ease: 'power3.out' }, T.endStart + 0.2)
+          .from('#end-headline', { opacity: 0, y: 24, duration: 0.6, ease: 'power3.out' }, T.endStart + 0.35)
+          .from('#cta', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.8)' }, T.endStart + 0.6)
+          .from('#end-note', { opacity: 0, duration: 0.5 }, T.endStart + 0.9)
+          .to({}, { duration: 0.01 }, T.total - 0.01); // pin timeline length to the composition
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines.main = tl;
+      })();
+    </script>
+  </body>
+</html>

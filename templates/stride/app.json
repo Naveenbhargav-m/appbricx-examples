@@ -1,0 +1,1725 @@
+{
+  "app": {
+    "name": "Stride",
+    "tagline": "Train. Log. Repeat.",
+    "theme": "obsidian",
+    "nav_style": "rail",
+    "density": "comfortable",
+    "brand_color": "#C6F432",
+    "direction": "brutalist"
+  },
+  "personas": [
+    {
+      "id": "athlete",
+      "label": "Athlete",
+      "description": "logs training and checks in daily",
+      "kind": "consumer"
+    },
+    {
+      "id": "coach",
+      "label": "Coach",
+      "description": "plans and reviews athletes' training",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": {
+    "primaryVerb": "track",
+    "inventoryShape": "records",
+    "moneySurface": "none"
+  },
+  "basket": null,
+  "entities": [
+    {
+      "name": "coach",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "specialty",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "bio",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "photo",
+          "type": "image",
+          "optional": true
+        }
+      ],
+      "access": {
+        "athlete": {
+          "read": "all"
+        },
+        "coach": {
+          "read": "all",
+          "update": "own"
+        }
+      }
+    },
+    {
+      "name": "athlete",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "coach_id",
+          "type": "ref",
+          "ref": "coach",
+          "optional": true
+        },
+        {
+          "name": "goal",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "level",
+          "type": "enum",
+          "enum_values": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
+          "optional": true
+        },
+        {
+          "name": "weekly_target",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "photo",
+          "type": "image",
+          "optional": true
+        }
+      ],
+      "access": {
+        "athlete": {
+          "read": "own",
+          "update": "own"
+        },
+        "coach": {
+          "read": "own",
+          "update": "own"
+        }
+      },
+      "owner_refs": [
+        "coach_id"
+      ]
+    },
+    {
+      "name": "plan_day",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "athlete_id",
+          "type": "ref",
+          "ref": "athlete"
+        },
+        {
+          "name": "coach_id",
+          "type": "ref",
+          "ref": "coach",
+          "optional": true
+        },
+        {
+          "name": "day",
+          "type": "date"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "enum_values": [
+            "strength",
+            "run",
+            "conditioning",
+            "mobility",
+            "ride",
+            "rest"
+          ]
+        },
+        {
+          "name": "details",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "duration_min",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "image",
+          "type": "image",
+          "optional": true
+        }
+      ],
+      "access": {
+        "athlete": {
+          "read": "own"
+        },
+        "coach": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [
+        "athlete_id",
+        "coach_id"
+      ]
+    },
+    {
+      "name": "workout",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "athlete_id",
+          "type": "ref",
+          "ref": "athlete"
+        },
+        {
+          "name": "coach_id",
+          "type": "ref",
+          "ref": "coach",
+          "optional": true
+        },
+        {
+          "name": "athlete_name",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "day",
+          "type": "date"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "enum_values": [
+            "strength",
+            "run",
+            "conditioning",
+            "mobility",
+            "ride",
+            "other"
+          ]
+        },
+        {
+          "name": "effort",
+          "type": "number"
+        },
+        {
+          "name": "duration_min",
+          "type": "number"
+        },
+        {
+          "name": "volume",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "distance_km",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "exercises",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "athlete": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        },
+        "coach": {
+          "create": false,
+          "read": "own",
+          "update": "none"
+        }
+      },
+      "owner_refs": [
+        "athlete_id",
+        "coach_id"
+      ],
+      "actor_ref": "athlete_id",
+      "rules": [
+        {
+          "id": "no-future-workouts",
+          "on": "both",
+          "message": "A workout can't be logged with a date in the future.",
+          "check": "const d = row.day instanceof Date ? row.day.toISOString().slice(0,10) : String(row.day).slice(0,10); const today = ctx.now().toISOString().slice(0,10); if (d > today) return \"A workout can't be logged with a date in the future.\"; return true;"
+        }
+      ]
+    },
+    {
+      "name": "checkin",
+      "label_field": "day",
+      "fields": [
+        {
+          "name": "athlete_id",
+          "type": "ref",
+          "ref": "athlete"
+        },
+        {
+          "name": "coach_id",
+          "type": "ref",
+          "ref": "coach",
+          "optional": true
+        },
+        {
+          "name": "athlete_name",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "day",
+          "type": "date"
+        },
+        {
+          "name": "sleep_hours",
+          "type": "number"
+        },
+        {
+          "name": "mood",
+          "type": "number"
+        },
+        {
+          "name": "soreness",
+          "type": "number"
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "unique": [
+        [
+          "athlete_id",
+          "day"
+        ]
+      ],
+      "access": {
+        "athlete": {
+          "create": true,
+          "read": "own",
+          "update": "own"
+        },
+        "coach": {
+          "create": false,
+          "read": "own",
+          "update": "none"
+        }
+      },
+      "owner_refs": [
+        "athlete_id",
+        "coach_id"
+      ],
+      "actor_ref": "athlete_id",
+      "rules": [
+        {
+          "id": "one-checkin-per-day",
+          "on": "create",
+          "message": "You've already checked in today.",
+          "check": "const d = row.day instanceof Date ? row.day.toISOString().slice(0,10) : String(row.day).slice(0,10); const today = ctx.now().toISOString().slice(0,10); if (d > today) return \"You can't check in for a future day.\"; try { const r = (await ctx.db.query('select 1 from checkin where athlete_id = $1 and day = $2 limit 1', [row.athlete_id, d])) as unknown as { rows?: unknown[] }; const n = Array.isArray(r) ? r.length : (r.rows || []).length; if (n > 0) return \"You've already checked in today.\"; } catch (e) { return true; } return true;"
+        }
+      ]
+    },
+    {
+      "name": "feedback",
+      "label_field": "message",
+      "fields": [
+        {
+          "name": "workout_id",
+          "type": "ref",
+          "ref": "workout"
+        },
+        {
+          "name": "athlete_id",
+          "type": "ref",
+          "ref": "athlete"
+        },
+        {
+          "name": "coach_id",
+          "type": "ref",
+          "ref": "coach",
+          "optional": true
+        },
+        {
+          "name": "coach_name",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "workout_title",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "message",
+          "type": "text"
+        },
+        {
+          "name": "tone",
+          "type": "enum",
+          "enum_values": [
+            "praise",
+            "adjust",
+            "question"
+          ]
+        }
+      ],
+      "access": {
+        "athlete": {
+          "create": false,
+          "read": "own",
+          "update": "none"
+        },
+        "coach": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [
+        "athlete_id",
+        "coach_id"
+      ]
+    },
+    {
+      "name": "digest",
+      "label_field": "summary",
+      "fields": [
+        {
+          "name": "athlete_id",
+          "type": "ref",
+          "ref": "athlete"
+        },
+        {
+          "name": "coach_id",
+          "type": "ref",
+          "ref": "coach",
+          "optional": true
+        },
+        {
+          "name": "week_start",
+          "type": "date"
+        },
+        {
+          "name": "sessions",
+          "type": "number"
+        },
+        {
+          "name": "minutes",
+          "type": "number"
+        },
+        {
+          "name": "volume",
+          "type": "number"
+        },
+        {
+          "name": "avg_effort",
+          "type": "number"
+        },
+        {
+          "name": "checkins",
+          "type": "number"
+        },
+        {
+          "name": "avg_sleep",
+          "type": "number"
+        },
+        {
+          "name": "summary",
+          "type": "text"
+        }
+      ],
+      "access": {
+        "athlete": {
+          "read": "own",
+          "create": false,
+          "update": "none"
+        },
+        "coach": {
+          "read": "own",
+          "create": false,
+          "update": "none"
+        }
+      },
+      "owner_refs": [
+        "athlete_id",
+        "coach_id"
+      ]
+    }
+  ],
+  "seeds": {
+    "coach": [
+      {
+        "id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "name": "Elena Voss",
+        "specialty": "Endurance & running",
+        "bio": "Marathon coach, 12 years. Patience, pace, progress.",
+        "photo": "/assets/20bc7fa9b6bb4518.svg"
+      },
+      {
+        "id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "name": "Marcus Hale",
+        "specialty": "Strength & conditioning",
+        "bio": "Ex-collegiate sprinter. Builds athletes from the floor up.",
+        "photo": "/assets/163f9e2a29d81d56.svg"
+      }
+    ],
+    "athlete": [
+      {
+        "id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "name": "Jordan Blake",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "goal": "Add 10 kg to the deadlift",
+        "level": "advanced",
+        "weekly_target": 4,
+        "photo": "/assets/94b962f8db7fd3b9.webp"
+      },
+      {
+        "id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "name": "Priya Nair",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "goal": "First pull-up",
+        "level": "beginner",
+        "weekly_target": 3,
+        "photo": "/assets/07d8bb5be952b3be.webp"
+      },
+      {
+        "id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "name": "Tomás Silva",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "goal": "Get back after injury",
+        "level": "intermediate",
+        "weekly_target": 4,
+        "photo": "/assets/c5e206471c571481.webp"
+      },
+      {
+        "id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "name": "Chloe Becker",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "goal": "Half marathon in 1:45",
+        "level": "advanced",
+        "weekly_target": 5,
+        "photo": "/assets/5741efafa6d4ac24.webp"
+      },
+      {
+        "id": "814fff61-da6f-5f89-b8eb-5479e9560ed8",
+        "name": "Devon Carter",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "goal": "Run a first 10K",
+        "level": "beginner",
+        "weekly_target": 3,
+        "photo": "/assets/6bb8ef2c4aa97514.webp"
+      },
+      {
+        "id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "name": "Aiko Tanaka",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "goal": "Ride 100 km",
+        "level": "intermediate",
+        "weekly_target": 4,
+        "photo": "/assets/0152c7befdd95910.webp"
+      },
+      {
+        "id": "8e1101e7-0307-5e29-9434-ae00bc8270f8",
+        "name": "Liam O'Connor",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "goal": "Drop 5 kg, build base",
+        "level": "beginner",
+        "weekly_target": 4,
+        "photo": "/assets/2822dd386f17e0aa.webp"
+      },
+      {
+        "id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "name": "Maya Reyes",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "goal": "Sub-22 5K and a 100 kg squat",
+        "level": "intermediate",
+        "weekly_target": 5,
+        "photo": "/assets/05fbc7f8ef749551.webp"
+      }
+    ],
+    "plan_day": [
+      {
+        "id": "ca08cd87-fa95-530e-99f9-1d972f48345e",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-05T00:00:00.000Z",
+        "title": "Push Day",
+        "kind": "strength",
+        "details": "Bench 5x5 · OHP 3x8 · Dips 3x10",
+        "duration_min": 58,
+        "image": "/assets/c0c29955a4e26d7c.webp"
+      },
+      {
+        "id": "739eb42f-2ef7-53af-9cdf-e75df1312623",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-06T00:00:00.000Z",
+        "title": "Mobility Flow",
+        "kind": "mobility",
+        "details": "Hips, thoracic, ankles · 30 min",
+        "duration_min": 30,
+        "image": "/assets/93438dceaf344f23.webp"
+      },
+      {
+        "id": "0864311e-78f9-5a29-9023-3d7c4d6bd5cd",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-07T00:00:00.000Z",
+        "title": "Lower Body Strength",
+        "kind": "strength",
+        "details": "Back squat 5x5 · RDL 3x8 · Lunges 3x10",
+        "duration_min": 65,
+        "image": "/assets/c94b29483989a507.webp"
+      },
+      {
+        "id": "12a2daa9-7809-5762-8f4c-290ece9e2799",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Tempo Intervals",
+        "kind": "run",
+        "details": "8 km with 4x1 km at tempo",
+        "duration_min": 45,
+        "image": "/assets/d3aa8fcffcf69a37.webp"
+      },
+      {
+        "id": "2c2cafdb-7268-50e9-bbef-1c77ec3b3b68",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Upper Body",
+        "kind": "strength",
+        "details": "Bench 5x5 · weighted pull-ups · OHP",
+        "duration_min": 60,
+        "image": "/assets/e87a50f08c5eddef.webp"
+      },
+      {
+        "id": "087af227-5034-5f15-b242-1298e24333f0",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-10T00:00:00.000Z",
+        "title": "Long Run",
+        "kind": "run",
+        "details": "12 km easy, conversational",
+        "duration_min": 70,
+        "image": "/assets/6669e86a394ea52f.webp"
+      },
+      {
+        "id": "7238ee6f-c9b6-54c9-bcf0-7c44bf732d39",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-11T00:00:00.000Z",
+        "title": "Upper Body Power",
+        "kind": "strength",
+        "details": "Bench 5x3 @75 kg · Weighted pull-ups 4x5 · Push press 4x5 · Face pulls 3x15",
+        "duration_min": 60,
+        "image": "/assets/4599b5a22a9d00ef.webp"
+      },
+      {
+        "id": "5b3b1fb4-e3fb-5fdd-964b-0ca0c9cc932f",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-12T00:00:00.000Z",
+        "title": "Easy Run + Strides",
+        "kind": "run",
+        "details": "6 km easy, 6x20 s strides",
+        "duration_min": 40,
+        "image": "/assets/dcf9bf2d18427908.webp"
+      },
+      {
+        "id": "d1b6eab5-469f-511b-8577-70e7980fe158",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-13T00:00:00.000Z",
+        "title": "Lower Body Strength",
+        "kind": "strength",
+        "details": "Squat 5x5 @102.5 · RDL 3x8 · Split squats 3x10",
+        "duration_min": 65,
+        "image": "/assets/790a0c74b0d5647a.webp"
+      },
+      {
+        "id": "be90a467-8ccf-551d-812b-64358c33d2d5",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-14T00:00:00.000Z",
+        "title": "Conditioning Circuit",
+        "kind": "conditioning",
+        "details": "5 rounds: row 500 m, 15 KB swings, 10 burpees",
+        "duration_min": 40,
+        "image": "/assets/6ac19dda2a330811.webp"
+      },
+      {
+        "id": "46c6c466-aaea-55dc-ba5e-d01c0b769150",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-11T00:00:00.000Z",
+        "title": "Deadlift Heavy Singles",
+        "kind": "strength",
+        "details": "Work up to 3 heavy singles",
+        "duration_min": 70,
+        "image": "/assets/20056f6bc04d5f8c.webp"
+      },
+      {
+        "id": "ef77f96e-7f42-5eef-abdf-c0ae128532f3",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "day": "2026-10-11T00:00:00.000Z",
+        "title": "Band-assisted Pull-ups",
+        "kind": "strength",
+        "details": "5x4 assisted · scapular hangs",
+        "duration_min": 45,
+        "image": "/assets/1c0a4eaa69c71b7e.webp"
+      },
+      {
+        "id": "cd7c97e1-9bca-563a-97a2-8eb53e924526",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "day": "2026-10-11T00:00:00.000Z",
+        "title": "Progression Long Run",
+        "kind": "run",
+        "details": "16 km, last 4 km at half-marathon pace",
+        "duration_min": 90,
+        "image": "/assets/78b54fbb1bfc048a.webp"
+      }
+    ],
+    "workout": [
+      {
+        "id": "9e40dfa9-c718-566e-b07a-1fe2d36da4ce",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-09-29T00:00:00.000Z",
+        "title": "Easy Run",
+        "kind": "run",
+        "effort": 4,
+        "duration_min": 30,
+        "volume": 0,
+        "distance_km": 5,
+        "exercises": "[{\"n\":\"Easy run\",\"km\":5,\"min\":30}]",
+        "notes": "Legs felt heavy but loosened up."
+      },
+      {
+        "id": "d286bfe9-497d-575d-9dae-84a9826728d7",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-09-30T00:00:00.000Z",
+        "title": "Lower Body Strength",
+        "kind": "strength",
+        "effort": 7,
+        "duration_min": 62,
+        "volume": 4175,
+        "exercises": "[{\"n\":\"Back squat\",\"s\":5,\"r\":5,\"w\":95},{\"n\":\"Romanian deadlift\",\"s\":3,\"r\":8,\"w\":75}]",
+        "notes": "Squats moved well."
+      },
+      {
+        "id": "ecb960af-b9c4-598d-a85e-eb58b1984e0e",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-02T00:00:00.000Z",
+        "title": "Hill Sprints",
+        "kind": "run",
+        "effort": 8,
+        "duration_min": 38,
+        "volume": 0,
+        "distance_km": 6,
+        "exercises": "[{\"n\":\"Hill sprints\",\"km\":6,\"min\":38}]",
+        "notes": "8 x 30 s up the big hill."
+      },
+      {
+        "id": "fb835424-82b1-586c-aff9-9befb7ea85a4",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-03T00:00:00.000Z",
+        "title": "Full Body Power",
+        "kind": "strength",
+        "effort": 7,
+        "duration_min": 55,
+        "volume": 2880,
+        "exercises": "[{\"n\":\"Deadlift\",\"s\":4,\"r\":4,\"w\":120},{\"n\":\"Overhead press\",\"s\":4,\"r\":6,\"w\":40}]",
+        "notes": ""
+      },
+      {
+        "id": "01ba2001-e8b1-51de-a0ee-3d32d827ef4b",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-04T00:00:00.000Z",
+        "title": "Easy Run",
+        "kind": "run",
+        "effort": 4,
+        "duration_min": 36,
+        "volume": 0,
+        "distance_km": 6,
+        "exercises": "[{\"n\":\"Easy run\",\"km\":6,\"min\":36}]",
+        "notes": "Sunday shakeout."
+      },
+      {
+        "id": "70a7f52a-8bb0-539f-aea7-9d962ec29f98",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-05T00:00:00.000Z",
+        "title": "Push Day",
+        "kind": "strength",
+        "effort": 7,
+        "duration_min": 58,
+        "volume": 2710,
+        "exercises": "[{\"n\":\"Bench press\",\"s\":5,\"r\":5,\"w\":70},{\"n\":\"Overhead press\",\"s\":3,\"r\":8,\"w\":40}]",
+        "notes": "Bench felt strong."
+      },
+      {
+        "id": "eab5c2c1-68bd-5c99-8be5-8fa434d77fdd",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-06T00:00:00.000Z",
+        "title": "Mobility Flow",
+        "kind": "mobility",
+        "effort": 2,
+        "duration_min": 30,
+        "volume": 0,
+        "exercises": "[]",
+        "notes": "Hips finally opening up."
+      },
+      {
+        "id": "81968ba3-1a38-5622-a820-a04a562605c4",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-07T00:00:00.000Z",
+        "title": "Lower Body Strength",
+        "kind": "strength",
+        "effort": 8,
+        "duration_min": 68,
+        "volume": 5320,
+        "exercises": "[{\"n\":\"Back squat\",\"s\":5,\"r\":5,\"w\":100},{\"n\":\"Romanian deadlift\",\"s\":3,\"r\":8,\"w\":80},{\"n\":\"Walking lunge\",\"s\":3,\"r\":10,\"w\":30}]",
+        "notes": "100 kg for five. Squat PR!"
+      },
+      {
+        "id": "afe24dd3-4183-54b2-9909-99573839f85a",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Tempo Intervals",
+        "kind": "run",
+        "effort": 8,
+        "duration_min": 42,
+        "volume": 0,
+        "distance_km": 8,
+        "exercises": "[{\"n\":\"Tempo intervals\",\"km\":8,\"min\":42}]",
+        "notes": "4 x 1 km at 4:25."
+      },
+      {
+        "id": "f2c459c6-5fa5-5e37-a789-ebc722f1408e",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Upper Body",
+        "kind": "strength",
+        "effort": 7,
+        "duration_min": 60,
+        "volume": 3072,
+        "exercises": "[{\"n\":\"Bench press\",\"s\":5,\"r\":5,\"w\":72.5},{\"n\":\"Weighted pull-up\",\"s\":4,\"r\":6,\"w\":10},{\"n\":\"Overhead press\",\"s\":3,\"r\":8,\"w\":42.5}]",
+        "notes": ""
+      },
+      {
+        "id": "2b1e5923-256a-5949-9217-2abe6f0294cf",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-10T00:00:00.000Z",
+        "title": "Long Run",
+        "kind": "run",
+        "effort": 6,
+        "duration_min": 71,
+        "volume": 0,
+        "distance_km": 12,
+        "exercises": "[{\"n\":\"Long run\",\"km\":12,\"min\":71}]",
+        "notes": "Longest run yet. Felt smooth."
+      },
+      {
+        "id": "3f574963-889e-5f4b-aa5b-8ba9ce9f4a68",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Jordan Blake",
+        "day": "2026-10-10T00:00:00.000Z",
+        "title": "Deadlift Volume",
+        "kind": "strength",
+        "effort": 8,
+        "duration_min": 75,
+        "volume": 7200,
+        "exercises": "[{\"n\":\"Deadlift\",\"s\":5,\"r\":3,\"w\":180},{\"n\":\"Barbell row\",\"s\":4,\"r\":8,\"w\":80},{\"n\":\"Back extension\",\"s\":3,\"r\":12,\"w\":20}]",
+        "notes": "Grip is the limiter."
+      },
+      {
+        "id": "f30c5d57-5715-50ca-94f2-673cc93cc1ed",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Jordan Blake",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Bench & Accessories",
+        "kind": "strength",
+        "effort": 7,
+        "duration_min": 65,
+        "volume": 5400,
+        "exercises": "[{\"n\":\"Bench press\",\"s\":5,\"r\":5,\"w\":110},{\"n\":\"Incline press\",\"s\":3,\"r\":8,\"w\":70}]",
+        "notes": ""
+      },
+      {
+        "id": "4df9f7e5-fead-54c5-baad-36f68ffd83f4",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Jordan Blake",
+        "day": "2026-10-07T00:00:00.000Z",
+        "title": "Squat Day",
+        "kind": "strength",
+        "effort": 9,
+        "duration_min": 80,
+        "volume": 8100,
+        "exercises": "[{\"n\":\"Back squat\",\"s\":5,\"r\":5,\"w\":150},{\"n\":\"Leg press\",\"s\":3,\"r\":10,\"w\":200}]",
+        "notes": "Heavy, but clean."
+      },
+      {
+        "id": "78572d03-5ea4-5fc1-95c8-a7cb2075f1dc",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Jordan Blake",
+        "day": "2026-10-05T00:00:00.000Z",
+        "title": "Overhead Press",
+        "kind": "strength",
+        "effort": 7,
+        "duration_min": 55,
+        "volume": 3600,
+        "exercises": "[{\"n\":\"Overhead press\",\"s\":5,\"r\":5,\"w\":65},{\"n\":\"Dips\",\"s\":4,\"r\":10,\"w\":20}]",
+        "notes": ""
+      },
+      {
+        "id": "639941b0-228d-5c9f-9d89-303ec8fdd3c6",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Priya Nair",
+        "day": "2026-10-10T00:00:00.000Z",
+        "title": "Assisted Pull-ups",
+        "kind": "strength",
+        "effort": 6,
+        "duration_min": 45,
+        "volume": 1200,
+        "exercises": "[{\"n\":\"Assisted pull-up\",\"s\":5,\"r\":4,\"w\":30},{\"n\":\"Goblet squat\",\"s\":3,\"r\":10,\"w\":16}]",
+        "notes": "Went down a band!"
+      },
+      {
+        "id": "29b78cda-c11c-5368-8043-e76a30b3e673",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Priya Nair",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Full Body Basics",
+        "kind": "strength",
+        "effort": 6,
+        "duration_min": 50,
+        "volume": 1500,
+        "exercises": "[{\"n\":\"Goblet squat\",\"s\":3,\"r\":10,\"w\":16},{\"n\":\"Dumbbell press\",\"s\":3,\"r\":10,\"w\":10}]",
+        "notes": ""
+      },
+      {
+        "id": "db43f5ef-3d0f-5767-b155-f046682c5f35",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Priya Nair",
+        "day": "2026-10-06T00:00:00.000Z",
+        "title": "Easy Ride",
+        "kind": "ride",
+        "effort": 4,
+        "duration_min": 40,
+        "volume": 0,
+        "distance_km": 14,
+        "exercises": "[]",
+        "notes": "Active recovery."
+      },
+      {
+        "id": "29c50bde-74b6-5958-b2a3-066db7b4d662",
+        "athlete_id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Tomás Silva",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Rehab Strength",
+        "kind": "strength",
+        "effort": 5,
+        "duration_min": 45,
+        "volume": 1800,
+        "exercises": "[{\"n\":\"Split squat\",\"s\":3,\"r\":10,\"w\":20},{\"n\":\"Single-leg RDL\",\"s\":3,\"r\":10,\"w\":14}]",
+        "notes": "Knee ok."
+      },
+      {
+        "id": "22202bb2-a60c-58f8-8f4a-7dffb1f1bfdd",
+        "athlete_id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Tomás Silva",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Pool Conditioning",
+        "kind": "conditioning",
+        "effort": 5,
+        "duration_min": 35,
+        "volume": 0,
+        "exercises": "[]",
+        "notes": ""
+      },
+      {
+        "id": "27d7bcae-5c48-5182-a3ca-7008f6864f14",
+        "athlete_id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Tomás Silva",
+        "day": "2026-10-07T00:00:00.000Z",
+        "title": "Mobility",
+        "kind": "mobility",
+        "effort": 3,
+        "duration_min": 25,
+        "volume": 0,
+        "exercises": "[]",
+        "notes": ""
+      },
+      {
+        "id": "0dc6d285-b3e7-5699-a686-6e8af1d03dd1",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Chloe Becker",
+        "day": "2026-10-10T00:00:00.000Z",
+        "title": "Steady Run",
+        "kind": "run",
+        "effort": 5,
+        "duration_min": 55,
+        "volume": 0,
+        "distance_km": 10,
+        "exercises": "[{\"n\":\"Steady run\",\"km\":10,\"min\":55}]",
+        "notes": ""
+      },
+      {
+        "id": "891fb36e-58af-5829-a334-dc20ce827eb6",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Chloe Becker",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Track Repeats",
+        "kind": "run",
+        "effort": 9,
+        "duration_min": 60,
+        "volume": 0,
+        "distance_km": 9,
+        "exercises": "[{\"n\":\"Track repeats\",\"km\":9,\"min\":50}]",
+        "notes": "6 x 1200 m."
+      },
+      {
+        "id": "cd0c0dc7-6e20-54fe-ba2f-35757e818f94",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Chloe Becker",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Strength Maintenance",
+        "kind": "strength",
+        "effort": 6,
+        "duration_min": 40,
+        "volume": 2400,
+        "exercises": "[{\"n\":\"Back squat\",\"s\":4,\"r\":6,\"w\":60},{\"n\":\"Hip thrust\",\"s\":3,\"r\":10,\"w\":60}]",
+        "notes": ""
+      },
+      {
+        "id": "12a9375f-7ea0-5c02-a02a-3307bb9b6ecc",
+        "athlete_id": "814fff61-da6f-5f89-b8eb-5479e9560ed8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Devon Carter",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Run / Walk Intervals",
+        "kind": "run",
+        "effort": 6,
+        "duration_min": 35,
+        "volume": 0,
+        "distance_km": 4.5,
+        "exercises": "[{\"n\":\"Run / walk\",\"km\":4.5,\"min\":35}]",
+        "notes": ""
+      },
+      {
+        "id": "7f5692df-e316-5ba2-a809-f173885a0ccb",
+        "athlete_id": "814fff61-da6f-5f89-b8eb-5479e9560ed8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Devon Carter",
+        "day": "2026-10-06T00:00:00.000Z",
+        "title": "Easy Run",
+        "kind": "run",
+        "effort": 5,
+        "duration_min": 32,
+        "volume": 0,
+        "distance_km": 4,
+        "exercises": "[{\"n\":\"Easy run\",\"km\":4,\"min\":32}]",
+        "notes": ""
+      },
+      {
+        "id": "ed7ae8ad-957a-53fb-803d-88122818f6ae",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Aiko Tanaka",
+        "day": "2026-10-10T00:00:00.000Z",
+        "title": "Long Ride",
+        "kind": "ride",
+        "effort": 7,
+        "duration_min": 150,
+        "volume": 0,
+        "distance_km": 62,
+        "exercises": "[]",
+        "notes": "Headwind home."
+      },
+      {
+        "id": "eeeea83f-59be-5291-bb0f-4ab0faf5793f",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Aiko Tanaka",
+        "day": "2026-10-09T00:00:00.000Z",
+        "title": "Core & Mobility",
+        "kind": "mobility",
+        "effort": 3,
+        "duration_min": 30,
+        "volume": 0,
+        "exercises": "[]",
+        "notes": ""
+      },
+      {
+        "id": "49861329-8a68-5230-ae81-39827d6cd3c2",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Aiko Tanaka",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Sweet Spot Intervals",
+        "kind": "ride",
+        "effort": 8,
+        "duration_min": 75,
+        "volume": 0,
+        "distance_km": 38,
+        "exercises": "[]",
+        "notes": "3 x 15 min."
+      },
+      {
+        "id": "2651727d-3e0e-5035-b024-1fb18804fc5c",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Aiko Tanaka",
+        "day": "2026-10-07T00:00:00.000Z",
+        "title": "Gym Strength",
+        "kind": "strength",
+        "effort": 6,
+        "duration_min": 50,
+        "volume": 2600,
+        "exercises": "[{\"n\":\"Back squat\",\"s\":4,\"r\":8,\"w\":50},{\"n\":\"Hip thrust\",\"s\":3,\"r\":10,\"w\":40}]",
+        "notes": ""
+      },
+      {
+        "id": "2c0290ba-38e0-5923-8cab-81db2cbe466b",
+        "athlete_id": "8e1101e7-0307-5e29-9434-ae00bc8270f8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Liam O'Connor",
+        "day": "2026-10-08T00:00:00.000Z",
+        "title": "Base Circuit",
+        "kind": "conditioning",
+        "effort": 6,
+        "duration_min": 45,
+        "volume": 0,
+        "exercises": "[]",
+        "notes": ""
+      },
+      {
+        "id": "a305c39a-0a8d-5d11-ae2d-d06d9d539aa7",
+        "athlete_id": "8e1101e7-0307-5e29-9434-ae00bc8270f8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Liam O'Connor",
+        "day": "2026-10-05T00:00:00.000Z",
+        "title": "Walk + Jog",
+        "kind": "run",
+        "effort": 4,
+        "duration_min": 40,
+        "volume": 0,
+        "distance_km": 5,
+        "exercises": "[{\"n\":\"Walk + jog\",\"km\":5,\"min\":40}]",
+        "notes": ""
+      }
+    ],
+    "checkin": [
+      {
+        "id": "62984ab2-750e-5129-b7ce-6bd2d9406c86",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-10T00:00:00.000Z",
+        "sleep_hours": 7.5,
+        "mood": 4,
+        "soreness": 3,
+        "note": "Legs a bit tired from Thursday."
+      },
+      {
+        "id": "a0d54dfe-6c63-5e2d-b5cb-03cc0178ff1c",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-09T00:00:00.000Z",
+        "sleep_hours": 6.5,
+        "mood": 3,
+        "soreness": 2
+      },
+      {
+        "id": "bdd25800-1c73-5dec-abbf-19c5864030a1",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Maya Reyes",
+        "day": "2026-10-08T00:00:00.000Z",
+        "sleep_hours": 8,
+        "mood": 5,
+        "soreness": 2,
+        "note": "Feeling great."
+      },
+      {
+        "id": "78a9510f-92dc-515e-aa55-2766824c03e2",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Jordan Blake",
+        "day": "2026-10-10T00:00:00.000Z",
+        "sleep_hours": 7,
+        "mood": 4,
+        "soreness": 4
+      },
+      {
+        "id": "baf0d456-7f56-5059-9c8c-d704ae8eef41",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Priya Nair",
+        "day": "2026-10-10T00:00:00.000Z",
+        "sleep_hours": 8.5,
+        "mood": 5,
+        "soreness": 2
+      },
+      {
+        "id": "9b72db68-4301-5bdb-815d-089601863749",
+        "athlete_id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "athlete_name": "Tomás Silva",
+        "day": "2026-10-09T00:00:00.000Z",
+        "sleep_hours": 5.5,
+        "mood": 2,
+        "soreness": 4,
+        "note": "Knee twinge on stairs."
+      },
+      {
+        "id": "fbdff462-dc21-5c0e-b534-cd8e338d6037",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Chloe Becker",
+        "day": "2026-10-10T00:00:00.000Z",
+        "sleep_hours": 7,
+        "mood": 4,
+        "soreness": 3
+      },
+      {
+        "id": "a1ba5b44-c825-59cb-ab6a-c2ba66d08b30",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Aiko Tanaka",
+        "day": "2026-10-10T00:00:00.000Z",
+        "sleep_hours": 6,
+        "mood": 3,
+        "soreness": 4,
+        "note": "Big ride, big appetite."
+      },
+      {
+        "id": "d873fb70-e018-5927-bd7d-89cbc3672004",
+        "athlete_id": "8e1101e7-0307-5e29-9434-ae00bc8270f8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Liam O'Connor",
+        "day": "2026-10-09T00:00:00.000Z",
+        "sleep_hours": 7,
+        "mood": 3,
+        "soreness": 1
+      },
+      {
+        "id": "1bf770f1-e777-526c-ba62-94e2fa911d95",
+        "athlete_id": "814fff61-da6f-5f89-b8eb-5479e9560ed8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "athlete_name": "Devon Carter",
+        "day": "2026-10-08T00:00:00.000Z",
+        "sleep_hours": 7.5,
+        "mood": 4,
+        "soreness": 2
+      }
+    ],
+    "feedback": [
+      {
+        "id": "d77e388a-bfc9-5ab7-bd68-2ac630686b5c",
+        "workout_id": "81968ba3-1a38-5622-a820-a04a562605c4",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "coach_name": "Marcus Hale",
+        "workout_title": "Lower Body Strength",
+        "message": "100 kg for five — that's the goal squat in sight. Keep the same bar speed next week and we add 2.5.",
+        "tone": "praise"
+      },
+      {
+        "id": "7bbf05b7-7632-5680-9b85-dcc11cbff506",
+        "workout_id": "2b1e5923-256a-5949-9217-2abe6f0294cf",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "coach_name": "Marcus Hale",
+        "workout_title": "Long Run",
+        "message": "Great pacing. Next time start the first 3 km a touch slower so the last 3 feel as good.",
+        "tone": "adjust"
+      },
+      {
+        "id": "7bee455a-f2b9-5e00-90a4-c75bfd69456a",
+        "workout_id": "f2c459c6-5fa5-5e37-a789-ebc722f1408e",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "coach_name": "Marcus Hale",
+        "workout_title": "Upper Body",
+        "message": "How did the weighted pull-ups feel on the last set? Any shoulder pinch?",
+        "tone": "question"
+      },
+      {
+        "id": "08437c9d-98f7-55a6-8e1c-68e9b3d478ae",
+        "workout_id": "3f574963-889e-5f4b-aa5b-8ba9ce9f4a68",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "coach_name": "Marcus Hale",
+        "workout_title": "Deadlift Volume",
+        "message": "Strap up for the last two sets — save the grip for heavy singles.",
+        "tone": "adjust"
+      },
+      {
+        "id": "7a831929-dc5e-51b6-9410-88193bf5be4f",
+        "workout_id": "639941b0-228d-5c9f-9d89-303ec8fdd3c6",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "coach_name": "Marcus Hale",
+        "workout_title": "Assisted Pull-ups",
+        "message": "Dropping a band is huge. Proud of you!",
+        "tone": "praise"
+      },
+      {
+        "id": "f94fcbb7-1459-5e86-be8a-81f7703408e9",
+        "workout_id": "891fb36e-58af-5829-a334-dc20ce827eb6",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "coach_name": "Elena Voss",
+        "workout_title": "Track Repeats",
+        "message": "Those splits were even, nice. Cool down properly today.",
+        "tone": "praise"
+      },
+      {
+        "id": "5b3a05ad-1cf0-5335-a0cc-ad5a447b10ac",
+        "workout_id": "ed7ae8ad-957a-53fb-803d-88122818f6ae",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "coach_name": "Elena Voss",
+        "workout_title": "Long Ride",
+        "message": "62 km is a monster. Eat within 30 minutes and take tomorrow easy.",
+        "tone": "praise"
+      },
+      {
+        "id": "f219d525-729b-578f-a115-178155a92bed",
+        "workout_id": "29c50bde-74b6-5958-b2a3-066db7b4d662",
+        "athlete_id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "coach_name": "Marcus Hale",
+        "workout_title": "Rehab Strength",
+        "message": "Keep the load where it is until the stairs twinge is gone.",
+        "tone": "adjust"
+      }
+    ],
+    "digest": [
+      {
+        "id": "88ddbb42-a4a0-535a-834f-5286360a8543",
+        "athlete_id": "0b584f3a-dadb-50cc-804e-a5ed1b3bcb55",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 5,
+        "minutes": 238,
+        "volume": 9150,
+        "avg_effort": 6.2,
+        "checkins": 6,
+        "avg_sleep": 7.3,
+        "summary": "Maya Reyes: 5 sessions, 238 min, 9150 kg lifted, avg effort 6.2/10, 6 check-ins, avg sleep 7.3 h."
+      },
+      {
+        "id": "d525b6ed-6de0-553a-8604-7da434e7ccd6",
+        "athlete_id": "5e15285e-8a80-5c98-bc30-cce22046bb43",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 4,
+        "minutes": 290,
+        "volume": 21400,
+        "avg_effort": 7.8,
+        "checkins": 5,
+        "avg_sleep": 7,
+        "summary": "Jordan Blake: 4 sessions, 290 min, 21400 kg lifted, avg effort 7.8/10, 5 check-ins, avg sleep 7 h."
+      },
+      {
+        "id": "e91cf8f6-1a9b-5578-a7b6-75387bfd2f6d",
+        "athlete_id": "5c3b8854-8d76-55cb-90f1-ddd4fbc179a4",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 3,
+        "minutes": 135,
+        "volume": 3700,
+        "avg_effort": 5.7,
+        "checkins": 4,
+        "avg_sleep": 8.1,
+        "summary": "Priya Nair: 3 sessions, 135 min, 3700 kg lifted, avg effort 5.7/10, 4 check-ins, avg sleep 8.1 h."
+      },
+      {
+        "id": "3a62f420-05a9-50e5-9504-420160719db2",
+        "athlete_id": "3727e637-4b3f-521c-b5e1-b513792587cb",
+        "coach_id": "091b628b-3dea-5edf-9fcd-c8f74e801197",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 3,
+        "minutes": 110,
+        "volume": 1500,
+        "avg_effort": 4.7,
+        "checkins": 3,
+        "avg_sleep": 6.2,
+        "summary": "Tomás Silva: 3 sessions, 110 min, 1500 kg lifted, avg effort 4.7/10, 3 check-ins, avg sleep 6.2 h."
+      },
+      {
+        "id": "21cec2bf-e214-5314-98f8-958a0bb43c0f",
+        "athlete_id": "998561e4-0d8f-571e-a091-2ea63893b068",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 6,
+        "minutes": 340,
+        "volume": 4800,
+        "avg_effort": 6.8,
+        "checkins": 6,
+        "avg_sleep": 7.1,
+        "summary": "Chloe Becker: 6 sessions, 340 min, 4800 kg lifted, avg effort 6.8/10, 6 check-ins, avg sleep 7.1 h."
+      },
+      {
+        "id": "b9771475-8359-577b-8524-d241c2f828a9",
+        "athlete_id": "814fff61-da6f-5f89-b8eb-5479e9560ed8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 3,
+        "minutes": 100,
+        "volume": 0,
+        "avg_effort": 5.3,
+        "checkins": 3,
+        "avg_sleep": 7.4,
+        "summary": "Devon Carter: 3 sessions, 100 min, 0 kg lifted, avg effort 5.3/10, 3 check-ins, avg sleep 7.4 h."
+      },
+      {
+        "id": "bee6da14-118b-543c-b1d7-22ba83198fe8",
+        "athlete_id": "1479f7ca-003c-566a-ab5a-dd12510fbc77",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 4,
+        "minutes": 295,
+        "volume": 5200,
+        "avg_effort": 6.5,
+        "checkins": 4,
+        "avg_sleep": 6.6,
+        "summary": "Aiko Tanaka: 4 sessions, 295 min, 5200 kg lifted, avg effort 6.5/10, 4 check-ins, avg sleep 6.6 h."
+      },
+      {
+        "id": "b2348997-7246-5f71-9e5f-99ca48d3ca9e",
+        "athlete_id": "8e1101e7-0307-5e29-9434-ae00bc8270f8",
+        "coach_id": "0f6a7edf-ce3e-5e57-a01e-42ec00985d5d",
+        "week_start": "2026-09-28T00:00:00.000Z",
+        "sessions": 2,
+        "minutes": 85,
+        "volume": 0,
+        "avg_effort": 5,
+        "checkins": 2,
+        "avg_sleep": 7,
+        "summary": "Liam O'Connor: 2 sessions, 85 min, 0 kg lifted, avg effort 5/10, 2 check-ins, avg sleep 7 h."
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "coach"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Team & access",
+            "subtitle": "Who can sign in, and what they can do."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It's just you so far — add the people who work in the app and pick their role."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "home",
+      "route": "/",
+      "title": "Home",
+      "icon": "Home",
+      "personas": [
+        "athlete"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "AthleteHome"
+      }
+    },
+    {
+      "name": "checkin",
+      "route": "/checkin",
+      "title": "Check-in",
+      "icon": "HeartPulse",
+      "personas": [
+        "athlete"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "CheckIn"
+      }
+    },
+    {
+      "name": "log",
+      "route": "/log",
+      "title": "Log",
+      "icon": "Dumbbell",
+      "personas": [
+        "athlete"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "LogWorkout"
+      }
+    },
+    {
+      "name": "activity",
+      "route": "/activity",
+      "title": "Activity",
+      "icon": "BarChart3",
+      "personas": [
+        "athlete"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "Activity"
+      }
+    },
+    {
+      "name": "roster",
+      "route": "/coach",
+      "title": "Roster",
+      "icon": "Users",
+      "personas": [
+        "coach"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "CoachRoster"
+      }
+    },
+    {
+      "name": "athlete-detail",
+      "route": "/coach/athlete/:id",
+      "title": "Athlete",
+      "icon": "User",
+      "detailOf": "athlete",
+      "personas": [
+        "coach"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "CoachAthlete"
+      }
+    }
+  ],
+  "auth": {
+    "screen": "StrideLogin",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "AthleteHome",
+      "kind": "code",
+      "purpose": "Athlete home: animated streak ring, today's workout, weekly volume chart, PRs, AI coach tip, coach feedback",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useMemo, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion, animate } from \"motion/react\";\nimport { Home, Dumbbell, HeartPulse, BarChart3, Flame, Trophy, Sparkles, LogOut, ArrowRight, Zap, RefreshCw, Check, Moon, MessageSquare } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst CARD = \"rounded-3xl border border-white/[0.07] bg-[#13150e] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_24px_48px_-24px_rgba(0,0,0,0.9)]\";\nconst NAV = [\n  { to: \"/\", label: \"Home\", I: Home },\n  { to: \"/log\", label: \"Log\", I: Dumbbell },\n  { to: \"/checkin\", label: \"Check-in\", I: HeartPulse },\n  { to: \"/activity\", label: \"Activity\", I: BarChart3 },\n];\n\nconst ds = (v: unknown): string => String(v ?? \"\").slice(0, 10);\nconst num = (v: unknown): number => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst addDays = (s: string, n: number): string => {\n  const d = new Date(s + \"T00:00:00Z\");\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\nconst dow = (s: string): number => (new Date(s + \"T00:00:00Z\").getUTCDay() + 6) % 7;\nconst DAYS = [\"M\", \"T\", \"W\", \"T\", \"F\", \"S\", \"S\"];\n\ntype Ex = { n?: string; s?: number; r?: number; w?: number; km?: number; min?: number };\nfunction parseEx(v: unknown): Ex[] {\n  try {\n    const j = JSON.parse(String(v ?? \"[]\"));\n    return Array.isArray(j) ? (j as Ex[]) : [];\n  } catch (e) {\n    return [];\n  }\n}\nfunction calcStreak(days: Set<string>, today: string): number {\n  let cur = days.has(today) ? today : addDays(today, -1);\n  let n = 0;\n  while (days.has(cur)) {\n    n++;\n    cur = addDays(cur, -1);\n  }\n  return n;\n}\n\nfunction Counter({ value, decimals = 0 }: { value: number; decimals?: number }) {\n  const reduce = useReducedMotion();\n  const [v, setV] = useState(reduce ? value : 0);\n  useEffect(() => {\n    if (reduce) {\n      setV(value);\n      return;\n    }\n    const c = animate(0, value, { duration: 1.2, ease: \"easeOut\", onUpdate: (x) => setV(x) });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <>{decimals ? v.toFixed(decimals) : Math.round(v).toLocaleString()}</>;\n}\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  return (\n    <div className=\"min-h-screen bg-[#0a0b08] text-white antialiased\">\n      \n      <aside className=\"fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/[0.06] bg-[#0c0d09] p-5 lg:flex\">\n        <div className=\"mb-8 flex items-center gap-2\">\n          <div className=\"grid h-9 w-9 place-items-center rounded-xl bg-primary text-black\"><Zap size={20} strokeWidth={2.8} /></div>\n          <span className=\"text-3xl font-extrabold uppercase tracking-tight\" style={{ fontFamily: FONT }}>Stride</span>\n        </div>\n        <nav className=\"space-y-1\">\n          {NAV.map((n) => (\n            <button key={n.to} onClick={() => app?.navigate(n.to)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold\">\n              {active === n.to && <motion.span layoutId=\"side-pill\" className=\"absolute inset-0 rounded-2xl bg-primary/15 ring-1 ring-primary/40\" />}\n              <n.I size={18} className={active === n.to ? \"relative text-primary\" : \"relative text-white/50\"} />\n              <span className={active === n.to ? \"relative text-white\" : \"relative text-white/60\"}>{n.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className=\"mt-auto flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3\">\n          <div className=\"grid h-10 w-10 place-items-center rounded-full bg-primary/20 font-bold text-primary\">{(app?.user.name || \"A\").slice(0, 1)}</div>\n          <div className=\"min-w-0 flex-1\"><div className=\"truncate text-sm font-semibold\">{app?.user.name}</div><div className=\"text-xs text-white/40\">Athlete</div></div>\n          <button aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"text-white/40 hover:text-white\"><LogOut size={18} /></button>\n        </div>\n      </aside>\n      <main className=\"lg:pl-64\"><div className=\"mx-auto max-w-6xl px-4 pb-32 pt-6 lg:px-10 lg:pb-12\">{children}</div></main>\n      <nav className=\"fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0c0d09]/90 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden\">\n        <div className=\"mx-auto grid max-w-md grid-cols-4\">\n          {NAV.map((n) => {\n            const on = active === n.to;\n            const center = n.to === \"/log\";\n            return (\n              <motion.button key={n.to} whileTap={{ scale: 0.9 }} onClick={() => app?.navigate(n.to)} className=\"flex flex-col items-center gap-1 py-1\">\n                <span className={center ? \"-mt-6 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-black shadow-[0_10px_30px_-6px_rgba(198,244,50,0.6)]\" : \"grid h-8 place-items-center\"}>\n                  <n.I size={center ? 22 : 20} strokeWidth={center ? 2.8 : 2} className={center ? \"\" : on ? \"text-primary\" : \"text-white/45\"} />\n                </span>\n                <span className={on ? \"text-[10px] font-semibold text-primary\" : \"text-[10px] text-white/45\"}>{n.label}</span>\n              </motion.button>\n            );\n          })}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nfunction Ring({ pct, size = 230, stroke = 16, children }: { pct: number; size?: number; stroke?: number; children: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  const r = (size - stroke) / 2;\n  const c = 2 * Math.PI * r;\n  return (\n    <div className=\"relative\" style={{ width: size, height: size }}>\n      <motion.div className=\"absolute inset-4 rounded-full bg-primary/10 blur-2xl\" animate={reduce ? undefined : { opacity: [0.4, 1, 0.4] }} transition={{ duration: 3.2, repeat: Infinity }} />\n      <svg width={size} height={size} className=\"-rotate-90\">\n        <circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke=\"rgba(255,255,255,0.07)\" strokeWidth={stroke} />\n        <motion.circle cx={size / 2} cy={size / 2} r={r} fill=\"none\" stroke=\"hsl(var(--primary))\" strokeWidth={stroke} strokeLinecap=\"round\" strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - Math.min(1, Math.max(0.02, pct))) }} transition={{ duration: reduce ? 0 : 1.4, ease: [0.22, 1, 0.36, 1] }} style={{ filter: \"drop-shadow(0 0 10px hsl(var(--primary) / 0.7))\" }} />\n      </svg>\n      <div className=\"absolute inset-0 grid place-items-center\">{children}</div>\n    </div>\n  );\n}\n\nexport default function AthleteHome({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [today] = useState(() => new Date().toISOString().slice(0, 10));\n  const [hour] = useState(() => new Date().getHours());\n  const [metric, setMetric] = useState<\"minutes\" | \"volume\" | \"distance\">(\"minutes\");\n  const [tip, setTip] = useState(\"\");\n  const [tipBusy, setTipBusy] = useState(false);\n  const [tipAi, setTipAi] = useState(false);\n  const [picked, setPicked] = useState<number | null>(null);\n\n  const me = app?.me(\"athlete\");\n  const loading = app ? app.loading(\"workout\") : false;\n  const all = app ? app.rows(\"workout\") : [];\n  const plans = app ? app.rows(\"plan_day\") : [];\n  const checkins = app ? app.rows(\"checkin\") : [];\n  const feedback = app ? app.rows(\"feedback\") : [];\n  const digests = app ? app.rows(\"digest\") : [];\n  const athletes = app ? app.rows(\"athlete\") : [];\n  const coaches = app ? app.rows(\"coach\") : [];\n  const mine = athletes.find((a) => String(a.id) === me) || athletes[0];\n  const coach = coaches.find((c) => mine && String(c.id) === String(mine.coach_id));\n\n  const workouts = useMemo(() => all.filter((w) => !me || String(w.athlete_id) === me), [all, me]);\n  const days = useMemo(() => new Set(workouts.map((w) => ds(w.day))), [workouts]);\n  const streak = calcStreak(days, today);\n  const best = useMemo(() => {\n    const sorted = Array.from(days).sort();\n    let b = 0;\n    let run = 0;\n    let prev = \"\";\n    for (const d of sorted) {\n      run = prev && addDays(prev, 1) === d ? run + 1 : 1;\n      if (run > b) b = run;\n      prev = d;\n    }\n    return b;\n  }, [days]);\n  const weekStart = addDays(today, -dow(today));\n  const week = useMemo(() => {\n    return DAYS.map((_, i) => {\n      const d = addDays(weekStart, i);\n      const ws = workouts.filter((w) => ds(w.day) === d);\n      return { d, minutes: ws.reduce((s, w) => s + num(w.duration_min), 0), volume: ws.reduce((s, w) => s + num(w.volume), 0), distance: ws.reduce((s, w) => s + num(w.distance_km), 0), n: ws.length };\n    });\n  }, [workouts, weekStart]);\n  const sessions = week.reduce((s, d) => s + d.n, 0);\n  const target = num(mine?.weekly_target) || 5;\n  const wkWorkouts = workouts.filter((w) => ds(w.day) >= weekStart && ds(w.day) <= today);\n  const avgEffort = wkWorkouts.length ? wkWorkouts.reduce((s, w) => s + num(w.effort), 0) / wkWorkouts.length : 0;\n  const totMin = week.reduce((s, d) => s + d.minutes, 0);\n  const totVol = week.reduce((s, d) => s + d.volume, 0);\n\n  const todayPlan = plans.find((p) => ds(p.day) === today && (!me || String(p.athlete_id) === me));\n  const doneToday = workouts.some((w) => ds(w.day) === today);\n  const checkedIn = checkins.some((c) => ds(c.day) === today && (!me || String(c.athlete_id) === me));\n  const lastCheckin = [...checkins].sort((a, b) => ds(b.day).localeCompare(ds(a.day)))[0];\n\n  const prs = useMemo(() => {\n    const lifts = new Map<string, { w: number; r: number; day: string }>();\n    let longest = { km: 0, day: \"\" };\n    let pace = { p: 99, day: \"\", km: 0 };\n    for (const w of workouts) {\n      for (const e of parseEx(w.exercises)) {\n        const wt = num(e.w);\n        if (e.n && wt > 0) {\n          const cur = lifts.get(e.n);\n          if (!cur || wt > cur.w || (wt === cur.w && ds(w.day) > cur.day)) lifts.set(e.n, { w: wt, r: num(e.r), day: ds(w.day) });\n        }\n      }\n      if (String(w.kind) === \"run\") {\n        const km = num(w.distance_km);\n        if (km > longest.km) longest = { km, day: ds(w.day) };\n        if (km >= 3) {\n          const p = num(w.duration_min) / km;\n          if (p < pace.p) pace = { p, day: ds(w.day), km };\n        }\n      }\n    }\n    const fresh = addDays(today, -7);\n    const out: { name: string; value: string; day: string; isNew: boolean; run: boolean }[] = [];\n    Array.from(lifts.entries()).sort((a, b) => b[1].w - a[1].w).slice(0, 4).forEach(([n, v]) => out.push({ name: n, value: v.w + \" kg\" + (v.r ? \" × \" + v.r : \"\"), day: v.day, isNew: v.day > fresh, run: false }));\n    if (longest.km) out.push({ name: \"Longest run\", value: longest.km + \" km\", day: longest.day, isNew: longest.day > fresh, run: true });\n    if (pace.p < 99) {\n      const m = Math.floor(pace.p);\n      const s = Math.round((pace.p - m) * 60);\n      out.push({ name: \"Best pace\", value: m + \":\" + String(s).padStart(2, \"0\") + \" /km\", day: pace.day, isNew: pace.day > fresh, run: true });\n    }\n    return out;\n  }, [workouts, today]);\n\n  const recent = useMemo(() => workouts.filter((w) => ds(w.day) >= addDays(today, -6)).sort((a, b) => ds(b.day).localeCompare(ds(a.day))), [workouts, today]);\n  const fbList = useMemo(() => [...feedback].sort((a, b) => String(b.created_at ?? \"\").localeCompare(String(a.created_at ?? \"\"))).slice(0, 2), [feedback]);\n  const lastDigest = [...digests].sort((a, b) => ds(b.week_start).localeCompare(ds(a.week_start)))[0];\n\n  function fallbackTip(): string {\n    if (!recent.length) return \"No sessions logged this week yet — even a 20-minute easy session keeps the streak and the habit alive.\";\n    const hard = recent.filter((w) => num(w.effort) >= 8).length;\n    const sore = lastCheckin ? num(lastCheckin.soreness) : 0;\n    if (sore >= 4) return \"Soreness is high on your last check-in — swap the next hard session for 30 minutes of mobility and sleep an extra hour.\";\n    if (hard >= 3) return \"You've logged \" + hard + \" sessions at effort 8+ this week. Make the next one an easy 5 — the gains land during recovery.\";\n    const top = recent[0];\n    return \"Nice work on \" + String(top.title) + \". Keep your next session at effort \" + Math.max(5, Math.min(8, num(top.effort))) + \" and aim to match, not beat, last week's numbers.\";\n  }\n\n  async function getTip() {\n    if (!app) return;\n    setTipBusy(true);\n    const lines = recent.map((w) => ds(w.day) + \": \" + String(w.title) + \" (\" + String(w.kind) + \"), effort \" + num(w.effort) + \"/10, \" + num(w.duration_min) + \" min\" + (num(w.volume) ? \", \" + num(w.volume) + \" kg volume\" : \"\") + (num(w.distance_km) ? \", \" + num(w.distance_km) + \" km\" : \"\") + (w.notes ? \", note: \" + String(w.notes) : \"\"));\n    const ck = checkins.filter((c) => ds(c.day) >= addDays(today, -6)).map((c) => ds(c.day) + \": sleep \" + num(c.sleep_hours) + \" h, mood \" + num(c.mood) + \"/5, soreness \" + num(c.soreness) + \"/5\");\n    try {\n      const a = await app.ai.ask(\"Athlete logs from the last 7 days:\\n\" + lines.join(\"\\n\") + \"\\nCheck-ins:\\n\" + ck.join(\"\\n\") + \"\\nGoal: \" + String(mine?.goal ?? \"get fitter\") + \"\\nGive ONE specific coaching tip for the next session.\", { system: \"You are a sharp, warm strength and endurance coach. Reply with exactly one tip in at most two short sentences. Cite a concrete number or exercise from the logs. No preamble, no lists, no emoji.\", maxTokens: 120 });\n      const t = a.trim();\n      if (t) {\n        setTip(t);\n        setTipAi(true);\n      } else throw new Error(\"empty\");\n    } catch (e) {\n      setTip(fallbackTip());\n      setTipAi(false);\n    }\n    setTipBusy(false);\n  }\n\n  const ready = !loading && workouts.length > 0;\n  useEffect(() => {\n    if (ready && !tip && !tipBusy) void getTip();\n    // eslint-disable-next-line\n  }, [ready]);\n\n  const maxV = Math.max(1, ...week.map((d) => (metric === \"minutes\" ? d.minutes : metric === \"volume\" ? d.volume : d.distance)));\n  const unit = metric === \"minutes\" ? \"min\" : metric === \"volume\" ? \"kg\" : \"km\";\n  const greet = hour < 12 ? \"Good morning\" : hour < 18 ? \"Good afternoon\" : \"Good evening\";\n  const first = (app?.user.name || \"Athlete\").split(\" \")[0];\n  const fadeUp = (i: number) => ({ initial: reduce ? false : { opacity: 0, y: 22 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.06 * i, type: \"spring\" as const, stiffness: 120, damping: 18 } });\n\n  return (\n    <Shell app={app} active=\"/\">\n      <motion.header {...fadeUp(0)} className=\"mb-6 flex items-center justify-between\">\n        <div>\n          <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-white/40\">{new Date(today + \"T00:00:00Z\").toLocaleDateString(undefined, { weekday: \"long\", month: \"short\", day: \"numeric\", timeZone: \"UTC\" })}</div>\n          <h1 className=\"text-4xl font-extrabold uppercase leading-[0.95] sm:text-5xl lg:text-6xl\" style={{ fontFamily: FONT }}>{greet}, <span className=\"text-primary\">{first}</span></h1>\n        </div>\n        <div className=\"grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-primary/20 text-lg font-bold text-primary ring-2 ring-primary/40 lg:hidden\">\n          {mine?.photo ? <img alt=\"\" src={String(mine.photo)} className=\"h-full w-full object-cover\" /> : first.slice(0, 1)}\n        </div>\n      </motion.header>\n\n      <div className=\"grid gap-5 lg:grid-cols-12\">\n        <motion.section {...fadeUp(1)} className={CARD + \" relative overflow-hidden p-6 lg:col-span-5\"}>\n          <div className=\"pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl\" />\n          <div className=\"flex items-center justify-between\">\n            <span className=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/50\"><Flame size={16} className=\"text-primary\" /> Streak</span>\n            <span className=\"rounded-full bg-white/[0.06] px-3 py-1 text-xs text-white/60\">Best {Math.max(best, streak)} days</span>\n          </div>\n          <div className=\"mt-4 flex justify-center\">\n            {loading ? <div className=\"h-[230px] w-[230px] animate-pulse rounded-full bg-white/5\" /> : (\n              <Ring pct={sessions / target}>\n                <div className=\"text-center\">\n                  <div className=\"text-8xl font-extrabold leading-none text-white\" style={{ fontFamily: FONT }}><Counter value={streak} /></div>\n                  <div className=\"mt-1 text-sm font-bold uppercase tracking-[0.25em] text-primary\">day streak</div>\n                  <div className=\"mt-1 text-xs text-white/45\">{sessions}/{target} sessions this week</div>\n                </div>\n              </Ring>\n            )}\n          </div>\n          <div className=\"mt-5 grid grid-cols-7 gap-1.5\">\n            {week.map((d, i) => {\n              const isToday = d.d === today;\n              return (\n                <motion.div key={d.d} initial={reduce ? false : { scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5 + i * 0.05, type: \"spring\", stiffness: 260, damping: 16 }} className=\"flex flex-col items-center gap-1.5\">\n                  <span className={d.n ? \"grid h-9 w-9 place-items-center rounded-full bg-primary text-black\" : isToday ? \"grid h-9 w-9 place-items-center rounded-full border-2 border-dashed border-primary/70\" : \"grid h-9 w-9 place-items-center rounded-full bg-white/[0.06]\"}>{d.n ? <Check size={16} strokeWidth={3.5} /> : null}</span>\n                  <span className={isToday ? \"text-[11px] font-bold text-primary\" : \"text-[11px] text-white/40\"}>{DAYS[i]}</span>\n                </motion.div>\n              );\n            })}\n          </div>\n        </motion.section>\n\n        <motion.section {...fadeUp(2)} className={CARD + \" relative min-h-[320px] overflow-hidden lg:col-span-7\"}>\n          {todayPlan?.image ? <img alt=\"\" src={String(todayPlan.image)} className=\"absolute inset-0 h-full w-full object-cover opacity-55\" /> : null}\n          <div className=\"absolute inset-0 bg-gradient-to-t from-[#0a0b08] via-[#0a0b08]/70 to-transparent\" />\n          <div className=\"relative flex h-full min-h-[320px] flex-col justify-end p-6\">\n            <span className=\"mb-3 w-fit rounded-full bg-primary px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.2em] text-black\">{doneToday ? \"Done today\" : \"Today's workout\"}</span>\n            {todayPlan ? (\n              <>\n                <h2 className=\"text-5xl font-extrabold uppercase leading-[0.95] lg:text-6xl\" style={{ fontFamily: FONT }}>{String(todayPlan.title)}</h2>\n                <p className=\"mt-2 max-w-lg text-sm text-white/70\">{String(todayPlan.details ?? \"\")}</p>\n                <div className=\"mt-5 flex flex-wrap items-center gap-3\">\n                  <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.03 }} onClick={() => app?.navigate(\"/log\")} className=\"flex h-12 items-center gap-2 rounded-2xl bg-primary px-6 text-base font-extrabold uppercase tracking-wide text-black shadow-[0_12px_36px_-8px_rgba(198,244,50,0.6)]\" style={{ fontFamily: FONT }}>\n                    {doneToday ? \"Log another\" : \"Start & log\"} <ArrowRight size={18} strokeWidth={3} />\n                  </motion.button>\n                  <span className=\"text-sm text-white/60\">{num(todayPlan.duration_min)} min · {String(todayPlan.kind)}</span>\n                </div>\n              </>\n            ) : (\n              <>\n                <h2 className=\"text-5xl font-extrabold uppercase leading-[0.95]\" style={{ fontFamily: FONT }}>Open day</h2>\n                <p className=\"mt-2 text-sm text-white/65\">{coach ? String(coach.name) + \" hasn't planned today — train freely or recover.\" : \"No plan for today — train freely or recover.\"}</p>\n                <motion.button whileTap={{ scale: 0.95 }} onClick={() => app?.navigate(\"/log\")} className=\"mt-5 flex h-12 w-fit items-center gap-2 rounded-2xl bg-primary px-6 font-extrabold uppercase text-black\" style={{ fontFamily: FONT }}>Log a session <ArrowRight size={18} strokeWidth={3} /></motion.button>\n              </>\n            )}\n          </div>\n        </motion.section>\n\n        <motion.section {...fadeUp(3)} className=\"grid grid-cols-2 gap-3 lg:col-span-12 lg:grid-cols-4\">\n          {[{ l: \"Sessions\", v: sessions, d: 0, u: \"\" }, { l: \"Minutes\", v: totMin, d: 0, u: \"min\" }, { l: \"Volume\", v: totVol, d: 0, u: \"kg\" }, { l: \"Avg effort\", v: avgEffort, d: 1, u: \"/10\" }].map((s, i) => (\n            <motion.div key={s.l} whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} className={CARD + \" p-4\"}>\n              <div className=\"text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45\">{s.l} · this week</div>\n              <div className=\"mt-1 flex items-baseline gap-1\"><span className=\"text-4xl font-extrabold leading-none sm:text-5xl\" style={{ fontFamily: FONT }}><Counter value={s.v} decimals={s.d} /></span><span className=\"text-sm text-white/45\">{s.u}</span></div>\n            </motion.div>\n          ))}\n        </motion.section>\n\n        <motion.section {...fadeUp(4)} className={CARD + \" p-6 lg:col-span-7\"}>\n          <div className=\"mb-5 flex flex-wrap items-center justify-between gap-3\">\n            <h3 className=\"text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Weekly volume</h3>\n            <div className=\"flex rounded-full bg-white/[0.06] p-1\">\n              {([[\"minutes\", \"Minutes\"], [\"volume\", \"Kg\"], [\"distance\", \"Km\"]] as const).map(([k, l]) => (\n                <button key={k} onClick={() => setMetric(k)} className=\"relative rounded-full px-3 py-1 text-xs font-semibold\">\n                  {metric === k && <motion.span layoutId=\"metric-pill\" className=\"absolute inset-0 rounded-full bg-primary\" />}\n                  <span className={metric === k ? \"relative text-black\" : \"relative text-white/60\"}>{l}</span>\n                </button>\n              ))}\n            </div>\n          </div>\n          <div className=\"flex h-56 items-end gap-2 sm:gap-4\">\n            {week.map((d, i) => {\n              const v = metric === \"minutes\" ? d.minutes : metric === \"volume\" ? d.volume : d.distance;\n              const h = Math.max(v ? 6 : 2, (v / maxV) * 100);\n              const sel = picked === i;\n              return (\n                <button key={d.d} onClick={() => setPicked(sel ? null : i)} className=\"flex h-full flex-1 flex-col items-center justify-end gap-2\">\n                  <span className={\"text-[11px] font-semibold \" + (sel || d.d === today ? \"text-primary\" : \"text-white/45\")}>{v ? Math.round(v * 10) / 10 : \"\"}</span>\n                  <motion.div initial={reduce ? false : { height: 0 }} animate={{ height: h + \"%\" }} transition={{ delay: reduce ? 0 : 0.1 + i * 0.06, type: \"spring\", stiffness: 110, damping: 16 }} className={\"w-full rounded-t-xl \" + (d.d === today || sel ? \"bg-primary shadow-[0_0_24px_-2px_hsl(var(--primary)/0.6)]\" : v ? \"bg-primary/45\" : \"bg-white/[0.07]\")} />\n                  <span className={d.d === today ? \"text-xs font-bold text-primary\" : \"text-xs text-white/40\"}>{DAYS[i]}</span>\n                </button>\n              );\n            })}\n          </div>\n          <div className=\"mt-3 text-xs text-white/40\">{picked !== null ? week[picked].n + \" session\" + (week[picked].n === 1 ? \"\" : \"s\") + \" · \" + week[picked].minutes + \" min · \" + week[picked].volume.toLocaleString() + \" kg · \" + week[picked].distance + \" km\" : \"Tap a bar for the day's details · unit: \" + unit}</div>\n        </motion.section>\n\n        <motion.section {...fadeUp(5)} className={CARD + \" p-6 lg:col-span-5\"}>\n          <div className=\"mb-4 flex items-center gap-2\"><Trophy size={18} className=\"text-primary\" /><h3 className=\"text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Personal records</h3></div>\n          {prs.length === 0 ? <p className=\"py-6 text-center text-sm text-white/45\">Log a lift or a run — your first PRs land here.</p> : (\n            <ul className=\"space-y-2\">\n              {prs.map((p, i) => (\n                <motion.li key={p.name} initial={reduce ? false : { opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.07 }} className=\"flex items-center justify-between rounded-2xl bg-white/[0.04] px-4 py-3\">\n                  <div className=\"min-w-0\"><div className=\"text-sm font-semibold\">{p.name}</div><div className=\"text-[11px] text-white/40\">{p.day}</div></div>\n                  <div className=\"flex items-center gap-2\">\n                    {p.isNew ? <span className=\"rounded-full bg-primary px-2 py-0.5 text-[10px] font-extrabold uppercase text-black\">New</span> : null}\n                    <span className=\"whitespace-nowrap text-xl font-extrabold\" style={{ fontFamily: FONT }}>{p.value}</span>\n                  </div>\n                </motion.li>\n              ))}\n            </ul>\n          )}\n        </motion.section>\n\n        <motion.section {...fadeUp(6)} className={CARD + \" relative overflow-hidden p-6 lg:col-span-7\"}>\n          <div className=\"pointer-events-none absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-primary/15 blur-3xl\" />\n          <div className=\"mb-3 flex items-center justify-between\">\n            <span className=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary\"><Sparkles size={16} /> Coach's tip{tipAi ? \" · AI\" : \"\"}</span>\n            <motion.button whileTap={{ scale: 0.9, rotate: 90 }} aria-label=\"New tip\" onClick={() => void getTip()} disabled={tipBusy} className=\"grid h-8 w-8 place-items-center rounded-full bg-white/[0.06] text-white/60\"><RefreshCw size={14} className={tipBusy ? \"animate-spin\" : \"\"} /></motion.button>\n          </div>\n          <AnimatePresence mode=\"wait\">\n            <motion.p key={tipBusy ? \"busy\" : tip} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className=\"text-xl font-semibold leading-snug lg:text-2xl\">\n              {tipBusy ? \"Reading your last 7 days…\" : tip || (recent.length ? \"Tap refresh for a tip based on your last 7 days.\" : fallbackTip())}\n            </motion.p>\n          </AnimatePresence>\n        </motion.section>\n\n        <motion.section {...fadeUp(7)} className={CARD + \" p-6 lg:col-span-5\"}>\n          <div className=\"mb-4 flex items-center gap-2\"><MessageSquare size={18} className=\"text-primary\" /><h3 className=\"text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>From {coach ? String(coach.name).split(\" \")[0] : \"your coach\"}</h3></div>\n          {fbList.length === 0 ? <p className=\"py-4 text-center text-sm text-white/45\">No feedback yet. Log a session and your coach will weigh in.</p> : (\n            <div className=\"space-y-3\">\n              {fbList.map((f) => (\n                <div key={String(f.id)} className=\"rounded-2xl bg-white/[0.04] p-4\">\n                  <div className=\"mb-1 flex items-center justify-between text-[11px] uppercase tracking-widest text-white/40\"><span>{String(f.workout_title ?? \"Workout\")}</span><span className={String(f.tone) === \"praise\" ? \"text-primary\" : \"text-amber-300\"}>{String(f.tone)}</span></div>\n                  <p className=\"text-sm leading-relaxed text-white/85\">{String(f.message)}</p>\n                </div>\n              ))}\n            </div>\n          )}\n        </motion.section>\n\n        <motion.button {...fadeUp(8)} whileTap={{ scale: 0.98 }} onClick={() => app?.navigate(\"/checkin\")} className={CARD + \" flex items-center justify-between p-5 text-left lg:col-span-6\"}>\n          <div className=\"flex items-center gap-4\">\n            <span className=\"grid h-12 w-12 place-items-center rounded-2xl bg-primary/15 text-primary\"><Moon size={22} /></span>\n            <div><div className=\"text-xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>{checkedIn ? \"Checked in today\" : \"Daily check-in\"}</div><div className=\"text-sm text-white/50\">{checkedIn ? \"Nice — your coach can see how you feel.\" : lastCheckin ? \"Last: \" + num(lastCheckin.sleep_hours) + \" h sleep · soreness \" + num(lastCheckin.soreness) + \"/5\" : \"Sleep, mood, soreness — 20 seconds.\"}</div></div>\n          </div>\n          {checkedIn ? <Check className=\"text-primary\" /> : <ArrowRight className=\"text-primary\" />}\n        </motion.button>\n\n        <motion.section {...fadeUp(9)} className={CARD + \" p-5 lg:col-span-6\"}>\n          <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-white/45\">Weekly digest{lastDigest ? \" · week of \" + ds(lastDigest.week_start) : \"\"}</div>\n          <p className=\"mt-2 text-sm leading-relaxed text-white/80\">{lastDigest ? String(lastDigest.summary) : \"Your summary arrives every Monday at 07:00.\"}</p>\n        </motion.section>\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "StrideLogin",
+      "kind": "code",
+      "purpose": "Type-led sign-in: giant MOVE. headline, streak ring, compact form, Google",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, useReducedMotion } from \"motion/react\";\nimport { ArrowRight, Zap } from \"lucide-react\";\n\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst IN = \"h-12 w-full rounded-xl border border-white/10 bg-white/[0.05] px-4 text-base text-white outline-none transition placeholder:text-white/30 focus:border-primary focus:bg-white/[0.07]\";\nconst LETTERS = [\"M\", \"O\", \"V\", \"E\", \".\"];\n\nfunction GoogleMark() {\n  return (\n    <svg width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" aria-hidden=\"true\">\n      <path fill=\"#EA4335\" d=\"M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z\" />\n      <path fill=\"#4285F4\" d=\"M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z\" />\n      <path fill=\"#FBBC05\" d=\"M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z\" />\n      <path fill=\"#34A853\" d=\"M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z\" />\n    </svg>\n  );\n}\n\nexport default function StrideLogin({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const auth = app?.auth;\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n  const [name, setName] = useState(\"\");\n  const [err, setErr] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const signup = auth?.mode === \"signup\";\n  const providers = auth?.providers ?? [];\n\n  async function go() {\n    if (!auth) return;\n    setErr(\"\");\n    setBusy(true);\n    try {\n      if (signup) await auth.signUp({ email, password, name });\n      else await auth.signIn(email, password);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Something went wrong\");\n    }\n    setBusy(false);\n  }\n\n  async function provider(p: string) {\n    if (!auth) return;\n    setErr(\"\");\n    try {\n      await auth.startProvider(p);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Couldn't start that sign-in\");\n    }\n  }\n\n  const R = 46;\n  const C = 2 * Math.PI * R;\n\n  return (\n    <div className=\"relative flex min-h-screen w-full flex-col items-center overflow-hidden bg-[#070805] px-5 pb-10 pt-8 text-white\">\n      <div className=\"pointer-events-none absolute left-1/2 top-[18%] h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-3xl\" />\n\n      <div className=\"relative z-10 flex w-full max-w-md items-center justify-between\">\n        <div className=\"flex items-center gap-2\">\n          <div className=\"grid h-8 w-8 place-items-center rounded-lg bg-primary text-black\"><Zap size={18} strokeWidth={2.8} /></div>\n          <span className=\"text-2xl font-extrabold uppercase tracking-tight\" style={{ fontFamily: FONT }}>Stride</span>\n        </div>\n      </div>\n\n      <div className=\"relative mt-6 flex w-full flex-col items-center sm:mt-8\">\n        <svg className=\"pointer-events-none absolute left-1/2 top-1/2 h-[120vw] max-h-[560px] w-[120vw] max-w-[560px] -translate-x-1/2 -translate-y-1/2\" viewBox=\"0 0 100 100\" aria-hidden=\"true\">\n          <circle cx=\"50\" cy=\"50\" r={R} fill=\"none\" stroke=\"rgba(255,255,255,0.05)\" strokeWidth=\"0.8\" />\n          <motion.circle\n            cx=\"50\" cy=\"50\" r={R} fill=\"none\" stroke=\"hsl(var(--primary))\" strokeWidth=\"1.6\" strokeLinecap=\"round\"\n            strokeDasharray={C} transform=\"rotate(-90 50 50)\"\n            initial={{ strokeDashoffset: reduce ? C * 0.25 : C }}\n            animate={{ strokeDashoffset: C * 0.25 }}\n            transition={{ duration: reduce ? 0 : 1.8, ease: [0.22, 1, 0.36, 1] }}\n            style={{ filter: \"drop-shadow(0 0 3px hsl(var(--primary) / 0.8))\" }}\n          />\n          <motion.g\n            animate={reduce ? undefined : { rotate: 360 }}\n            transition={{ duration: 9, repeat: Infinity, ease: \"linear\" }}\n            style={{ transformOrigin: \"50px 50px\" }}\n          >\n            <circle cx=\"50\" cy=\"4\" r=\"1.7\" fill=\"hsl(var(--primary))\" style={{ filter: \"drop-shadow(0 0 2px hsl(var(--primary)))\" }} />\n          </motion.g>\n        </svg>\n\n        <h1 aria-label=\"Move\" className=\"relative flex select-none items-end justify-center font-extrabold uppercase leading-[0.82] text-primary\" style={{ fontFamily: FONT, fontSize: \"clamp(6rem, 29vw, 13rem)\", textShadow: \"0 0 60px hsl(var(--primary) / 0.35)\" }}>\n          {LETTERS.map((l, i) => (\n            <motion.span\n              key={i}\n              aria-hidden=\"true\"\n              initial={reduce ? false : { y: \"60%\", opacity: 0, skewX: -12 }}\n              animate={{ y: 0, opacity: 1, skewX: 0 }}\n              transition={{ delay: reduce ? 0 : 0.15 + i * 0.09, type: \"spring\", stiffness: 160, damping: 16 }}\n              className=\"inline-block\"\n            >\n              {l}\n            </motion.span>\n          ))}\n        </h1>\n        <motion.p initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: reduce ? 0 : 0.8 }} className=\"relative mt-2 text-center text-sm text-white/55\">\n          {signup ? \"Create your athlete account and start the streak.\" : \"Your plan. Your streak. Your coach.\"}\n        </motion.p>\n      </div>\n\n      <motion.div\n        initial={reduce ? false : { opacity: 0, y: 24 }}\n        animate={{ opacity: 1, y: 0 }}\n        transition={{ delay: reduce ? 0 : 0.7, type: \"spring\", stiffness: 110, damping: 18 }}\n        className=\"relative z-10 mt-7 w-full max-w-sm rounded-3xl border border-white/[0.08] bg-[#0e100a]/80 p-5 backdrop-blur-xl\"\n      >\n        <div className=\"space-y-3\">\n          {signup ? (\n            <div>\n              <label htmlFor=\"stride-name\" className=\"mb-1 block text-[11px] font-semibold uppercase tracking-widest text-white/50\">Name</label>\n              <input id=\"stride-name\" aria-label=\"Name\" autoComplete=\"name\" value={name} onChange={(e) => setName(e.target.value)} className={IN} />\n            </div>\n          ) : null}\n          <div>\n            <label htmlFor=\"stride-email\" className=\"mb-1 block text-[11px] font-semibold uppercase tracking-widest text-white/50\">Email</label>\n            <input id=\"stride-email\" aria-label=\"Email\" type=\"email\" autoComplete=\"email\" value={email} onChange={(e) => setEmail(e.target.value)} className={IN} />\n          </div>\n          <div>\n            <label htmlFor=\"stride-password\" className=\"mb-1 block text-[11px] font-semibold uppercase tracking-widest text-white/50\">Password</label>\n            <input id=\"stride-password\" aria-label=\"Password\" type=\"password\" autoComplete={signup ? \"new-password\" : \"current-password\"} value={password} onChange={(e) => setPassword(e.target.value)} className={IN} />\n          </div>\n        </div>\n        {err ? <p role=\"alert\" className=\"mt-3 text-sm text-red-400\">{err}</p> : null}\n        <motion.button whileTap={{ scale: 0.97 }} onClick={() => void go()} disabled={busy} className=\"mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-xl font-extrabold uppercase tracking-wide text-black shadow-[0_12px_40px_-8px_rgba(198,244,50,0.55)] disabled:opacity-60\" style={{ fontFamily: FONT }}>\n          {signup ? \"Create account\" : \"Sign in\"} <ArrowRight size={20} strokeWidth={3} />\n        </motion.button>\n\n        {providers.length > 0 ? (\n          <>\n            <div className=\"my-4 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white/35\">\n              <span className=\"h-px flex-1 bg-white/10\" />or<span className=\"h-px flex-1 bg-white/10\" />\n            </div>\n            <div className=\"space-y-2\">\n              {providers.map((p) => (\n                <motion.button key={p.name} whileTap={{ scale: 0.97 }} onClick={() => void provider(p.name)} className=\"flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white text-sm font-semibold text-neutral-900\">\n                  {p.name === \"google\" ? <GoogleMark /> : null}\n                  Continue with {p.label}\n                </motion.button>\n              ))}\n            </div>\n          </>\n        ) : null}\n\n        {auth?.canSignUp ? (\n          <button onClick={() => auth.setMode(signup ? \"login\" : \"signup\")} className=\"mt-4 w-full text-center text-sm text-white/55 hover:text-white\">\n            {signup ? \"Have an account? Log in\" : \"New here? Create an account\"}\n          </button>\n        ) : null}\n      </motion.div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "CheckIn",
+      "kind": "code",
+      "purpose": "Daily check-in: sleep, mood, soreness with 7-day trend",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { Home, Dumbbell, HeartPulse, BarChart3, LogOut, Zap, Plus, Check } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst CARD = \"rounded-3xl border border-white/[0.07] bg-[#13150e] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_24px_48px_-24px_rgba(0,0,0,0.9)]\";\nconst NAV = [\n  { to: \"/\", label: \"Home\", I: Home },\n  { to: \"/log\", label: \"Log\", I: Dumbbell },\n  { to: \"/checkin\", label: \"Check-in\", I: HeartPulse },\n  { to: \"/activity\", label: \"Activity\", I: BarChart3 },\n];\nconst ds = (v: unknown): string => String(v ?? \"\").slice(0, 10);\nconst num = (v: unknown): number => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst addDays = (s: string, n: number): string => {\n  const d = new Date(s + \"T00:00:00Z\");\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\nconst MOODS = [\"😞\", \"😕\", \"😐\", \"🙂\", \"🔥\"];\nconst MOOD_L = [\"Rough\", \"Meh\", \"Okay\", \"Good\", \"Fired up\"];\nconst SORE_L = [\"Fresh\", \"Light\", \"Moderate\", \"Sore\", \"Wrecked\"];\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  return (\n    <div className=\"min-h-screen bg-[#0a0b08] text-white antialiased\">\n      <aside className=\"fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/[0.06] bg-[#0c0d09] p-5 lg:flex\">\n        <div className=\"mb-8 flex items-center gap-2\">\n          <div className=\"grid h-9 w-9 place-items-center rounded-xl bg-primary text-black\"><Zap size={20} strokeWidth={2.8} /></div>\n          <span className=\"text-3xl font-extrabold uppercase tracking-tight\" style={{ fontFamily: FONT }}>Stride</span>\n        </div>\n        <nav className=\"space-y-1\">\n          {NAV.map((n) => (\n            <button key={n.to} onClick={() => app?.navigate(n.to)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold\">\n              {active === n.to && <motion.span layoutId=\"side-pill\" className=\"absolute inset-0 rounded-2xl bg-primary/15 ring-1 ring-primary/40\" />}\n              <n.I size={18} className={active === n.to ? \"relative text-primary\" : \"relative text-white/50\"} />\n              <span className={active === n.to ? \"relative text-white\" : \"relative text-white/60\"}>{n.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className=\"mt-auto flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3\">\n          <div className=\"grid h-10 w-10 place-items-center rounded-full bg-primary/20 font-bold text-primary\">{(app?.user.name || \"A\").slice(0, 1)}</div>\n          <div className=\"min-w-0 flex-1\"><div className=\"truncate text-sm font-semibold\">{app?.user.name}</div><div className=\"text-xs text-white/40\">Athlete</div></div>\n          <button aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"text-white/40 hover:text-white\"><LogOut size={18} /></button>\n        </div>\n      </aside>\n      <main className=\"lg:pl-64\"><div className=\"mx-auto max-w-4xl px-4 pb-32 pt-6 lg:px-10 lg:pb-12\">{children}</div></main>\n      <nav className=\"fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0c0d09]/90 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden\">\n        <div className=\"mx-auto grid max-w-md grid-cols-4\">\n          {NAV.map((n) => {\n            const on = active === n.to;\n            const center = n.to === \"/log\";\n            return (\n              <motion.button key={n.to} whileTap={{ scale: 0.9 }} onClick={() => app?.navigate(n.to)} className=\"flex flex-col items-center gap-1 py-1\">\n                <span className={center ? \"-mt-6 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-black shadow-[0_10px_30px_-6px_rgba(198,244,50,0.6)]\" : \"grid h-8 place-items-center\"}>\n                  <n.I size={center ? 22 : 20} strokeWidth={center ? 2.8 : 2} className={center ? \"\" : on ? \"text-primary\" : \"text-white/45\"} />\n                </span>\n                <span className={on ? \"text-[10px] font-semibold text-primary\" : \"text-[10px] text-white/45\"}>{n.label}</span>\n              </motion.button>\n            );\n          })}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nexport default function CheckIn({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [today] = useState(() => new Date().toISOString().slice(0, 10));\n  const me = app?.me(\"athlete\");\n  const athletes = app ? app.rows(\"athlete\") : [];\n  const mine = athletes.find((a) => String(a.id) === me) || athletes[0];\n  const rows = app ? app.rows(\"checkin\") : [];\n  const existing = rows.find((c) => ds(c.day) === today);\n  const [sleep, setSleep] = useState(7.5);\n  const [mood, setMood] = useState(4);\n  const [sore, setSore] = useState(2);\n  const [note, setNote] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const [saved, setSaved] = useState(false);\n  const [justNow, setJustNow] = useState<Row | null>(null);\n\n  const shown = existing || justNow;\n  const hist = Array.from({ length: 7 }, (_, i) => {\n    const d = addDays(today, i - 6);\n    const r = rows.find((c) => ds(c.day) === d) || (d === today && justNow ? justNow : undefined);\n    return { d, r };\n  });\n\n  async function save() {\n    if (!app) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      const vals = { athlete_id: me, coach_id: mine?.coach_id ?? null, athlete_name: app.user.name, day: today, sleep_hours: sleep, mood, soreness: sore, note };\n      await app.create(\"checkin\", vals);\n      setJustNow(vals);\n      setSaved(true);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Couldn't save your check-in.\");\n    }\n    setBusy(false);\n  }\n\n  const lbl = \"mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45\";\n  return (\n    <Shell app={app} active=\"/checkin\">\n      <motion.div initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>\n        <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-white/40\">20 seconds · your coach sees it</div>\n        <h1 className=\"text-5xl font-extrabold uppercase leading-[0.95] lg:text-6xl\" style={{ fontFamily: FONT }}>Daily <span className=\"text-primary\">check-in</span></h1>\n      </motion.div>\n\n      <div className=\"mt-6 grid gap-5 lg:grid-cols-5\">\n        <div className=\"lg:col-span-3\">\n          <AnimatePresence mode=\"wait\">\n            {shown ? (\n              <motion.section key=\"done\" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} className={CARD + \" relative overflow-hidden p-8 text-center\"}>\n                <div className=\"pointer-events-none absolute left-1/2 top-0 h-48 w-48 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl\" />\n                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: \"spring\", stiffness: 240, damping: 12 }} className=\"relative mx-auto grid h-20 w-20 place-items-center rounded-full bg-primary text-black\"><Check size={40} strokeWidth={3.5} /></motion.div>\n                <h2 className=\"relative mt-5 text-4xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>{saved ? \"Check-in saved\" : \"Already checked in today\"}</h2>\n                <p className=\"relative mt-1 text-sm text-white/55\">One check-in per day — come back tomorrow.</p>\n                <div className=\"relative mt-6 grid grid-cols-3 gap-2\">\n                  <div className=\"rounded-2xl bg-white/[0.06] p-3\"><div className=\"text-3xl font-extrabold\" style={{ fontFamily: FONT }}>{num(shown.sleep_hours)}h</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">sleep</div></div>\n                  <div className=\"rounded-2xl bg-white/[0.06] p-3\"><div className=\"text-3xl\">{MOODS[Math.max(0, Math.min(4, num(shown.mood) - 1))]}</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">mood</div></div>\n                  <div className=\"rounded-2xl bg-white/[0.06] p-3\"><div className=\"text-3xl font-extrabold\" style={{ fontFamily: FONT }}>{num(shown.soreness)}/5</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">soreness</div></div>\n                </div>\n              </motion.section>\n            ) : (\n              <motion.section key=\"form\" exit={{ opacity: 0, y: -20 }} className={CARD + \" space-y-8 p-6\"}>\n                <div>\n                  <div className={lbl}>Sleep last night</div>\n                  <div className=\"flex items-center justify-between gap-4\">\n                    <motion.button whileTap={{ scale: 0.85 }} aria-label=\"Less sleep\" onClick={() => setSleep((s) => Math.max(0, Math.round((s - 0.5) * 10) / 10))} className=\"grid h-14 w-14 place-items-center rounded-2xl bg-white/[0.07] text-3xl font-bold\">−</motion.button>\n                    <div className=\"text-center\"><motion.span key={sleep} initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className=\"inline-block text-8xl font-extrabold leading-none text-primary\" style={{ fontFamily: FONT }}>{sleep}</motion.span><span className=\"ml-1 text-xl text-white/50\">h</span></div>\n                    <motion.button whileTap={{ scale: 0.85 }} aria-label=\"More sleep\" onClick={() => setSleep((s) => Math.min(14, Math.round((s + 0.5) * 10) / 10))} className=\"grid h-14 w-14 place-items-center rounded-2xl bg-primary text-black\"><Plus /></motion.button>\n                  </div>\n                </div>\n                <div>\n                  <div className={lbl}>Mood · {MOOD_L[mood - 1]}</div>\n                  <div className=\"grid grid-cols-5 gap-2\">\n                    {MOODS.map((m, i) => (\n                      <motion.button key={m} whileTap={{ scale: 0.88 }} animate={{ scale: mood === i + 1 ? 1.08 : 1 }} onClick={() => setMood(i + 1)} className={\"grid h-16 place-items-center rounded-2xl text-3xl \" + (mood === i + 1 ? \"bg-primary/20 ring-2 ring-primary\" : \"bg-white/[0.05]\")}>{m}</motion.button>\n                    ))}\n                  </div>\n                </div>\n                <div>\n                  <div className={lbl}>Soreness · {SORE_L[sore - 1]}</div>\n                  <div className=\"grid grid-cols-5 gap-2\">\n                    {[1, 2, 3, 4, 5].map((n) => (\n                      <motion.button key={n} whileTap={{ scale: 0.88 }} onClick={() => setSore(n)} animate={{ height: 36 + n * 10 }} className={\"self-end rounded-xl text-sm font-bold \" + (n <= sore ? (sore >= 4 ? \"bg-orange-500 text-black\" : \"bg-primary text-black\") : \"bg-white/[0.07] text-white/40\")}>{n}</motion.button>\n                    ))}\n                  </div>\n                </div>\n                <label className=\"block\"><span className={lbl + \" block\"}>Anything your coach should know?</span><textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} className=\"w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-white outline-none focus:border-primary\" placeholder=\"Optional\" /></label>\n                <AnimatePresence>{err ? <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300\">{err}</motion.p> : null}</AnimatePresence>\n                <motion.button whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }} disabled={busy} onClick={() => void save()} className=\"flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xl font-extrabold uppercase text-black shadow-[0_14px_40px_-8px_rgba(198,244,50,0.55)] disabled:opacity-60\" style={{ fontFamily: FONT }}>{busy ? \"Saving…\" : \"Save check-in\"}</motion.button>\n              </motion.section>\n            )}\n          </AnimatePresence>\n        </div>\n\n        <motion.section initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={CARD + \" p-6 lg:col-span-2\"}>\n          <h3 className=\"mb-4 text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Last 7 days</h3>\n          <div className={lbl.replace(\"mb-3\", \"mb-2\")}>Sleep (h)</div>\n          <div className=\"flex h-24 items-end gap-2\">\n            {hist.map((h, i) => (\n              <div key={h.d} className=\"flex h-full flex-1 flex-col items-center justify-end gap-1\">\n                <motion.div initial={reduce ? false : { height: 0 }} animate={{ height: h.r ? Math.max(8, (num(h.r.sleep_hours) / 10) * 100) + \"%\" : \"4%\" }} transition={{ delay: i * 0.05, type: \"spring\", stiffness: 120, damping: 15 }} className={\"w-full rounded-t-lg \" + (h.r ? (num(h.r.sleep_hours) < 6 ? \"bg-orange-500\" : \"bg-primary\") : \"bg-white/[0.07]\")} />\n                <span className=\"text-[10px] text-white/40\">{h.d.slice(8)}</span>\n              </div>\n            ))}\n          </div>\n          <div className={lbl.replace(\"mb-3\", \"mb-2 mt-6\")}>Mood</div>\n          <div className=\"flex justify-between\">{hist.map((h) => <span key={h.d} className=\"w-full text-center text-xl\">{h.r ? MOODS[Math.max(0, Math.min(4, num(h.r.mood) - 1))] : <span className=\"text-white/20\">·</span>}</span>)}</div>\n          <div className={lbl.replace(\"mb-3\", \"mb-2 mt-6\")}>Soreness</div>\n          <div className=\"flex gap-2\">{hist.map((h) => <div key={h.d} className=\"flex-1\"><div className={\"h-8 rounded-lg \" + (h.r ? (num(h.r.soreness) >= 4 ? \"bg-orange-500\" : num(h.r.soreness) === 3 ? \"bg-amber-300\" : \"bg-primary/70\") : \"bg-white/[0.07]\")} style={{ opacity: h.r ? 0.4 + num(h.r.soreness) * 0.12 : 1 }} /></div>)}</div>\n        </motion.section>\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "LogWorkout",
+      "kind": "code",
+      "purpose": "Full-screen workout logger with effort picker and celebratory completion animation",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useMemo, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { Home, Dumbbell, HeartPulse, BarChart3, LogOut, Zap, Plus, X, Check, Flame, ArrowRight, Timer } from \"lucide-react\";\n\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst CARD = \"rounded-3xl border border-white/[0.07] bg-[#13150e] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_24px_48px_-24px_rgba(0,0,0,0.9)]\";\nconst INPUT = \"h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-white outline-none transition focus:border-primary\";\nconst NAV = [\n  { to: \"/\", label: \"Home\", I: Home },\n  { to: \"/log\", label: \"Log\", I: Dumbbell },\n  { to: \"/checkin\", label: \"Check-in\", I: HeartPulse },\n  { to: \"/activity\", label: \"Activity\", I: BarChart3 },\n];\nconst KINDS = [\"strength\", \"run\", \"conditioning\", \"mobility\", \"ride\", \"other\"] as const;\ntype Kind = (typeof KINDS)[number];\nconst PRESETS = [\"Back squat\", \"Bench press\", \"Deadlift\", \"Overhead press\", \"Pull-up\", \"Barbell row\"];\n\nconst ds = (v: unknown): string => String(v ?? \"\").slice(0, 10);\nconst num = (v: unknown): number => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst addDays = (s: string, n: number): string => {\n  const d = new Date(s + \"T00:00:00Z\");\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  return (\n    <div className=\"min-h-screen bg-[#0a0b08] text-white antialiased\">\n      <aside className=\"fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/[0.06] bg-[#0c0d09] p-5 lg:flex\">\n        <div className=\"mb-8 flex items-center gap-2\">\n          <div className=\"grid h-9 w-9 place-items-center rounded-xl bg-primary text-black\"><Zap size={20} strokeWidth={2.8} /></div>\n          <span className=\"text-3xl font-extrabold uppercase tracking-tight\" style={{ fontFamily: FONT }}>Stride</span>\n        </div>\n        <nav className=\"space-y-1\">\n          {NAV.map((n) => (\n            <button key={n.to} onClick={() => app?.navigate(n.to)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold\">\n              {active === n.to && <motion.span layoutId=\"side-pill\" className=\"absolute inset-0 rounded-2xl bg-primary/15 ring-1 ring-primary/40\" />}\n              <n.I size={18} className={active === n.to ? \"relative text-primary\" : \"relative text-white/50\"} />\n              <span className={active === n.to ? \"relative text-white\" : \"relative text-white/60\"}>{n.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className=\"mt-auto flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3\">\n          <div className=\"grid h-10 w-10 place-items-center rounded-full bg-primary/20 font-bold text-primary\">{(app?.user.name || \"A\").slice(0, 1)}</div>\n          <div className=\"min-w-0 flex-1\"><div className=\"truncate text-sm font-semibold\">{app?.user.name}</div><div className=\"text-xs text-white/40\">Athlete</div></div>\n          <button aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"text-white/40 hover:text-white\"><LogOut size={18} /></button>\n        </div>\n      </aside>\n      <main className=\"lg:pl-64\"><div className=\"mx-auto max-w-4xl px-4 pb-32 pt-6 lg:px-10 lg:pb-12\">{children}</div></main>\n      <nav className=\"fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0c0d09]/90 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden\">\n        <div className=\"mx-auto grid max-w-md grid-cols-4\">\n          {NAV.map((n) => {\n            const on = active === n.to;\n            const center = n.to === \"/log\";\n            return (\n              <motion.button key={n.to} whileTap={{ scale: 0.9 }} onClick={() => app?.navigate(n.to)} className=\"flex flex-col items-center gap-1 py-1\">\n                <span className={center ? \"-mt-6 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-black shadow-[0_10px_30px_-6px_rgba(198,244,50,0.6)]\" : \"grid h-8 place-items-center\"}>\n                  <n.I size={center ? 22 : 20} strokeWidth={center ? 2.8 : 2} className={center ? \"\" : on ? \"text-primary\" : \"text-white/45\"} />\n                </span>\n                <span className={on ? \"text-[10px] font-semibold text-primary\" : \"text-[10px] text-white/45\"}>{n.label}</span>\n              </motion.button>\n            );\n          })}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\ntype Ex = { id: number; name: string; sets: string; reps: string; weight: string; km: string; min: string };\n\nfunction Celebrate({ onDone, onHome, streak, volume, minutes, title }: { onDone: () => void; onHome: () => void; streak: number; volume: number; minutes: number; title: string }) {\n  const reduce = useReducedMotion();\n  const dots = useMemo(() => Array.from({ length: 28 }, (_, i) => ({ a: (i / 28) * Math.PI * 2, d: 120 + (i % 4) * 38, s: 6 + (i % 3) * 4, c: i % 3 })), []);\n  return (\n    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"fixed inset-0 z-50 grid place-items-center bg-[#080906]/95 px-6 backdrop-blur-md\">\n      <div className=\"relative flex w-full max-w-sm flex-col items-center text-center\">\n        <div className=\"relative grid h-44 w-44 place-items-center\">\n          {!reduce && dots.map((p, i) => (\n            <motion.span key={i} initial={{ x: 0, y: 0, opacity: 1, scale: 0 }} animate={{ x: Math.cos(p.a) * p.d, y: Math.sin(p.a) * p.d, opacity: 0, scale: 1 }} transition={{ duration: 1.1, delay: 0.25, ease: \"easeOut\" }} className={\"absolute rounded-full \" + (p.c === 0 ? \"bg-primary\" : p.c === 1 ? \"bg-white\" : \"bg-amber-300\")} style={{ width: p.s, height: p.s }} />\n          ))}\n          <motion.span initial={{ scale: 0.4, opacity: 0.8 }} animate={{ scale: 2.4, opacity: 0 }} transition={{ duration: 1, delay: 0.2 }} className=\"absolute h-44 w-44 rounded-full border-4 border-primary\" />\n          <motion.div initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: \"spring\", stiffness: 220, damping: 12 }} className=\"grid h-36 w-36 place-items-center rounded-full bg-primary text-black shadow-[0_0_80px_hsl(var(--primary)/0.6)]\">\n            <motion.svg width=\"68\" height=\"68\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"3.4\" strokeLinecap=\"round\" strokeLinejoin=\"round\"><motion.path d=\"M4 12.5l5 5L20 6.5\" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.3, duration: 0.5 }} /></motion.svg>\n          </motion.div>\n        </div>\n        <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className=\"mt-6 text-6xl font-extrabold uppercase leading-none\" style={{ fontFamily: FONT }}>Session <span className=\"text-primary\">done</span></motion.h2>\n        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className=\"mt-2 text-white/60\">{title} is in the books. Your coach has been notified.</motion.p>\n        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }} className=\"mt-6 grid w-full grid-cols-3 gap-2\">\n          <div className=\"rounded-2xl bg-white/[0.06] p-3\"><div className=\"flex items-center justify-center gap-1 text-3xl font-extrabold text-primary\" style={{ fontFamily: FONT }}><Flame size={20} />{streak}</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">day streak</div></div>\n          <div className=\"rounded-2xl bg-white/[0.06] p-3\"><div className=\"text-3xl font-extrabold\" style={{ fontFamily: FONT }}>{minutes}</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">minutes</div></div>\n          <div className=\"rounded-2xl bg-white/[0.06] p-3\"><div className=\"text-3xl font-extrabold\" style={{ fontFamily: FONT }}>{volume.toLocaleString()}</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">kg lifted</div></div>\n        </motion.div>\n        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }} className=\"mt-6 flex w-full gap-3\">\n          <motion.button whileTap={{ scale: 0.96 }} onClick={onDone} className=\"h-12 flex-1 rounded-2xl border border-white/15 text-sm font-semibold\">Log another</motion.button>\n          <motion.button whileTap={{ scale: 0.96 }} onClick={onHome} className=\"flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary font-extrabold uppercase text-black\" style={{ fontFamily: FONT }}>Home <ArrowRight size={16} strokeWidth={3} /></motion.button>\n        </motion.div>\n      </div>\n    </motion.div>\n  );\n}\n\nexport default function LogWorkout({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [today] = useState(() => new Date().toISOString().slice(0, 10));\n  const me = app?.me(\"athlete\");\n  const athletes = app ? app.rows(\"athlete\") : [];\n  const mine = athletes.find((a) => String(a.id) === me) || athletes[0];\n  const plans = app ? app.rows(\"plan_day\") : [];\n  const workouts = app ? app.rows(\"workout\") : [];\n  const plan = plans.find((p) => ds(p.day) === today);\n\n  const [title, setTitle] = useState(\"\");\n  const [kind, setKind] = useState<Kind>(\"strength\");\n  const [day, setDay] = useState(today);\n  const [minutes, setMinutes] = useState(\"45\");\n  const [effort, setEffort] = useState(7);\n  const [notes, setNotes] = useState(\"\");\n  const [exs, setExs] = useState<Ex[]>([]);\n  const [nid, setNid] = useState(1);\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const [done, setDone] = useState<{ streak: number; volume: number; minutes: number; title: string } | null>(null);\n  const [prefilled, setPrefilled] = useState(false);\n\n  if (plan && !prefilled && !title) {\n    setPrefilled(true);\n    setTitle(String(plan.title));\n    const k = String(plan.kind) as Kind;\n    if ((KINDS as readonly string[]).includes(k)) setKind(k);\n    if (plan.duration_min) setMinutes(String(num(plan.duration_min)));\n  }\n\n  const cardio = kind === \"run\" || kind === \"ride\";\n  function addEx(name: string) {\n    setExs((x) => [...x, { id: nid, name, sets: \"3\", reps: \"8\", weight: \"\", km: \"\", min: \"\" }]);\n    setNid((n) => n + 1);\n  }\n  function patchEx(id: number, p: Partial<Ex>) {\n    setExs((x) => x.map((e) => (e.id === id ? { ...e, ...p } : e)));\n  }\n  const volume = exs.reduce((s, e) => s + num(e.sets) * num(e.reps) * num(e.weight), 0);\n  const distance = exs.reduce((s, e) => s + num(e.km), 0);\n\n  async function save() {\n    if (!app) return;\n    setErr(\"\");\n    if (!title.trim()) {\n      setErr(\"Give the session a name.\");\n      return;\n    }\n    if (day > today) {\n      setErr(\"A workout can't be logged with a date in the future.\");\n      return;\n    }\n    setBusy(true);\n    try {\n      const exercises = exs.filter((e) => e.name.trim()).map((e) => (e.km || e.min ? { n: e.name, km: num(e.km), min: num(e.min) } : { n: e.name, s: num(e.sets), r: num(e.reps), w: num(e.weight) }));\n      await app.create(\"workout\", {\n        athlete_id: me,\n        coach_id: mine?.coach_id ?? null,\n        athlete_name: app.user.name,\n        day,\n        title: title.trim(),\n        kind,\n        effort,\n        duration_min: num(minutes),\n        volume,\n        distance_km: distance,\n        exercises: JSON.stringify(exercises),\n        notes,\n      });\n      const set = new Set(workouts.map((w) => ds(w.day)));\n      set.add(day);\n      let cur = set.has(today) ? today : addDays(today, -1);\n      let n = 0;\n      while (set.has(cur)) {\n        n++;\n        cur = addDays(cur, -1);\n      }\n      setDone({ streak: n, volume, minutes: num(minutes), title: title.trim() });\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Couldn't save that workout.\");\n    }\n    setBusy(false);\n  }\n\n  function reset() {\n    setDone(null);\n    setTitle(\"\");\n    setExs([]);\n    setNotes(\"\");\n    setEffort(7);\n    setPrefilled(true);\n  }\n\n  const effortColor = (n: number) => (n <= 3 ? \"bg-sky-400/80\" : n <= 6 ? \"bg-primary\" : n <= 8 ? \"bg-amber-400\" : \"bg-orange-500\");\n  const effortLabel = effort <= 3 ? \"Easy\" : effort <= 6 ? \"Moderate\" : effort <= 8 ? \"Hard\" : \"All out\";\n\n  return (\n    <Shell app={app} active=\"/log\">\n      <motion.div initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>\n        <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-white/40\">{plan ? \"Planned today · \" + String(plan.title) : \"Free session\"}</div>\n        <h1 className=\"text-5xl font-extrabold uppercase leading-[0.95] lg:text-6xl\" style={{ fontFamily: FONT }}>Log <span className=\"text-primary\">workout</span></h1>\n      </motion.div>\n\n      <div className=\"mt-6 grid gap-5 lg:grid-cols-5\">\n        <div className=\"space-y-5 lg:col-span-3\">\n          <motion.section initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className={CARD + \" space-y-4 p-5\"}>\n            <label className=\"block\"><span className=\"mb-1 block text-xs font-semibold uppercase tracking-widest text-white/45\">Session name</span><input className={INPUT} value={title} onChange={(e) => setTitle(e.target.value)} placeholder=\"e.g. Upper body power\" /></label>\n            <div className=\"flex flex-wrap gap-2\">\n              {KINDS.map((k) => (\n                <button key={k} onClick={() => setKind(k)} className=\"relative rounded-full px-4 py-2 text-sm font-semibold capitalize\">\n                  {kind === k && <motion.span layoutId=\"kind-pill\" className=\"absolute inset-0 rounded-full bg-primary\" />}\n                  <span className={kind === k ? \"relative text-black\" : \"relative text-white/65\"}>{k}</span>\n                </button>\n              ))}\n            </div>\n            <div className=\"grid grid-cols-2 gap-3\">\n              <label className=\"block\"><span className=\"mb-1 block text-xs font-semibold uppercase tracking-widest text-white/45\">Date</span><input type=\"date\" max={today} className={INPUT} value={day} onChange={(e) => setDay(e.target.value)} /></label>\n              <label className=\"block\"><span className=\"mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-white/45\"><Timer size={12} /> Minutes</span><input type=\"number\" inputMode=\"numeric\" className={INPUT} value={minutes} onChange={(e) => setMinutes(e.target.value)} /></label>\n            </div>\n          </motion.section>\n\n          <motion.section initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={CARD + \" p-5\"}>\n            <div className=\"mb-3 flex items-center justify-between\">\n              <h3 className=\"text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Exercises</h3>\n              <span className=\"text-xs text-white/45\">{volume ? volume.toLocaleString() + \" kg\" : \"\"}{volume && distance ? \" · \" : \"\"}{distance ? distance + \" km\" : \"\"}</span>\n            </div>\n            <div className=\"space-y-3\">\n              <AnimatePresence initial={false}>\n                {exs.map((e) => (\n                  <motion.div key={e.id} layout initial={{ opacity: 0, height: 0, scale: 0.96 }} animate={{ opacity: 1, height: \"auto\", scale: 1 }} exit={{ opacity: 0, height: 0, scale: 0.9 }} className=\"overflow-hidden rounded-2xl bg-white/[0.04] p-3\">\n                    <div className=\"flex items-center gap-2\">\n                      <input className={INPUT + \" h-10 flex-1\"} value={e.name} onChange={(ev) => patchEx(e.id, { name: ev.target.value })} placeholder=\"Exercise\" />\n                      <button aria-label=\"Remove\" onClick={() => setExs((x) => x.filter((y) => y.id !== e.id))} className=\"grid h-10 w-10 place-items-center rounded-xl text-white/45 hover:bg-white/10\"><X size={16} /></button>\n                    </div>\n                    {cardio ? (\n                      <div className=\"mt-2 grid grid-cols-2 gap-2\">\n                        <input type=\"number\" inputMode=\"decimal\" className={INPUT + \" h-10\"} placeholder=\"Distance km\" value={e.km} onChange={(ev) => patchEx(e.id, { km: ev.target.value })} />\n                        <input type=\"number\" inputMode=\"numeric\" className={INPUT + \" h-10\"} placeholder=\"Minutes\" value={e.min} onChange={(ev) => patchEx(e.id, { min: ev.target.value })} />\n                      </div>\n                    ) : (\n                      <div className=\"mt-2 grid grid-cols-3 gap-2\">\n                        <label className=\"text-[10px] uppercase tracking-widest text-white/40\">Sets<input type=\"number\" inputMode=\"numeric\" className={INPUT + \" mt-1 h-10\"} value={e.sets} onChange={(ev) => patchEx(e.id, { sets: ev.target.value })} /></label>\n                        <label className=\"text-[10px] uppercase tracking-widest text-white/40\">Reps<input type=\"number\" inputMode=\"numeric\" className={INPUT + \" mt-1 h-10\"} value={e.reps} onChange={(ev) => patchEx(e.id, { reps: ev.target.value })} /></label>\n                        <label className=\"text-[10px] uppercase tracking-widest text-white/40\">Kg<input type=\"number\" inputMode=\"decimal\" className={INPUT + \" mt-1 h-10\"} value={e.weight} onChange={(ev) => patchEx(e.id, { weight: ev.target.value })} /></label>\n                      </div>\n                    )}\n                  </motion.div>\n                ))}\n              </AnimatePresence>\n            </div>\n            {exs.length === 0 ? <p className=\"py-3 text-sm text-white/45\">Add what you did — lifts feed your PRs and weekly volume.</p> : null}\n            <div className=\"mt-3 flex flex-wrap gap-2\">\n              {(cardio ? [\"Steady run\", \"Intervals\", \"Long ride\"] : PRESETS).map((p) => (\n                <motion.button key={p} whileTap={{ scale: 0.92 }} onClick={() => addEx(p)} className=\"flex items-center gap-1 rounded-full border border-white/12 px-3 py-1.5 text-xs text-white/75\"><Plus size={12} />{p}</motion.button>\n              ))}\n              <motion.button whileTap={{ scale: 0.92 }} onClick={() => addEx(\"\")} className=\"flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-semibold text-primary\"><Plus size={12} />Custom</motion.button>\n            </div>\n          </motion.section>\n        </div>\n\n        <div className=\"space-y-5 lg:col-span-2\">\n          <motion.section initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className={CARD + \" p-5\"}>\n            <div className=\"mb-3 flex items-end justify-between\">\n              <h3 className=\"text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Effort</h3>\n              <div className=\"text-right\"><motion.span key={effort} initial={{ scale: 1.4 }} animate={{ scale: 1 }} className=\"inline-block text-6xl font-extrabold leading-none text-primary\" style={{ fontFamily: FONT }}>{effort}</motion.span><span className=\"text-white/45\">/10</span><div className=\"text-xs uppercase tracking-widest text-white/50\">{effortLabel}</div></div>\n            </div>\n            <div className=\"grid grid-cols-10 gap-1\">\n              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (\n                <motion.button key={n} aria-label={\"Effort \" + n} whileTap={{ scale: 0.85 }} onClick={() => setEffort(n)} animate={{ height: 28 + n * 4 }} className={\"self-end rounded-lg \" + (n <= effort ? effortColor(effort) : \"bg-white/[0.07]\")} />\n              ))}\n            </div>\n          </motion.section>\n          <motion.section initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={CARD + \" p-5\"}>\n            <label className=\"block\"><span className=\"mb-1 block text-xs font-semibold uppercase tracking-widest text-white/45\">Notes for your coach</span>\n              <textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder=\"How did it feel?\" className=\"w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-white outline-none focus:border-primary\" /></label>\n          </motion.section>\n          <AnimatePresence>{err ? <motion.p initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300\">{err}</motion.p> : null}</AnimatePresence>\n          <motion.button whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }} disabled={busy} onClick={() => void save()} className=\"flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xl font-extrabold uppercase text-black shadow-[0_14px_40px_-8px_rgba(198,244,50,0.55)] disabled:opacity-60\" style={{ fontFamily: FONT }}><Check size={22} strokeWidth={3.4} />{busy ? \"Saving…\" : \"Finish workout\"}</motion.button>\n        </div>\n      </div>\n      <AnimatePresence>{done ? <Celebrate {...done} onDone={reset} onHome={() => app?.navigate(\"/\")} /> : null}</AnimatePresence>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "Activity",
+      "kind": "code",
+      "purpose": "Athlete history: consistency heatmap, workouts with coach feedback, weekly plan and digests",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useMemo, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { Home, Dumbbell, HeartPulse, BarChart3, LogOut, Zap, ChevronDown, MessageSquare } from \"lucide-react\";\n\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst CARD = \"rounded-3xl border border-white/[0.07] bg-[#13150e] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_24px_48px_-24px_rgba(0,0,0,0.9)]\";\nconst NAV = [\n  { to: \"/\", label: \"Home\", I: Home },\n  { to: \"/log\", label: \"Log\", I: Dumbbell },\n  { to: \"/checkin\", label: \"Check-in\", I: HeartPulse },\n  { to: \"/activity\", label: \"Activity\", I: BarChart3 },\n];\nconst ds = (v: unknown): string => String(v ?? \"\").slice(0, 10);\nconst num = (v: unknown): number => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst addDays = (s: string, n: number): string => {\n  const d = new Date(s + \"T00:00:00Z\");\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\nconst dow = (s: string): number => (new Date(s + \"T00:00:00Z\").getUTCDay() + 6) % 7;\nconst fmt = (s: string): string => new Date(s + \"T00:00:00Z\").toLocaleDateString(undefined, { weekday: \"short\", month: \"short\", day: \"numeric\", timeZone: \"UTC\" });\ntype Ex = { n?: string; s?: number; r?: number; w?: number; km?: number; min?: number };\nfunction parseEx(v: unknown): Ex[] {\n  try {\n    const j = JSON.parse(String(v ?? \"[]\"));\n    return Array.isArray(j) ? (j as Ex[]) : [];\n  } catch (e) {\n    return [];\n  }\n}\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  return (\n    <div className=\"min-h-screen bg-[#0a0b08] text-white antialiased\">\n      <aside className=\"fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/[0.06] bg-[#0c0d09] p-5 lg:flex\">\n        <div className=\"mb-8 flex items-center gap-2\">\n          <div className=\"grid h-9 w-9 place-items-center rounded-xl bg-primary text-black\"><Zap size={20} strokeWidth={2.8} /></div>\n          <span className=\"text-3xl font-extrabold uppercase tracking-tight\" style={{ fontFamily: FONT }}>Stride</span>\n        </div>\n        <nav className=\"space-y-1\">\n          {NAV.map((n) => (\n            <button key={n.to} onClick={() => app?.navigate(n.to)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold\">\n              {active === n.to && <motion.span layoutId=\"side-pill\" className=\"absolute inset-0 rounded-2xl bg-primary/15 ring-1 ring-primary/40\" />}\n              <n.I size={18} className={active === n.to ? \"relative text-primary\" : \"relative text-white/50\"} />\n              <span className={active === n.to ? \"relative text-white\" : \"relative text-white/60\"}>{n.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className=\"mt-auto flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3\">\n          <div className=\"grid h-10 w-10 place-items-center rounded-full bg-primary/20 font-bold text-primary\">{(app?.user.name || \"A\").slice(0, 1)}</div>\n          <div className=\"min-w-0 flex-1\"><div className=\"truncate text-sm font-semibold\">{app?.user.name}</div><div className=\"text-xs text-white/40\">Athlete</div></div>\n          <button aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"text-white/40 hover:text-white\"><LogOut size={18} /></button>\n        </div>\n      </aside>\n      <main className=\"lg:pl-64\"><div className=\"mx-auto max-w-4xl px-4 pb-32 pt-6 lg:px-10 lg:pb-12\">{children}</div></main>\n      <nav className=\"fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0c0d09]/90 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden\">\n        <div className=\"mx-auto grid max-w-md grid-cols-4\">\n          {NAV.map((n) => {\n            const on = active === n.to;\n            const center = n.to === \"/log\";\n            return (\n              <motion.button key={n.to} whileTap={{ scale: 0.9 }} onClick={() => app?.navigate(n.to)} className=\"flex flex-col items-center gap-1 py-1\">\n                <span className={center ? \"-mt-6 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-black shadow-[0_10px_30px_-6px_rgba(198,244,50,0.6)]\" : \"grid h-8 place-items-center\"}>\n                  <n.I size={center ? 22 : 20} strokeWidth={center ? 2.8 : 2} className={center ? \"\" : on ? \"text-primary\" : \"text-white/45\"} />\n                </span>\n                <span className={on ? \"text-[10px] font-semibold text-primary\" : \"text-[10px] text-white/45\"}>{n.label}</span>\n              </motion.button>\n            );\n          })}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nexport default function Activity({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [today] = useState(() => new Date().toISOString().slice(0, 10));\n  const [tab, setTab] = useState<\"workouts\" | \"plan\" | \"digests\">(\"workouts\");\n  const [open, setOpen] = useState<string | null>(null);\n  const me = app?.me(\"athlete\");\n  const loading = app ? app.loading(\"workout\") : false;\n  const workouts = useMemo(() => (app ? app.rows(\"workout\") : []).filter((w) => !me || String(w.athlete_id) === me).sort((a, b) => ds(b.day).localeCompare(ds(a.day))), [app, me]);\n  const feedback = app ? app.rows(\"feedback\") : [];\n  const plans = (app ? app.rows(\"plan_day\") : []).filter((p) => ds(p.day) >= addDays(today, -dow(today))).sort((a, b) => ds(a.day).localeCompare(ds(b.day)));\n  const digests = (app ? app.rows(\"digest\") : []).sort((a, b) => ds(b.week_start).localeCompare(ds(a.week_start)));\n\n  const cells = useMemo(() => {\n    const start = addDays(today, -dow(today) - 7 * 11);\n    const byDay = new Map<string, number>();\n    workouts.forEach((w) => byDay.set(ds(w.day), (byDay.get(ds(w.day)) || 0) + num(w.effort)));\n    return Array.from({ length: 12 * 7 }, (_, i) => {\n      const d = addDays(start, i);\n      return { d, v: byDay.get(d) || 0, future: d > today };\n    });\n  }, [workouts, today]);\n\n  const tabs: [typeof tab, string][] = [[\"workouts\", \"Workouts\"], [\"plan\", \"Plan\"], [\"digests\", \"Digests\"]];\n  return (\n    <Shell app={app} active=\"/activity\">\n      <motion.div initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>\n        <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-white/40\">{workouts.length} sessions logged</div>\n        <h1 className=\"text-5xl font-extrabold uppercase leading-[0.95] lg:text-6xl\" style={{ fontFamily: FONT }}>Your <span className=\"text-primary\">activity</span></h1>\n      </motion.div>\n\n      <motion.section initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className={CARD + \" mt-6 overflow-hidden p-5\"}>\n        <div className=\"mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45\">Consistency · last 12 weeks</div>\n        <div className=\"grid grid-flow-col grid-rows-7 gap-1\" style={{ gridTemplateColumns: \"repeat(12, minmax(0, 1fr))\" }}>\n          {cells.map((c, i) => (\n            <motion.div key={c.d} title={c.d} initial={reduce ? false : { opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: (i % 7) * 0.02 + Math.floor(i / 7) * 0.03 }} className={\"aspect-square rounded-md \" + (c.future ? \"bg-transparent\" : c.v === 0 ? \"bg-white/[0.06]\" : c.v <= 4 ? \"bg-primary/30\" : c.v <= 7 ? \"bg-primary/65\" : \"bg-primary\")} />\n          ))}\n        </div>\n      </motion.section>\n\n      <div className=\"mt-5 flex w-fit rounded-full bg-white/[0.06] p-1\">\n        {tabs.map(([k, l]) => (\n          <button key={k} onClick={() => setTab(k)} className=\"relative rounded-full px-5 py-2 text-sm font-semibold\">\n            {tab === k && <motion.span layoutId=\"act-pill\" className=\"absolute inset-0 rounded-full bg-primary\" />}\n            <span className={tab === k ? \"relative text-black\" : \"relative text-white/65\"}>{l}</span>\n          </button>\n        ))}\n      </div>\n\n      <div className=\"mt-5 space-y-3\">\n        {tab === \"workouts\" && loading ? <div className=\"h-24 animate-pulse rounded-3xl bg-white/5\" /> : null}\n        {tab === \"workouts\" && !loading && workouts.length === 0 ? (\n          <div className={CARD + \" p-10 text-center\"}><Dumbbell className=\"mx-auto text-primary\" /><div className=\"mt-3 text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Nothing logged yet</div><p className=\"mt-1 text-sm text-white/50\">Your first session starts the streak.</p><motion.button whileTap={{ scale: 0.95 }} onClick={() => app?.navigate(\"/log\")} className=\"mt-4 rounded-2xl bg-primary px-6 py-3 font-extrabold uppercase text-black\" style={{ fontFamily: FONT }}>Log a workout</motion.button></div>\n        ) : null}\n        {tab === \"workouts\" && workouts.map((w, i) => {\n          const id = String(w.id);\n          const fbs = feedback.filter((f) => String(f.workout_id) === id);\n          const isOpen = open === id;\n          const ex = parseEx(w.exercises);\n          return (\n            <motion.div key={id} layout initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 8) * 0.04 }} className={CARD + \" overflow-hidden\"}>\n              <button onClick={() => setOpen(isOpen ? null : id)} className=\"flex w-full items-center gap-4 p-4 text-left\">\n                <div className=\"grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary\"><span className=\"text-2xl font-extrabold leading-none\" style={{ fontFamily: FONT }}>{num(w.effort)}</span></div>\n                <div className=\"min-w-0 flex-1\">\n                  <div className=\"truncate text-lg font-bold\">{String(w.title)}</div>\n                  <div className=\"text-xs text-white/45\">{fmt(ds(w.day))} · {num(w.duration_min)} min · {String(w.kind)}{num(w.volume) ? \" · \" + num(w.volume).toLocaleString() + \" kg\" : \"\"}{num(w.distance_km) ? \" · \" + num(w.distance_km) + \" km\" : \"\"}</div>\n                </div>\n                {fbs.length ? <span className=\"flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-[10px] font-extrabold uppercase text-black\"><MessageSquare size={10} />{fbs.length}</span> : null}\n                <motion.span animate={{ rotate: isOpen ? 180 : 0 }}><ChevronDown size={18} className=\"text-white/40\" /></motion.span>\n              </button>\n              <AnimatePresence initial={false}>\n                {isOpen ? (\n                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: \"auto\", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className=\"overflow-hidden\">\n                    <div className=\"space-y-2 border-t border-white/[0.06] p-4\">\n                      {ex.map((e, k) => <div key={k} className=\"flex justify-between rounded-xl bg-white/[0.04] px-3 py-2 text-sm\"><span>{e.n}</span><span className=\"text-white/60\">{e.km ? e.km + \" km · \" + e.min + \" min\" : e.s + \" × \" + e.r + (e.w ? \" @ \" + e.w + \" kg\" : \"\")}</span></div>)}\n                      {w.notes ? <p className=\"text-sm italic text-white/60\">“{String(w.notes)}”</p> : null}\n                      {fbs.map((f) => <div key={String(f.id)} className=\"rounded-2xl border border-primary/30 bg-primary/10 p-3 text-sm\"><div className=\"mb-1 text-[10px] font-bold uppercase tracking-widest text-primary\">{String(f.coach_name ?? \"Coach\")} · {String(f.tone)}</div>{String(f.message)}</div>)}\n                    </div>\n                  </motion.div>\n                ) : null}\n              </AnimatePresence>\n            </motion.div>\n          );\n        })}\n\n        {tab === \"plan\" && plans.length === 0 ? <div className={CARD + \" p-10 text-center text-white/50\"}>No plan assigned yet — your coach will add one.</div> : null}\n        {tab === \"plan\" && plans.map((p, i) => (\n          <motion.div key={String(p.id)} initial={reduce ? false : { opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i, 10) * 0.04 }} className={CARD + \" flex items-center gap-4 overflow-hidden p-3\"}>\n            <div className=\"relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white/5\">{p.image ? <img alt=\"\" src={String(p.image)} className=\"h-full w-full object-cover\" /> : null}</div>\n            <div className=\"min-w-0 flex-1\"><div className={\"text-[11px] font-bold uppercase tracking-widest \" + (ds(p.day) === today ? \"text-primary\" : \"text-white/40\")}>{ds(p.day) === today ? \"Today\" : fmt(ds(p.day))}</div><div className=\"truncate text-lg font-bold\">{String(p.title)}</div><div className=\"truncate text-xs text-white/50\">{String(p.details ?? \"\")}</div></div>\n            <span className=\"text-sm text-white/50\">{num(p.duration_min)}m</span>\n          </motion.div>\n        ))}\n\n        {tab === \"digests\" && digests.length === 0 ? <div className={CARD + \" p-10 text-center text-white/50\"}>Your first weekly digest lands Monday at 07:00.</div> : null}\n        {tab === \"digests\" && digests.map((d, i) => (\n          <motion.div key={String(d.id)} initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={CARD + \" p-5\"}>\n            <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-primary\">Week of {ds(d.week_start)}</div>\n            <div className=\"mt-3 grid grid-cols-4 gap-2 text-center\">\n              {[[\"Sessions\", num(d.sessions)], [\"Minutes\", num(d.minutes)], [\"Effort\", num(d.avg_effort)], [\"Sleep h\", num(d.avg_sleep)]].map(([l, v]) => <div key={String(l)} className=\"rounded-2xl bg-white/[0.05] p-3\"><div className=\"text-3xl font-extrabold\" style={{ fontFamily: FONT }}>{v}</div><div className=\"text-[10px] uppercase tracking-widest text-white/45\">{l}</div></div>)}\n            </div>\n            <p className=\"mt-3 text-sm text-white/65\">{String(d.summary)}</p>\n          </motion.div>\n        ))}\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "CoachRoster",
+      "kind": "code",
+      "purpose": "Coach home: roster with streaks and last check-in, review queue with inline feedback",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useMemo, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion, animate } from \"motion/react\";\nimport { LogOut, Zap, Flame, Users, MessageSquare, AlertTriangle, ChevronRight, Send, Check, Clipboard } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst CARD = \"rounded-3xl border border-white/[0.07] bg-[#13150e] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_24px_48px_-24px_rgba(0,0,0,0.9)]\";\nconst ds = (v: unknown): string => String(v ?? \"\").slice(0, 10);\nconst num = (v: unknown): number => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst addDays = (s: string, n: number): string => {\n  const d = new Date(s + \"T00:00:00Z\");\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\nconst MOODS = [\"😞\", \"😕\", \"😐\", \"🙂\", \"🔥\"];\nfunction calcStreak(days: Set<string>, today: string): number {\n  let cur = days.has(today) ? today : addDays(today, -1);\n  let n = 0;\n  while (days.has(cur)) {\n    n++;\n    cur = addDays(cur, -1);\n  }\n  return n;\n}\nfunction ago(d: string, today: string): string {\n  const n = Math.round((new Date(today + \"T00:00:00Z\").getTime() - new Date(d + \"T00:00:00Z\").getTime()) / 86400000);\n  return n <= 0 ? \"today\" : n === 1 ? \"yesterday\" : n + \"d ago\";\n}\n\nfunction MiniRing({ pct, children }: { pct: number; children: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  const size = 64;\n  const r = 28;\n  const c = 2 * Math.PI * r;\n  return (\n    <div className=\"relative shrink-0\" style={{ width: size, height: size }}>\n      <svg width={size} height={size} className=\"-rotate-90\">\n        <circle cx={32} cy={32} r={r} fill=\"none\" stroke=\"rgba(255,255,255,0.08)\" strokeWidth={6} />\n        <motion.circle cx={32} cy={32} r={r} fill=\"none\" stroke=\"hsl(var(--primary))\" strokeWidth={6} strokeLinecap=\"round\" strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - Math.min(1, Math.max(0.03, pct))) }} transition={{ duration: reduce ? 0 : 1.1, ease: [0.22, 1, 0.36, 1] }} />\n      </svg>\n      <div className=\"absolute inset-0 grid place-items-center\">{children}</div>\n    </div>\n  );\n}\n\nfunction CountUp({ value }: { value: number }) {\n  const reduce = useReducedMotion();\n  const [v, setV] = useState(reduce ? value : 0);\n  React.useEffect(() => {\n    if (reduce) {\n      setV(value);\n      return;\n    }\n    const c = animate(0, value, { duration: 1, ease: \"easeOut\", onUpdate: (x) => setV(x) });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <>{Math.round(v)}</>;\n}\n\nexport default function CoachRoster({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [today] = useState(() => new Date().toISOString().slice(0, 10));\n  const [fbFor, setFbFor] = useState<string | null>(null);\n  const [msg, setMsg] = useState(\"\");\n  const [tone, setTone] = useState<\"praise\" | \"adjust\" | \"question\">(\"praise\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const [sent, setSent] = useState<string[]>([]);\n\n  const me = app?.me(\"coach\");\n  const loading = app ? app.loading(\"athlete\") : false;\n  const athletes = app ? app.rows(\"athlete\") : [];\n  const workouts = app ? app.rows(\"workout\") : [];\n  const checkins = app ? app.rows(\"checkin\") : [];\n  const feedback = app ? app.rows(\"feedback\") : [];\n  const coaches = app ? app.rows(\"coach\") : [];\n  const mine = coaches.find((c) => String(c.id) === me);\n\n  const roster = useMemo(() => {\n    return athletes.map((a) => {\n      const id = String(a.id);\n      const ws = workouts.filter((w) => String(w.athlete_id) === id);\n      const days = new Set(ws.map((w) => ds(w.day)));\n      const streak = calcStreak(days, today);\n      const cks = checkins.filter((c) => String(c.athlete_id) === id).sort((x, y) => ds(y.day).localeCompare(ds(x.day)));\n      const weekStart = addDays(today, -6);\n      const week = ws.filter((w) => ds(w.day) >= weekStart).length;\n      const last = [...ws].sort((x, y) => ds(y.day).localeCompare(ds(x.day)))[0];\n      return { a, id, streak, last, ck: cks[0], week, target: num(a.weekly_target) || 4 };\n    }).sort((x, y) => y.streak - x.streak);\n  }, [athletes, workouts, checkins, today]);\n\n  const flagged = roster.filter((r) => r.ck && (num(r.ck.soreness) >= 4 || num(r.ck.sleep_hours) < 6) && ds(r.ck.day) >= addDays(today, -2));\n  const queue = useMemo(() => workouts.filter((w) => !feedback.some((f) => String(f.workout_id) === String(w.id)) && !sent.includes(String(w.id))).sort((a, b) => ds(b.day).localeCompare(ds(a.day))).slice(0, 8), [workouts, feedback, sent]);\n  const avgStreak = roster.length ? roster.reduce((s, r) => s + r.streak, 0) / roster.length : 0;\n\n  async function send(w: Row) {\n    if (!app || !msg.trim()) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      await app.create(\"feedback\", { workout_id: String(w.id), athlete_id: String(w.athlete_id), coach_id: me ?? null, coach_name: mine ? String(mine.name) : app.user.name, workout_title: String(w.title), message: msg.trim(), tone });\n      setSent((s) => [...s, String(w.id)]);\n      setFbFor(null);\n      setMsg(\"\");\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Couldn't send feedback.\");\n    }\n    setBusy(false);\n  }\n\n  const first = (app?.user.name || \"Coach\").split(\" \")[0];\n  const fade = (i: number) => ({ initial: reduce ? false : { opacity: 0, y: 22 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.06 * i, type: \"spring\" as const, stiffness: 120, damping: 18 } });\n\n  return (\n    <div className=\"min-h-screen bg-[#0a0b08] text-white antialiased\">\n      <header className=\"sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.06] bg-[#0a0b08]/85 px-4 py-3 backdrop-blur-xl lg:px-10\">\n        <div className=\"flex items-center gap-2\">\n          <div className=\"grid h-9 w-9 place-items-center rounded-xl bg-primary text-black\"><Zap size={20} strokeWidth={2.8} /></div>\n          <span className=\"text-3xl font-extrabold uppercase tracking-tight\" style={{ fontFamily: FONT }}>Stride</span>\n          <span className=\"ml-2 rounded-full bg-white/[0.08] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white/60\">Coach</span>\n        </div>\n        <div className=\"flex items-center gap-3\">\n          <span className=\"hidden text-sm text-white/60 sm:block\">{app?.user.name}</span>\n          <button aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-white/60 hover:text-white\"><LogOut size={16} /></button>\n        </div>\n      </header>\n\n      <main className=\"mx-auto max-w-7xl px-4 pb-16 pt-6 lg:px-10\">\n        <motion.div {...fade(0)}>\n          <div className=\"text-xs font-semibold uppercase tracking-[0.2em] text-white/40\">{new Date(today + \"T00:00:00Z\").toLocaleDateString(undefined, { weekday: \"long\", month: \"short\", day: \"numeric\", timeZone: \"UTC\" })}</div>\n          <h1 className=\"text-4xl font-extrabold uppercase leading-[0.95] sm:text-5xl lg:text-6xl\" style={{ fontFamily: FONT }}>Your <span className=\"text-primary\">roster</span>, {first}</h1>\n        </motion.div>\n\n        <motion.div {...fade(1)} className=\"mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4\">\n          {[{ l: \"Athletes\", v: roster.length, I: Users }, { l: \"Avg streak\", v: avgStreak, I: Flame }, { l: \"Awaiting feedback\", v: queue.length, I: MessageSquare }, { l: \"Flagged check-ins\", v: flagged.length, I: AlertTriangle }].map((s) => (\n            <div key={s.l} className={CARD + \" p-4\"}>\n              <div className=\"flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.15em] text-white/45\">{s.l}<s.I size={15} className=\"text-primary\" /></div>\n              <div className=\"mt-1 text-5xl font-extrabold leading-none\" style={{ fontFamily: FONT }}><CountUp value={s.v} /></div>\n            </div>\n          ))}\n        </motion.div>\n\n        <div className=\"mt-6 grid gap-5 lg:grid-cols-12\">\n          <section className=\"lg:col-span-7\">\n            <h2 className=\"mb-3 text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Athletes</h2>\n            {loading ? <div className=\"space-y-3\">{[0, 1, 2].map((i) => <div key={i} className=\"h-24 animate-pulse rounded-3xl bg-white/5\" />)}</div> : null}\n            {!loading && roster.length === 0 ? <div className={CARD + \" p-10 text-center\"}><Users className=\"mx-auto text-primary\" /><div className=\"mt-3 text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>No athletes yet</div><p className=\"mt-1 text-sm text-white/50\">Athletes assigned to you appear here.</p></div> : null}\n            <div className=\"grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2\">\n              {roster.map((r, i) => {\n                const stale = !r.ck || ds(r.ck.day) < addDays(today, -2);\n                return (\n                  <motion.button key={r.id} {...fade(2 + Math.min(i, 8) * 0.5)} whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={() => app?.navigate(\"/coach/athlete/\" + r.id)} className={CARD + \" flex items-center gap-4 p-4 text-left\"}>\n                    <MiniRing pct={r.week / r.target}>\n                      <div className=\"h-11 w-11 overflow-hidden rounded-full bg-primary/20\">{r.a.photo ? <img alt=\"\" src={String(r.a.photo)} className=\"h-full w-full object-cover\" /> : null}</div>\n                    </MiniRing>\n                    <div className=\"min-w-0 flex-1\">\n                      <div className=\"truncate text-lg font-bold\">{String(r.a.name)}</div>\n                      <div className=\"flex items-center gap-2 text-xs text-white/50\">\n                        <span className={\"flex items-center gap-1 font-bold \" + (r.streak ? \"text-primary\" : \"text-white/40\")}><Flame size={13} />{r.streak}d</span>\n                        <span>·</span>\n                        <span>{r.week}/{r.target} this week</span>\n                      </div>\n                      <div className=\"mt-1 flex items-center gap-1.5 text-[11px] text-white/45\">\n                        {r.ck ? <><span>{MOODS[Math.max(0, Math.min(4, num(r.ck.mood) - 1))]}</span><span>{num(r.ck.sleep_hours)}h</span><span className={num(r.ck.soreness) >= 4 ? \"font-bold text-orange-400\" : \"\"}>sore {num(r.ck.soreness)}/5</span><span>· {ago(ds(r.ck.day), today)}</span></> : <span>No check-ins yet</span>}\n                        {stale ? <span className=\"ml-auto rounded-full bg-amber-400/15 px-1.5 text-[9px] font-bold uppercase text-amber-300\">quiet</span> : null}\n                      </div>\n                    </div>\n                    <ChevronRight size={18} className=\"text-white/30\" />\n                  </motion.button>\n                );\n              })}\n            </div>\n          </section>\n\n          <section className=\"lg:col-span-5\">\n            <h2 className=\"mb-3 text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Review queue</h2>\n            {queue.length === 0 ? <div className={CARD + \" p-8 text-center\"}><div className=\"mx-auto grid h-12 w-12 place-items-center rounded-full bg-primary text-black\"><Check strokeWidth={3} /></div><div className=\"mt-3 text-xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>All caught up</div><p className=\"text-sm text-white/50\">Every logged workout has your feedback.</p></div> : null}\n            <div className=\"space-y-3\">\n              <AnimatePresence initial={false}>\n                {queue.map((w, i) => {\n                  const id = String(w.id);\n                  const ath = athletes.find((a) => String(a.id) === String(w.athlete_id));\n                  const open = fbFor === id;\n                  return (\n                    <motion.div key={id} layout initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 60, height: 0 }} transition={{ delay: Math.min(i, 6) * 0.04 }} className={CARD + \" overflow-hidden\"}>\n                      <button onClick={() => { setFbFor(open ? null : id); setErr(\"\"); }} className=\"flex w-full items-center gap-3 p-4 text-left\">\n                        <div className=\"h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary/20\">{ath?.photo ? <img alt=\"\" src={String(ath.photo)} className=\"h-full w-full object-cover\" /> : null}</div>\n                        <div className=\"min-w-0 flex-1\"><div className=\"truncate font-bold\">{String(w.athlete_name ?? ath?.name ?? \"Athlete\")} · {String(w.title)}</div><div className=\"text-xs text-white/45\">{ago(ds(w.day), today)} · effort {num(w.effort)}/10 · {num(w.duration_min)} min</div></div>\n                        <span className=\"rounded-full bg-primary px-2.5 py-1 text-[10px] font-extrabold uppercase text-black\">Reply</span>\n                      </button>\n                      <AnimatePresence initial={false}>\n                        {open ? (\n                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: \"auto\", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className=\"overflow-hidden\">\n                            <div className=\"space-y-3 border-t border-white/[0.06] p-4\">\n                              {w.notes ? <p className=\"text-sm italic text-white/60\">“{String(w.notes)}”</p> : null}\n                              <div className=\"flex gap-2\">\n                                {([\"praise\", \"adjust\", \"question\"] as const).map((t) => <button key={t} onClick={() => setTone(t)} className={\"rounded-full px-3 py-1 text-xs font-semibold capitalize \" + (tone === t ? \"bg-primary text-black\" : \"bg-white/[0.07] text-white/65\")}>{t}</button>)}\n                              </div>\n                              <textarea rows={3} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder=\"Feedback the athlete will see…\" className=\"w-full rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-sm text-white outline-none focus:border-primary\" />\n                              {err ? <p className=\"text-sm text-red-300\">{err}</p> : null}\n                              <motion.button whileTap={{ scale: 0.96 }} disabled={busy || !msg.trim()} onClick={() => void send(w)} className=\"flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-extrabold uppercase text-black disabled:opacity-50\" style={{ fontFamily: FONT }}><Send size={16} />{busy ? \"Sending…\" : \"Send feedback\"}</motion.button>\n                            </div>\n                          </motion.div>\n                        ) : null}\n                      </AnimatePresence>\n                    </motion.div>\n                  );\n                })}\n              </AnimatePresence>\n            </div>\n            <div className={CARD + \" mt-5 flex items-center gap-3 p-4 text-sm text-white/55\"}><Clipboard size={18} className=\"text-primary\" /> Open an athlete to assign their weekly plan.</div>\n          </section>\n        </div>\n      </main>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "CoachAthlete",
+      "kind": "code",
+      "purpose": "Coach view of one athlete: stats, logs with feedback, weekly plan assignment",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useMemo, useState } from \"react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport { LogOut, Zap, Flame, ArrowLeft, Send, Check, Calendar, MessageSquare, Sparkles } from \"lucide-react\";\n\ntype Row = Record<string, unknown>;\nconst FONT = \"'Barlow Condensed','Oswald','Arial Narrow',Impact,sans-serif\";\nconst CARD = \"rounded-3xl border border-white/[0.07] bg-[#13150e] shadow-[0_1px_0_rgba(255,255,255,0.05)_inset,0_24px_48px_-24px_rgba(0,0,0,0.9)]\";\nconst INPUT = \"h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none transition focus:border-primary\";\nconst ds = (v: unknown): string => String(v ?? \"\").slice(0, 10);\nconst num = (v: unknown): number => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst addDays = (s: string, n: number): string => {\n  const d = new Date(s + \"T00:00:00Z\");\n  d.setUTCDate(d.getUTCDate() + n);\n  return d.toISOString().slice(0, 10);\n};\nconst dow = (s: string): number => (new Date(s + \"T00:00:00Z\").getUTCDay() + 6) % 7;\nconst fmt = (s: string): string => new Date(s + \"T00:00:00Z\").toLocaleDateString(undefined, { weekday: \"short\", month: \"short\", day: \"numeric\", timeZone: \"UTC\" });\nconst MOODS = [\"😞\", \"😕\", \"😐\", \"🙂\", \"🔥\"];\nconst KINDS = [\"strength\", \"run\", \"conditioning\", \"mobility\", \"ride\", \"rest\"];\nconst TEMPLATE = [\n  { title: \"Lower Body Strength\", kind: \"strength\", details: \"Squat 5x5 · RDL 3x8 · Lunges 3x10\", min: \"60\" },\n  { title: \"Easy Run\", kind: \"run\", details: \"6 km easy pace\", min: \"40\" },\n  { title: \"Upper Body Strength\", kind: \"strength\", details: \"Bench 5x5 · Rows 4x8 · OHP 3x8\", min: \"60\" },\n  { title: \"Mobility Flow\", kind: \"mobility\", details: \"Hips, thoracic, ankles\", min: \"30\" },\n  { title: \"Tempo Intervals\", kind: \"run\", details: \"4 x 1 km at tempo\", min: \"45\" },\n  { title: \"Long Session\", kind: \"conditioning\", details: \"Steady aerobic work\", min: \"75\" },\n  { title: \"Rest Day\", kind: \"rest\", details: \"Walk, sleep, eat well\", min: \"0\" },\n];\nfunction calcStreak(days: Set<string>, today: string): number {\n  let cur = days.has(today) ? today : addDays(today, -1);\n  let n = 0;\n  while (days.has(cur)) {\n    n++;\n    cur = addDays(cur, -1);\n  }\n  return n;\n}\n\nexport default function CoachAthlete({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [today] = useState(() => new Date().toISOString().slice(0, 10));\n  const id = app?.params.id || \"\";\n  const me = app?.me(\"coach\");\n  const athletes = app ? app.rows(\"athlete\") : [];\n  const a = athletes.find((x) => String(x.id) === id);\n  const coaches = app ? app.rows(\"coach\") : [];\n  const mine = coaches.find((c) => String(c.id) === me);\n  const workouts = useMemo(() => (app ? app.rows(\"workout\") : []).filter((w) => String(w.athlete_id) === id).sort((x, y) => ds(y.day).localeCompare(ds(x.day))), [app, id]);\n  const checkins = (app ? app.rows(\"checkin\") : []).filter((c) => String(c.athlete_id) === id).sort((x, y) => ds(y.day).localeCompare(ds(x.day)));\n  const feedback = (app ? app.rows(\"feedback\") : []).filter((f) => String(f.athlete_id) === id);\n  const plans = (app ? app.rows(\"plan_day\") : []).filter((p) => String(p.athlete_id) === id);\n  const allPlans = app ? app.rows(\"plan_day\") : [];\n\n  const [tab, setTab] = useState<\"logs\" | \"plan\" | \"checkins\">(\"logs\");\n  const [fbFor, setFbFor] = useState<string | null>(null);\n  const [msg, setMsg] = useState(\"\");\n  const [tone, setTone] = useState<\"praise\" | \"adjust\" | \"question\">(\"praise\");\n  const [busy, setBusy] = useState(false);\n  const [err, setErr] = useState(\"\");\n  const nextMon = addDays(today, 7 - dow(today));\n  const [weekStart, setWeekStart] = useState(nextMon);\n  const [draft, setDraft] = useState(TEMPLATE);\n  const [planBusy, setPlanBusy] = useState(false);\n  const [planMsg, setPlanMsg] = useState(\"\");\n\n  const days = useMemo(() => new Set(workouts.map((w) => ds(w.day))), [workouts]);\n  const streak = calcStreak(days, today);\n  const wk = workouts.filter((w) => ds(w.day) >= addDays(today, -6));\n  const mins = wk.reduce((s, w) => s + num(w.duration_min), 0);\n  const vol = wk.reduce((s, w) => s + num(w.volume), 0);\n  const eff = wk.length ? wk.reduce((s, w) => s + num(w.effort), 0) / wk.length : 0;\n  const series = Array.from({ length: 14 }, (_, i) => {\n    const d = addDays(today, i - 13);\n    return { d, v: workouts.filter((w) => ds(w.day) === d).reduce((s, w) => s + num(w.duration_min), 0) };\n  });\n  const maxV = Math.max(1, ...series.map((s) => s.v));\n  const weekPlans = plans.filter((p) => ds(p.day) >= weekStart && ds(p.day) <= addDays(weekStart, 6)).sort((x, y) => ds(x.day).localeCompare(ds(y.day)));\n\n  async function sendFb(w: Row) {\n    if (!app || !msg.trim()) return;\n    setBusy(true);\n    setErr(\"\");\n    try {\n      await app.create(\"feedback\", { workout_id: String(w.id), athlete_id: id, coach_id: me ?? null, coach_name: mine ? String(mine.name) : app.user.name, workout_title: String(w.title), message: msg.trim(), tone });\n      setFbFor(null);\n      setMsg(\"\");\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : \"Couldn't send feedback.\");\n    }\n    setBusy(false);\n  }\n\n  const [aiBusy, setAiBusy] = useState(false);\n  const [aiNote, setAiNote] = useState(\"\");\n  const [aiFallback, setAiFallback] = useState(false);\n  const [aiSent, setAiSent] = useState(false);\n  const [aiErr, setAiErr] = useState(\"\");\n  const latest = workouts[0];\n\n  async function draftNote() {\n    if (!app || !a) return;\n    setAiBusy(true);\n    setAiFallback(false);\n    setAiSent(false);\n    setAiErr(\"\");\n    const wl = workouts.slice(0, 7).map((w) => ds(w.day) + \": \" + String(w.title) + \" (\" + String(w.kind) + \"), effort \" + num(w.effort) + \"/10, \" + num(w.duration_min) + \" min\" + (w.notes ? \", note: \" + String(w.notes).slice(0, 80) : \"\"));\n    const cl = checkins.slice(0, 7).map((c) => ds(c.day) + \": sleep \" + num(c.sleep_hours) + \" h, mood \" + num(c.mood) + \"/5, soreness \" + num(c.soreness) + \"/5\" + (c.note ? \", \" + String(c.note).slice(0, 80) : \"\"));\n    try {\n      const r = await app.ai.ask(\"Athlete: \" + String(a.name) + \". Goal: \" + String(a.goal ?? \"get fitter\") + \".\\nLast workouts:\\n\" + (wl.join(\"\\n\") || \"none\") + \"\\nCheck-ins:\\n\" + (cl.join(\"\\n\") || \"none\") + \"\\nWrite the feedback note.\", { system: \"You are a warm, encouraging strength and endurance coach writing a short note to your athlete. 3 to 4 sentences, first person, address them by first name, cite one concrete detail from the logs, end with one clear next step. No lists, no emoji.\", maxTokens: 220 });\n      const t = r.trim();\n      if (!t) throw new Error(\"empty\");\n      setAiNote(t);\n    } catch (e) {\n      setAiFallback(true);\n      setAiNote(\"\");\n    }\n    setAiBusy(false);\n  }\n\n  async function sendAiNote() {\n    if (!app || !latest || !aiNote.trim()) return;\n    setAiBusy(true);\n    setAiErr(\"\");\n    try {\n      await app.create(\"feedback\", { workout_id: String(latest.id), athlete_id: id, coach_id: me ?? null, coach_name: mine ? String(mine.name) : app.user.name, workout_title: String(latest.title), message: aiNote.trim(), tone: \"praise\" });\n      setAiSent(true);\n      setAiNote(\"\");\n    } catch (e) {\n      setAiErr(e instanceof Error ? e.message : \"Couldn't send the note.\");\n    }\n    setAiBusy(false);\n  }\n\n  async function assign() {\n    if (!app) return;\n    setPlanBusy(true);\n    setPlanMsg(\"\");\n    try {\n      let n = 0;\n      for (let i = 0; i < draft.length; i++) {\n        const r = draft[i];\n        if (!r.title.trim()) continue;\n        const img = allPlans.find((p) => String(p.kind) === r.kind && p.image)?.image;\n        await app.create(\"plan_day\", { athlete_id: id, coach_id: me ?? null, day: addDays(weekStart, i), title: r.title.trim(), kind: r.kind, details: r.details, duration_min: num(r.min), ...(img ? { image: String(img) } : {}) });\n        n++;\n      }\n      setPlanMsg(\"Assigned \" + n + \" days to \" + String(a?.name ?? \"athlete\") + \" — week of \" + fmt(weekStart));\n    } catch (e) {\n      setPlanMsg(e instanceof Error ? e.message : \"Couldn't assign the plan.\");\n    }\n    setPlanBusy(false);\n  }\n\n  const fade = (i: number) => ({ initial: reduce ? false : { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: reduce ? 0 : 0.06 * i } });\n  const tabs: [typeof tab, string][] = [[\"logs\", \"Logs\"], [\"plan\", \"Weekly plan\"], [\"checkins\", \"Check-ins\"]];\n\n  return (\n    <div className=\"min-h-screen bg-[#0a0b08] text-white antialiased\">\n      <header className=\"sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.06] bg-[#0a0b08]/85 px-4 py-3 backdrop-blur-xl lg:px-10\">\n        <motion.button whileTap={{ scale: 0.92 }} onClick={() => app?.navigate(\"/coach\")} className=\"flex items-center gap-2 text-sm font-semibold text-white/70\"><ArrowLeft size={18} /> Roster</motion.button>\n        <div className=\"flex items-center gap-2\"><div className=\"grid h-8 w-8 place-items-center rounded-lg bg-primary text-black\"><Zap size={18} strokeWidth={2.8} /></div><span className=\"text-2xl font-extrabold uppercase\" style={{ fontFamily: FONT }}>Stride</span></div>\n        <button aria-label=\"Sign out\" onClick={() => app?.auth.signOut()} className=\"grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-white/60\"><LogOut size={16} /></button>\n      </header>\n\n      <main className=\"mx-auto max-w-7xl px-4 pb-16 pt-6 lg:px-10\">\n        {!a ? <div className={CARD + \" h-40 animate-pulse\"} /> : (\n          <div className=\"grid gap-5 lg:grid-cols-12\">\n            <motion.aside {...fade(0)} className=\"space-y-4 lg:col-span-4\">\n              <div className={CARD + \" relative overflow-hidden p-6\"}>\n                {a.photo ? <img alt=\"\" src={String(a.photo)} className=\"absolute inset-0 h-full w-full object-cover opacity-30\" /> : null}\n                <div className=\"absolute inset-0 bg-gradient-to-t from-[#13150e] via-[#13150e]/80 to-transparent\" />\n                <div className=\"relative pt-24\">\n                  <div className=\"text-xs font-bold uppercase tracking-[0.2em] text-primary\">{String(a.level ?? \"athlete\")}</div>\n                  <h1 className=\"text-5xl font-extrabold uppercase leading-[0.95]\" style={{ fontFamily: FONT }}>{String(a.name)}</h1>\n                  <p className=\"mt-2 text-sm text-white/65\">Goal: {String(a.goal ?? \"—\")}</p>\n                </div>\n              </div>\n              <div className=\"grid grid-cols-2 gap-3\">\n                {[{ l: \"Streak\", v: streak + \"d\", I: true }, { l: \"Sessions 7d\", v: String(wk.length) }, { l: \"Minutes 7d\", v: String(mins) }, { l: \"Avg effort\", v: eff.toFixed(1) }].map((s) => (\n                  <div key={s.l} className={CARD + \" p-4\"}><div className=\"flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/45\">{s.I ? <Flame size={13} className=\"text-primary\" /> : null}{s.l}</div><div className=\"text-4xl font-extrabold\" style={{ fontFamily: FONT }}>{s.v}</div></div>\n                ))}\n              </div>\n              <div className={CARD + \" p-5\"}>\n                <div className=\"mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-white/45\">Minutes · last 14 days · {vol.toLocaleString()} kg this week</div>\n                <div className=\"flex h-28 items-end gap-1\">\n                  {series.map((s, i) => <motion.div key={s.d} initial={reduce ? false : { height: 0 }} animate={{ height: Math.max(3, (s.v / maxV) * 100) + \"%\" }} transition={{ delay: i * 0.03, type: \"spring\", stiffness: 120, damping: 14 }} className={\"flex-1 rounded-t-md \" + (s.v ? \"bg-primary\" : \"bg-white/[0.07]\")} />)}\n                </div>\n              </div>\n            </motion.aside>\n\n            <section className=\"lg:col-span-8\">\n              <div className=\"flex w-fit rounded-full bg-white/[0.06] p-1\">\n                {tabs.map(([k, l]) => (\n                  <button key={k} onClick={() => setTab(k)} className=\"relative rounded-full px-4 py-2 text-sm font-semibold\">\n                    {tab === k && <motion.span layoutId=\"coach-tab\" className=\"absolute inset-0 rounded-full bg-primary\" />}\n                    <span className={tab === k ? \"relative text-black\" : \"relative text-white/65\"}>{l}</span>\n                  </button>\n                ))}\n              </div>\n\n              <div className=\"mt-4 space-y-3\">\n                {tab === \"logs\" ? (\n                  <motion.div initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className={CARD + \" relative overflow-hidden p-5\"}>\n                    <div className=\"pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/15 blur-3xl\" />\n                    <div className=\"relative flex flex-wrap items-center justify-between gap-3\">\n                      <div>\n                        <div className=\"flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary\"><Sparkles size={15} /> Coach notes</div>\n                        <div className=\"mt-1 text-sm text-white/55\">A draft from {a ? String(a.name).split(\" \")[0] : \"the athlete\"}'s last 7 workouts and check-ins. Edit it, then send.</div>\n                      </div>\n                      <motion.button whileTap={{ scale: 0.95 }} onClick={() => void draftNote()} disabled={aiBusy || workouts.length === 0} className=\"flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 font-extrabold uppercase text-black disabled:opacity-50\" style={{ fontFamily: FONT }}><Sparkles size={16} className={aiBusy && !aiNote ? \"animate-pulse\" : \"\"} />{aiBusy && !aiNote ? \"Drafting…\" : aiNote ? \"Redraft\" : \"Draft feedback\"}</motion.button>\n                    </div>\n                    <AnimatePresence initial={false}>\n                      {aiFallback ? <motion.p key=\"fb\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"relative mt-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/70\">AI is resting right now, try again soon.</motion.p> : null}\n                      {aiNote ? (\n                        <motion.div key=\"note\" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"relative overflow-hidden\">\n                          <textarea aria-label=\"Draft feedback note\" rows={5} value={aiNote} onChange={(e) => setAiNote(e.target.value)} className=\"mt-3 w-full rounded-2xl border border-primary/30 bg-primary/[0.06] p-4 text-sm leading-relaxed text-white outline-none focus:border-primary\" />\n                          <div className=\"mt-2 flex flex-wrap items-center justify-between gap-2\">\n                            <span className=\"text-xs text-white/45\">Sends on {latest ? String(latest.title) : \"the latest workout\"}</span>\n                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => void sendAiNote()} disabled={aiBusy || !aiNote.trim() || !latest} className=\"flex h-10 items-center gap-2 rounded-2xl bg-white px-5 text-sm font-extrabold uppercase text-black disabled:opacity-50\" style={{ fontFamily: FONT }}><Send size={14} />Send note</motion.button>\n                          </div>\n                        </motion.div>\n                      ) : null}\n                      {aiSent ? <motion.p key=\"sent\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"relative mt-3 flex items-center gap-2 text-sm text-primary\"><Check size={16} />Note sent.</motion.p> : null}\n                      {aiErr ? <motion.p key=\"err\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className=\"relative mt-3 text-sm text-red-300\">{aiErr}</motion.p> : null}\n                    </AnimatePresence>\n                  </motion.div>\n                ) : null}\n                {tab === \"logs\" && workouts.length === 0 ? <div className={CARD + \" p-10 text-center text-white/50\"}>No workouts logged yet.</div> : null}\n                {tab === \"logs\" && workouts.slice(0, 12).map((w, i) => {\n                  const wid = String(w.id);\n                  const fbs = feedback.filter((f) => String(f.workout_id) === wid);\n                  const open = fbFor === wid;\n                  return (\n                    <motion.div key={wid} layout initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 8) * 0.04 }} className={CARD + \" p-4\"}>\n                      <div className=\"flex items-center gap-3\">\n                        <div className=\"grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/15 text-2xl font-extrabold text-primary\" style={{ fontFamily: FONT }}>{num(w.effort)}</div>\n                        <div className=\"min-w-0 flex-1\"><div className=\"truncate font-bold\">{String(w.title)}</div><div className=\"text-xs text-white/45\">{fmt(ds(w.day))} · {num(w.duration_min)} min{num(w.volume) ? \" · \" + num(w.volume).toLocaleString() + \" kg\" : \"\"}{num(w.distance_km) ? \" · \" + num(w.distance_km) + \" km\" : \"\"}</div></div>\n                        <motion.button whileTap={{ scale: 0.93 }} onClick={() => { setFbFor(open ? null : wid); setErr(\"\"); }} className=\"flex items-center gap-1 rounded-full bg-white/[0.08] px-3 py-1.5 text-xs font-semibold\"><MessageSquare size={13} />{fbs.length ? fbs.length : \"Reply\"}</motion.button>\n                      </div>\n                      {w.notes ? <p className=\"mt-2 text-sm italic text-white/55\">“{String(w.notes)}”</p> : null}\n                      {fbs.map((f) => <div key={String(f.id)} className=\"mt-2 rounded-2xl border border-primary/25 bg-primary/10 p-3 text-sm\"><span className=\"mr-2 text-[10px] font-bold uppercase tracking-widest text-primary\">{String(f.tone)}</span>{String(f.message)}</div>)}\n                      <AnimatePresence initial={false}>\n                        {open ? (\n                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: \"auto\", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className=\"overflow-hidden\">\n                            <div className=\"space-y-3 pt-3\">\n                              <div className=\"flex gap-2\">{([\"praise\", \"adjust\", \"question\"] as const).map((t) => <button key={t} onClick={() => setTone(t)} className={\"rounded-full px-3 py-1 text-xs font-semibold capitalize \" + (tone === t ? \"bg-primary text-black\" : \"bg-white/[0.07] text-white/65\")}>{t}</button>)}</div>\n                              <textarea rows={3} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder=\"Feedback the athlete will see…\" className=\"w-full rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-sm text-white outline-none focus:border-primary\" />\n                              {err ? <p className=\"text-sm text-red-300\">{err}</p> : null}\n                              <motion.button whileTap={{ scale: 0.96 }} disabled={busy || !msg.trim()} onClick={() => void sendFb(w)} className=\"flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-extrabold uppercase text-black disabled:opacity-50\" style={{ fontFamily: FONT }}><Send size={16} />{busy ? \"Sending…\" : \"Send feedback\"}</motion.button>\n                            </div>\n                          </motion.div>\n                        ) : null}\n                      </AnimatePresence>\n                    </motion.div>\n                  );\n                })}\n\n                {tab === \"plan\" ? (\n                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className=\"space-y-3\">\n                    <div className={CARD + \" p-4\"}>\n                      <div className=\"flex flex-wrap items-end gap-3\">\n                        <label className=\"text-[11px] font-semibold uppercase tracking-widest text-white/45\"><span className=\"mb-1 flex items-center gap-1\"><Calendar size={12} /> Week starting (Monday)</span><input type=\"date\" className={INPUT} value={weekStart} onChange={(e) => setWeekStart(e.target.value)} /></label>\n                        <span className=\"pb-3 text-xs text-white/45\">{weekPlans.length ? weekPlans.length + \" days already planned this week\" : \"Nothing planned for this week yet\"}</span>\n                      </div>\n                    </div>\n                    {draft.map((r, i) => (\n                      <motion.div key={i} initial={reduce ? false : { opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className={CARD + \" p-3\"}>\n                        <div className=\"mb-2 text-[11px] font-bold uppercase tracking-widest text-primary\">{fmt(addDays(weekStart, i))}</div>\n                        <div className=\"grid gap-2 sm:grid-cols-12\">\n                          <input className={INPUT + \" sm:col-span-5\"} value={r.title} placeholder=\"Session title\" onChange={(e) => setDraft((d) => d.map((x, k) => (k === i ? { ...x, title: e.target.value } : x)))} />\n                          <select className={INPUT + \" sm:col-span-3\"} value={r.kind} onChange={(e) => setDraft((d) => d.map((x, k) => (k === i ? { ...x, kind: e.target.value } : x)))}>{KINDS.map((k) => <option key={k} value={k}>{k}</option>)}</select>\n                          <input className={INPUT + \" sm:col-span-2\"} type=\"number\" value={r.min} placeholder=\"Min\" onChange={(e) => setDraft((d) => d.map((x, k) => (k === i ? { ...x, min: e.target.value } : x)))} />\n                          <input className={INPUT + \" sm:col-span-12\"} value={r.details} placeholder=\"Details (sets, reps, pace)\" onChange={(e) => setDraft((d) => d.map((x, k) => (k === i ? { ...x, details: e.target.value } : x)))} />\n                        </div>\n                      </motion.div>\n                    ))}\n                    <AnimatePresence>{planMsg ? <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary\"><Check size={16} />{planMsg}</motion.p> : null}</AnimatePresence>\n                    <motion.button whileTap={{ scale: 0.97 }} disabled={planBusy} onClick={() => void assign()} className=\"flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-xl font-extrabold uppercase text-black shadow-[0_14px_40px_-8px_rgba(198,244,50,0.55)] disabled:opacity-60\" style={{ fontFamily: FONT }}>{planBusy ? \"Assigning…\" : \"Assign weekly plan\"}</motion.button>\n                    {weekPlans.length ? <div className={CARD + \" p-4\"}><div className=\"mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/45\">Already on the calendar</div>{weekPlans.map((p) => <div key={String(p.id)} className=\"flex justify-between border-b border-white/[0.05] py-2 text-sm last:border-0\"><span className=\"text-white/50\">{fmt(ds(p.day))}</span><span className=\"font-semibold\">{String(p.title)}</span></div>)}</div> : null}\n                  </motion.div>\n                ) : null}\n\n                {tab === \"checkins\" && checkins.length === 0 ? <div className={CARD + \" p-10 text-center text-white/50\"}>No check-ins yet.</div> : null}\n                {tab === \"checkins\" && checkins.map((c, i) => (\n                  <motion.div key={String(c.id)} initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 8) * 0.04 }} className={CARD + \" flex items-center gap-4 p-4\"}>\n                    <div className=\"text-3xl\">{MOODS[Math.max(0, Math.min(4, num(c.mood) - 1))]}</div>\n                    <div className=\"min-w-0 flex-1\"><div className=\"text-sm font-bold\">{fmt(ds(c.day))}</div><div className=\"text-xs text-white/50\">{num(c.sleep_hours)} h sleep · soreness {num(c.soreness)}/5</div>{c.note ? <div className=\"mt-1 text-sm italic text-white/60\">“{String(c.note)}”</div> : null}</div>\n                    {num(c.soreness) >= 4 || num(c.sleep_hours) < 6 ? <span className=\"rounded-full bg-orange-500/15 px-2 py-1 text-[10px] font-bold uppercase text-orange-300\">Watch</span> : null}\n                  </motion.div>\n                ))}\n              </div>\n            </section>\n          </div>\n        )}\n      </main>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "demo_logins": [
+    {
+      "persona": "athlete",
+      "row": "5e15285e-8a80-5c98-bc30-cce22046bb43"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "workout-logged-notify-coach",
+      "title": "Workout logged → notify the coach",
+      "on": {
+        "entity": "workout",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "coach_id",
+            "entity": "coach"
+          },
+          "title": "{{athlete_name}} logged a workout",
+          "body": "{{title}} · effort {{effort}}/10 · {{duration_min}} min. Tap to review and leave feedback."
+        }
+      ]
+    },
+    {
+      "id": "feedback-notify-athlete",
+      "title": "Coach feedback → notify the athlete",
+      "on": {
+        "entity": "feedback",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "athlete_id",
+            "entity": "athlete"
+          },
+          "title": "{{coach_name}} left feedback",
+          "body": "On {{workout_title}}: {{message}}"
+        }
+      ]
+    },
+    {
+      "id": "weekly-digest",
+      "title": "Monday 07:00 weekly digest",
+      "on": {
+        "schedule": "weekly mon 07:00",
+        "entity": "workout",
+        "tz": "UTC"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const d = (v: unknown): string => (v instanceof Date ? v.toISOString().slice(0, 10) : String(v).slice(0, 10)); const now = ctx.now(); const startIso = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10); const aths = await ctx.db.list('athlete'); const wos = await ctx.db.list('workout'); const cks = await ctx.db.list('checkin'); for (const a of aths) { const id = String(a.id); const w = wos.filter((x) => String(x.athlete_id) === id && d(x.day) >= startIso); const c = cks.filter((x) => String(x.athlete_id) === id && d(x.day) >= startIso); const minutes = w.reduce((s, x) => s + Number(x.duration_min || 0), 0); const volume = w.reduce((s, x) => s + Number(x.volume || 0), 0); const eff = w.length ? Math.round((w.reduce((s, x) => s + Number(x.effort || 0), 0) / w.length) * 10) / 10 : 0; const sleep = c.length ? Math.round((c.reduce((s, x) => s + Number(x.sleep_hours || 0), 0) / c.length) * 10) / 10 : 0; const summary = String(a.name) + ': ' + w.length + ' sessions, ' + minutes + ' min, ' + volume + ' kg lifted, avg effort ' + eff + '/10, ' + c.length + ' check-ins, avg sleep ' + sleep + ' h.'; await ctx.db.create('digest', { athlete_id: id, coach_id: a.coach_id ? String(a.coach_id) : null, week_start: startIso, sessions: w.length, minutes: minutes, volume: volume, avg_effort: eff, checkins: c.length, avg_sleep: sleep, summary: summary }); } ctx.notify({ title: 'Weekly digest is ready', body: 'Your training summary for the last 7 days has been written.' });",
+          "checked": "4c75cd2d61718f06"
+        }
+      ]
+    }
+  ]
+}

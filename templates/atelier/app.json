@@ -1,0 +1,1073 @@
+{
+  "app": {
+    "name": "Atelier",
+    "tagline": "Handmade, by the hands that made it",
+    "theme": "sage-cream",
+    "nav_style": "topbar",
+    "density": "comfortable",
+    "brand_icon": "Sparkles",
+    "brand_color": "#B5835A",
+    "direction": "calm-health"
+  },
+  "personas": [
+    {
+      "id": "buyer",
+      "label": "Buyer",
+      "description": "discovers and buys handmade pieces",
+      "kind": "consumer"
+    },
+    {
+      "id": "seller",
+      "label": "Seller",
+      "description": "a maker running their studio",
+      "kind": "staff"
+    },
+    {
+      "id": "admin",
+      "label": "Admin",
+      "description": "curates the marketplace",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": {
+    "primaryVerb": "buy",
+    "inventoryShape": "catalog",
+    "moneySurface": "none"
+  },
+  "basket": null,
+  "entities": [
+    {
+      "name": "buyer",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "seller",
+      "label_field": "shop_name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "shop_name",
+          "type": "text"
+        },
+        {
+          "name": "location",
+          "type": "text"
+        },
+        {
+          "name": "tagline",
+          "type": "text"
+        },
+        {
+          "name": "story",
+          "type": "text"
+        },
+        {
+          "name": "avatar",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "cover",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "featured",
+          "type": "boolean",
+          "optional": true
+        }
+      ],
+      "access": {
+        "seller": {
+          "update": "own"
+        }
+      },
+      "owner_refs": []
+    },
+    {
+      "name": "admin",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        }
+      ]
+    },
+    {
+      "name": "product",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "seller_id",
+          "type": "ref",
+          "ref": "seller"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text"
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "enum_values": [
+            "ceramics",
+            "woodwork",
+            "textiles",
+            "candles",
+            "jewellery",
+            "knitwear"
+          ]
+        },
+        {
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "name": "stock",
+          "type": "number"
+        },
+        {
+          "name": "photo",
+          "type": "image"
+        },
+        {
+          "name": "photo_2",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "photo_3",
+          "type": "image",
+          "optional": true
+        },
+        {
+          "name": "materials",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "pending",
+            "approved",
+            "hidden"
+          ]
+        }
+      ],
+      "access": {
+        "seller": {
+          "create": true,
+          "update": "own",
+          "delete": "own"
+        },
+        "buyer": {
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "seller_id"
+      ],
+      "rules": [
+        {
+          "id": "curators-approve",
+          "on": "both",
+          "message": "Only Atelier curators can approve a piece.",
+          "check": "const isAdmin = await ctx.me('admin'); if (isAdmin) return true; const prev = ctx.old ? String(ctx.old.status) : ''; if (String(row.status) === 'approved' && prev !== 'approved') return 'Only Atelier curators can approve a piece.'; if (Number(row.price) < 0 || Number(row.stock) < 0) return 'Price and stock cannot be negative.'; return true;"
+        }
+      ]
+    },
+    {
+      "name": "cart_item",
+      "label_field": "buyer_id",
+      "fields": [
+        {
+          "name": "buyer_id",
+          "type": "ref",
+          "ref": "buyer",
+          "optional": true
+        },
+        {
+          "name": "product_id",
+          "type": "ref",
+          "ref": "product"
+        },
+        {
+          "name": "quantity",
+          "type": "number"
+        }
+      ],
+      "access": {
+        "buyer": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        },
+        "seller": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "owner_refs": [],
+      "actor_ref": "buyer_id"
+    },
+    {
+      "name": "order",
+      "label_field": "product_title",
+      "fields": [
+        {
+          "name": "buyer_id",
+          "type": "ref",
+          "ref": "buyer",
+          "optional": true
+        },
+        {
+          "name": "seller_id",
+          "type": "ref",
+          "ref": "seller"
+        },
+        {
+          "name": "product_id",
+          "type": "ref",
+          "ref": "product"
+        },
+        {
+          "name": "product_title",
+          "type": "text"
+        },
+        {
+          "name": "quantity",
+          "type": "number"
+        },
+        {
+          "name": "total",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "placed",
+            "paid",
+            "shipped",
+            "delivered"
+          ]
+        },
+        {
+          "name": "placed_on",
+          "type": "date"
+        },
+        {
+          "name": "ship_to",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "buyer": {
+          "create": true,
+          "read": "own",
+          "update": "none",
+          "delete": "none"
+        },
+        "seller": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "owner_refs": [
+        "buyer_id",
+        "seller_id"
+      ],
+      "actor_ref": "buyer_id",
+      "rules": [
+        {
+          "id": "stock-and-self",
+          "on": "create",
+          "message": "This order can't be placed.",
+          "check": "const r = await ctx.db.query('select seller_id, stock, status, title from product where id = $1', [row.product_id]); const rows = Array.isArray(r) ? r : (r && r.rows) || []; const p = rows[0]; if (!p) return 'That piece no longer exists.'; if (String(p.status) !== 'approved') return 'That piece is not available yet.'; const q = Number(row.quantity); if (!(q >= 1)) return 'Choose at least one.'; if (q > Number(p.stock)) return 'Only ' + Number(p.stock) + ' of ' + String(p.title) + ' left in stock — you asked for ' + q + '.'; const me = await ctx.me('seller'); const myId = me && typeof me === 'object' ? String(me.id) : (me ? String(me) : ''); if (myId && myId === String(p.seller_id)) return 'You can\\'t buy your own piece.'; return true;"
+        }
+      ]
+    },
+    {
+      "name": "payment",
+      "label_field": "provider_ref",
+      "fields": [
+        {
+          "name": "order_id",
+          "type": "ref",
+          "ref": "order"
+        },
+        {
+          "name": "provider_ref",
+          "type": "text"
+        },
+        {
+          "name": "amount",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "state",
+          "type": "enum",
+          "enum_values": [
+            "succeeded",
+            "failed"
+          ]
+        }
+      ],
+      "access": {
+        "buyer": {
+          "create": false,
+          "read": "none",
+          "update": "none",
+          "delete": "none"
+        },
+        "seller": {
+          "create": false,
+          "read": "none",
+          "update": "none",
+          "delete": "none"
+        }
+      }
+    }
+  ],
+  "seeds": {
+    "buyer": [
+      {
+        "id": "a343f778-57d2-56db-97a9-0ff1bfa140e5",
+        "name": "Daniel Okoye",
+        "email": "daniel@example.com",
+        "city": "Manchester"
+      },
+      {
+        "id": "ad9265fd-2b96-5fe4-925e-587b58a4939c",
+        "name": "Sofia Marchetti",
+        "email": "sofia@example.com",
+        "city": "Milan"
+      },
+      {
+        "id": "31122a62-5a8a-5fb5-9ae7-7e3cf8f0c6cc",
+        "name": "Leo Bergström",
+        "email": "leo@example.com",
+        "city": "Stockholm"
+      },
+      {
+        "id": "f299317d-ef9f-5105-8cc5-8ba51f71d70d",
+        "name": "Hannah Cole",
+        "email": "hannah@example.com",
+        "city": "Toronto"
+      },
+      {
+        "id": "221a9d4e-cb72-5d5b-854d-8b7a7772dbbc",
+        "name": "Ravi Menon",
+        "email": "ravi@example.com",
+        "city": "Singapore"
+      },
+      {
+        "id": "9c47a52e-f437-5927-8ec2-f43d7f52011d",
+        "name": "Elodie Martin",
+        "email": "elodie@example.com",
+        "city": "Lyon"
+      },
+      {
+        "id": "2834325b-d685-5741-8558-95c1a9df9dd4",
+        "name": "Tess Whitaker",
+        "email": "tess@example.com",
+        "city": "Austin"
+      },
+      {
+        "id": "d18d954a-ee3b-5fa0-b6b5-1ecf769a115b",
+        "name": "Mira Patel",
+        "email": "mira@example.com",
+        "city": "London"
+      }
+    ],
+    "seller": [
+      {
+        "id": "b9e7504f-3463-5607-97c2-bf4e7a2fe7e5",
+        "name": "Nora Lindqvist",
+        "email": "nora@example.com",
+        "shop_name": "Nora Knits",
+        "location": "Gothenburg, Sweden",
+        "tagline": "Cosy knits from small-batch wool",
+        "story": "I knit from undyed merino sourced from a family farm two hours north. Everything is made to keep winter feeling like a gift.",
+        "avatar": "/assets/0f8f8046be4919df.svg",
+        "cover": "/assets/64aead7bd670f6ae.webp",
+        "featured": true
+      },
+      {
+        "id": "f69c85a7-40d0-53ee-bc59-a5a9b171ee9a",
+        "name": "Aiko Tanaka",
+        "email": "aiko@example.com",
+        "shop_name": "Indigo Thread Studio",
+        "location": "Kyoto, Japan",
+        "tagline": "Shibori dyed and loom-woven textiles",
+        "story": "I dye silk and linen in indigo vats my grandmother taught me to tend. Each fold and binding is done by hand, so every scarf carries its own pattern.",
+        "avatar": "/assets/edc7e9ac3c2f7ce5.svg",
+        "cover": "/assets/a1b5916277be4b0f.webp",
+        "featured": true
+      },
+      {
+        "id": "331f0651-b950-5091-a62c-1fd72b4f4122",
+        "name": "Jonah Pierce",
+        "email": "jonah@example.com",
+        "shop_name": "Pierce & Ash Candles",
+        "location": "Portland, USA",
+        "tagline": "Slow-burning soy candles",
+        "story": "Poured in tiny batches in a converted garage, scented with essential oils and cured for two full weeks before they leave the studio.",
+        "avatar": "/assets/5745aeb5239a3293.svg",
+        "cover": "/assets/d60eebca8e43e2e5.webp",
+        "featured": false
+      },
+      {
+        "id": "43cf3adf-15f4-547b-9b8e-f0f8bbfa4f56",
+        "name": "Priya Nair",
+        "email": "priya@example.com",
+        "shop_name": "Saltmarsh Jewellery",
+        "location": "Kochi, India",
+        "tagline": "Recycled brass and sea-worn stones",
+        "story": "I melt reclaimed brass and shape it by hand into light, everyday jewellery inspired by the backwaters I grew up beside.",
+        "avatar": "/assets/086ecfe552744c61.svg",
+        "cover": "/assets/a17649ef861352e4.webp",
+        "featured": false
+      },
+      {
+        "id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "name": "Imogen Hale",
+        "email": "imogen@example.com",
+        "shop_name": "Hale Ceramics",
+        "location": "Bristol, UK",
+        "tagline": "Stoneware that remembers the hand",
+        "story": "I throw every piece on a wheel I bought second-hand in 2014, then fire it in a tiny gas kiln behind my flat. Glazes are mixed from ash, clay and a lot of patience — no two mugs ever match.",
+        "avatar": "/assets/47a2db5113b69de6.svg",
+        "cover": "/assets/af570aadefd23723.webp",
+        "featured": true
+      },
+      {
+        "id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "name": "Tomás Rivera",
+        "email": "tomas@example.com",
+        "shop_name": "Rivera Woodworks",
+        "location": "Oaxaca, Mexico",
+        "tagline": "Slow-cut wood, finished with oil and time",
+        "story": "Third-generation carpenter. I only work with fallen walnut, oak and olive wood from neighbouring orchards, and finish everything with beeswax and linseed oil.",
+        "avatar": "/assets/bf976b1ef32fd345.svg",
+        "cover": "/assets/0ad59ac88a06dd21.webp",
+        "featured": true
+      }
+    ],
+    "admin": [
+      {
+        "id": "f45a06fe-9711-58a8-bfe9-2cbbcb3e68e3",
+        "name": "Clara Voss",
+        "email": "clara@example.com"
+      }
+    ],
+    "product": [
+      {
+        "id": "2b6cf602-91df-5d65-a9b0-c6b5b906179f",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "title": "Speckled Stoneware Mug",
+        "description": "A generous 320ml mug with a thumb-rest handle and a soft oatmeal glaze flecked with iron. Dishwasher and microwave safe.",
+        "category": "ceramics",
+        "price": 28,
+        "stock": 14,
+        "photo": "/assets/0381c964afef3226.webp",
+        "photo_2": "/assets/b6b1c4ab9b101f53.webp",
+        "photo_3": "/assets/b438b19aeb8433f4.webp",
+        "materials": "Stoneware, iron-speckled glaze",
+        "status": "approved"
+      },
+      {
+        "id": "cffde671-ef7f-5fca-af83-b3734b3a887b",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "title": "Hand-thrown Fruit Bowl",
+        "description": "A wide, shallow bowl with a pale celadon interior, thrown in one piece. Beautiful holding lemons, or nothing at all.",
+        "category": "ceramics",
+        "price": 64,
+        "stock": 5,
+        "photo": "/assets/53041b88ebeec82d.webp",
+        "photo_2": "/assets/fdfa883a617d17f2.webp",
+        "photo_3": "/assets/910a5c016df1ddc7.webp",
+        "materials": "Stoneware, celadon glaze",
+        "status": "approved"
+      },
+      {
+        "id": "5299229f-fe4d-520e-99e3-9afe501f8530",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "title": "Salt-glazed Bud Vase Set",
+        "description": "Three small vases in graduated heights, salt-fired for a subtle orange-peel texture. Fits a single stem each.",
+        "category": "ceramics",
+        "price": 42,
+        "stock": 2,
+        "photo": "/assets/ef21f4ebb5c1990a.webp",
+        "photo_2": "/assets/81ae0fc4952e1db6.webp",
+        "photo_3": "/assets/561a3c87559f17b7.webp",
+        "materials": "Stoneware, salt glaze",
+        "status": "approved"
+      },
+      {
+        "id": "77672e45-7486-59c2-9b76-2af7481d2d19",
+        "seller_id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "title": "Walnut Serving Board",
+        "description": "Cut from a single fallen walnut slab, with a live edge and a leather hanging loop. Finished with food-safe oil and beeswax.",
+        "category": "woodwork",
+        "price": 78,
+        "stock": 8,
+        "photo": "/assets/439d1c55d4639a45.webp",
+        "photo_2": "/assets/89bcb147b72b0321.webp",
+        "photo_3": "/assets/eae0b3a54d9e7e9e.webp",
+        "materials": "Walnut, beeswax, linseed oil",
+        "status": "approved"
+      },
+      {
+        "id": "c8272fd4-87d6-531b-b196-e156ea9ec334",
+        "seller_id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "title": "Olive Wood Spoon Trio",
+        "description": "Three hand-carved spoons from olive wood: a stirring spoon, a tasting spoon and a small jam spoon.",
+        "category": "woodwork",
+        "price": 36,
+        "stock": 20,
+        "photo": "/assets/6a8475f7581673dd.webp",
+        "photo_2": "/assets/cf6c12e536a961ff.webp",
+        "photo_3": "/assets/3ffe983c50da4eca.webp",
+        "materials": "Olive wood, food-safe oil",
+        "status": "approved"
+      },
+      {
+        "id": "032aa0cc-acc0-5a40-bfab-1e14fa47a81a",
+        "seller_id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "title": "Carved Oak Stool",
+        "description": "A sculptural three-legged stool, adzed from one block of oak. Sturdy, honest and surprisingly light.",
+        "category": "woodwork",
+        "price": 220,
+        "stock": 3,
+        "photo": "/assets/ba8b5f11b2878645.webp",
+        "photo_2": "/assets/f215ecef5206f527.webp",
+        "photo_3": "/assets/6336b2736ba33629.webp",
+        "materials": "European oak, hard-wax oil",
+        "status": "approved"
+      },
+      {
+        "id": "40d2ac92-c0e1-5ab9-8e41-41468783d62c",
+        "seller_id": "f69c85a7-40d0-53ee-bc59-a5a9b171ee9a",
+        "title": "Indigo Shibori Scarf",
+        "description": "A silk-linen scarf folded, bound and dipped by hand in natural indigo. Soft drape, deep blue, one of a kind.",
+        "category": "textiles",
+        "price": 85,
+        "stock": 6,
+        "photo": "/assets/5550fbf401da4ff4.webp",
+        "photo_2": "/assets/c7a5255c232a5a1d.webp",
+        "photo_3": "/assets/399939a38acab716.webp",
+        "materials": "Silk-linen blend, natural indigo",
+        "status": "approved"
+      },
+      {
+        "id": "035d8e01-2b1f-58fd-93ae-0e0cf15776e0",
+        "seller_id": "f69c85a7-40d0-53ee-bc59-a5a9b171ee9a",
+        "title": "Woven Linen Napkins (Set of 4)",
+        "description": "Heavy stonewashed linen napkins with a hand-finished fringe, woven on a small floor loom.",
+        "category": "textiles",
+        "price": 48,
+        "stock": 12,
+        "photo": "/assets/a66d6184f1807b96.webp",
+        "photo_2": "/assets/bed415bd9688e8dc.svg",
+        "photo_3": "/assets/c3138246eb9eef6a.svg",
+        "materials": "100% stonewashed linen",
+        "status": "approved"
+      },
+      {
+        "id": "3e5365dc-3983-5a5a-8141-c74734ec544e",
+        "seller_id": "b9e7504f-3463-5607-97c2-bf4e7a2fe7e5",
+        "title": "Chunky Merino Beanie",
+        "description": "A deep-ribbed beanie in undyed merino, knitted on thick needles for warmth that doesn't itch.",
+        "category": "knitwear",
+        "price": 54,
+        "stock": 9,
+        "photo": "/assets/5d471d09068dcba9.webp",
+        "photo_2": "/assets/3e90ed1bb1c54151.webp",
+        "photo_3": "/assets/cafc922b7f5a12ed.webp",
+        "materials": "Undyed merino wool",
+        "status": "approved"
+      },
+      {
+        "id": "c1d8d613-a0c7-587f-b3d8-151eeae852d5",
+        "seller_id": "b9e7504f-3463-5607-97c2-bf4e7a2fe7e5",
+        "title": "Cable-knit Throw",
+        "description": "A heavy cable-knit blanket for sofas and cold evenings. Made to order in about two weeks, currently between batches.",
+        "category": "knitwear",
+        "price": 189,
+        "stock": 0,
+        "photo": "/assets/6c4cea89bf55b4ff.webp",
+        "photo_2": "/assets/9b8e66d94498c1a2.svg",
+        "photo_3": "/assets/fb2bd5b8f67d514e.webp",
+        "materials": "Merino wool",
+        "status": "approved"
+      },
+      {
+        "id": "89605bcd-cdb3-5fc8-bd47-fb2fb9080585",
+        "seller_id": "331f0651-b950-5091-a62c-1fd72b4f4122",
+        "title": "Cedar & Fig Soy Candle",
+        "description": "A 220g candle with notes of cedar, green fig and a little smoke. Around 45 hours of slow, clean burn.",
+        "category": "candles",
+        "price": 26,
+        "stock": 30,
+        "photo": "/assets/c110c36fca5235a9.svg",
+        "photo_2": "/assets/97b678d397937cff.svg",
+        "photo_3": "/assets/7d0b475afb43968e.webp",
+        "materials": "Soy wax, cotton wick, essential oils",
+        "status": "approved"
+      },
+      {
+        "id": "85ddb264-609c-5eed-b118-da06096c13c3",
+        "seller_id": "43cf3adf-15f4-547b-9b8e-f0f8bbfa4f56",
+        "title": "Brass Hoop Earrings",
+        "description": "Light, hammered hoops cast from reclaimed brass. Hypoallergenic posts, 35mm.",
+        "category": "jewellery",
+        "price": 58,
+        "stock": 7,
+        "photo": "/assets/303ebd8fa473dcac.svg",
+        "photo_2": "/assets/dbe4b842378a60bc.svg",
+        "photo_3": "/assets/479b66008ea36dff.svg",
+        "materials": "Reclaimed brass, sterling posts",
+        "status": "approved"
+      },
+      {
+        "id": "633f3502-0b2f-5fda-85fd-b33c14a0cc24",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "title": "Raku Tea Set",
+        "description": "A teapot and two cups, raku-fired for crackled metallic surfaces. Awaiting curator approval.",
+        "category": "ceramics",
+        "price": 140,
+        "stock": 4,
+        "photo": "/assets/58098f3c6ed2847d.webp",
+        "photo_2": "/assets/5ab00db35dc057f9.webp",
+        "photo_3": "/assets/ee50393b886afeaf.webp",
+        "materials": "Raku clay",
+        "status": "pending"
+      },
+      {
+        "id": "84da4511-b531-5112-8b92-5aaddb2fd78d",
+        "seller_id": "331f0651-b950-5091-a62c-1fd72b4f4122",
+        "title": "Beeswax Taper Set",
+        "description": "Six hand-dipped beeswax tapers with a honeyed scent. Awaiting curator approval.",
+        "category": "candles",
+        "price": 32,
+        "stock": 25,
+        "photo": "/assets/2232be27b3bedd38.svg",
+        "photo_2": "/assets/fc0229c358c07151.svg",
+        "photo_3": "/assets/2e1e6f21a7358932.webp",
+        "materials": "Pure beeswax",
+        "status": "pending"
+      }
+    ],
+    "cart_item": [],
+    "order": [
+      {
+        "id": "0514cbb4-94fe-5104-9249-16144184d47d",
+        "buyer_id": "d18d954a-ee3b-5fa0-b6b5-1ecf769a115b",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "product_id": "2b6cf602-91df-5d65-a9b0-c6b5b906179f",
+        "product_title": "Speckled Stoneware Mug",
+        "quantity": 2,
+        "total": 56,
+        "status": "delivered",
+        "placed_on": "2026-09-14T00:00:00.000Z",
+        "ship_to": "14 Corbet Place, London"
+      },
+      {
+        "id": "285e5f95-4a66-53e4-a17e-6d36e9ddef56",
+        "buyer_id": "d18d954a-ee3b-5fa0-b6b5-1ecf769a115b",
+        "seller_id": "f69c85a7-40d0-53ee-bc59-a5a9b171ee9a",
+        "product_id": "40d2ac92-c0e1-5ab9-8e41-41468783d62c",
+        "product_title": "Indigo Shibori Scarf",
+        "quantity": 1,
+        "total": 85,
+        "status": "shipped",
+        "placed_on": "2026-10-06T00:00:00.000Z",
+        "ship_to": "14 Corbet Place, London"
+      },
+      {
+        "id": "7cd0c13a-f816-5e10-b411-dc52a8a59c9e",
+        "buyer_id": "d18d954a-ee3b-5fa0-b6b5-1ecf769a115b",
+        "seller_id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "product_id": "77672e45-7486-59c2-9b76-2af7481d2d19",
+        "product_title": "Walnut Serving Board",
+        "quantity": 1,
+        "total": 78,
+        "status": "paid",
+        "placed_on": "2026-10-09T00:00:00.000Z",
+        "ship_to": "14 Corbet Place, London"
+      },
+      {
+        "id": "29830804-0b7c-5ae2-b3fb-024a656676f2",
+        "buyer_id": "a343f778-57d2-56db-97a9-0ff1bfa140e5",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "product_id": "cffde671-ef7f-5fca-af83-b3734b3a887b",
+        "product_title": "Hand-thrown Fruit Bowl",
+        "quantity": 1,
+        "total": 64,
+        "status": "placed",
+        "placed_on": "2026-10-10T00:00:00.000Z",
+        "ship_to": "8 Albion Road, Manchester"
+      },
+      {
+        "id": "c00b4295-56ff-5a21-86cc-bc3b50291ea1",
+        "buyer_id": "ad9265fd-2b96-5fe4-925e-587b58a4939c",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "product_id": "2b6cf602-91df-5d65-a9b0-c6b5b906179f",
+        "product_title": "Speckled Stoneware Mug",
+        "quantity": 3,
+        "total": 84,
+        "status": "paid",
+        "placed_on": "2026-10-08T00:00:00.000Z",
+        "ship_to": "Via Tortona 21, Milan"
+      },
+      {
+        "id": "1d336a58-d1db-52c2-829a-80d9489ed02b",
+        "buyer_id": "31122a62-5a8a-5fb5-9ae7-7e3cf8f0c6cc",
+        "seller_id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "product_id": "032aa0cc-acc0-5a40-bfab-1e14fa47a81a",
+        "product_title": "Carved Oak Stool",
+        "quantity": 1,
+        "total": 220,
+        "status": "delivered",
+        "placed_on": "2026-09-28T00:00:00.000Z",
+        "ship_to": "Storgatan 4, Stockholm"
+      },
+      {
+        "id": "82c6f587-e398-538a-875a-9499e399be92",
+        "buyer_id": "f299317d-ef9f-5105-8cc5-8ba51f71d70d",
+        "seller_id": "b9e7504f-3463-5607-97c2-bf4e7a2fe7e5",
+        "product_id": "3e5365dc-3983-5a5a-8141-c74734ec544e",
+        "product_title": "Chunky Merino Beanie",
+        "quantity": 2,
+        "total": 108,
+        "status": "shipped",
+        "placed_on": "2026-10-05T00:00:00.000Z",
+        "ship_to": "22 Queen St, Toronto"
+      },
+      {
+        "id": "e5bad109-4e8e-516c-a33f-17b44569e79f",
+        "buyer_id": "221a9d4e-cb72-5d5b-854d-8b7a7772dbbc",
+        "seller_id": "331f0651-b950-5091-a62c-1fd72b4f4122",
+        "product_id": "89605bcd-cdb3-5fc8-bd47-fb2fb9080585",
+        "product_title": "Cedar & Fig Soy Candle",
+        "quantity": 4,
+        "total": 104,
+        "status": "delivered",
+        "placed_on": "2026-10-02T00:00:00.000Z",
+        "ship_to": "11 Orchard Rd, Singapore"
+      },
+      {
+        "id": "90006bd8-268a-512a-80fc-c22f355933fd",
+        "buyer_id": "9c47a52e-f437-5927-8ec2-f43d7f52011d",
+        "seller_id": "43cf3adf-15f4-547b-9b8e-f0f8bbfa4f56",
+        "product_id": "85ddb264-609c-5eed-b118-da06096c13c3",
+        "product_title": "Brass Hoop Earrings",
+        "quantity": 1,
+        "total": 58,
+        "status": "placed",
+        "placed_on": "2026-10-11T00:00:00.000Z",
+        "ship_to": "3 Rue Mercière, Lyon"
+      },
+      {
+        "id": "b20f3d57-3fdc-5456-8c0f-483b6b1b75f5",
+        "buyer_id": "2834325b-d685-5741-8558-95c1a9df9dd4",
+        "seller_id": "4a4c7a4b-63b0-5f6a-b60d-f9cf1782e91e",
+        "product_id": "c8272fd4-87d6-531b-b196-e156ea9ec334",
+        "product_title": "Olive Wood Spoon Trio",
+        "quantity": 2,
+        "total": 72,
+        "status": "paid",
+        "placed_on": "2026-10-07T00:00:00.000Z",
+        "ship_to": "90 Congress Ave, Austin"
+      },
+      {
+        "id": "2ff2354a-05aa-546a-8b44-3b3c3f03326a",
+        "buyer_id": "a343f778-57d2-56db-97a9-0ff1bfa140e5",
+        "seller_id": "7ede5281-f4e3-5f66-a11a-c8dfe3ec116e",
+        "product_id": "5299229f-fe4d-520e-99e3-9afe501f8530",
+        "product_title": "Salt-glazed Bud Vase Set",
+        "quantity": 1,
+        "total": 42,
+        "status": "delivered",
+        "placed_on": "2026-10-01T00:00:00.000Z",
+        "ship_to": "8 Albion Road, Manchester"
+      }
+    ],
+    "payment": []
+  },
+  "pages": [
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "admin"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Team & access",
+            "subtitle": "Who can sign in, and what they can do."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It's just you so far — add the people who work in the app and pick their role."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "shop",
+      "route": "/shop",
+      "title": "Shop",
+      "icon": "ShoppingBag",
+      "personas": [
+        "buyer",
+        "seller"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "Storefront"
+      }
+    },
+    {
+      "name": "studio",
+      "route": "/studio",
+      "title": "Studio",
+      "icon": "Package",
+      "personas": [
+        "seller"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "Studio"
+      }
+    },
+    {
+      "name": "console",
+      "route": "/console",
+      "title": "Console",
+      "icon": "ShieldCheck",
+      "personas": [
+        "admin"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "AdminConsole"
+      }
+    }
+  ],
+  "auth": {
+    "screen": "AtelierLogin",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "AtelierLogin",
+      "kind": "code",
+      "purpose": "Editorial magazine-cover sign-in: serif masthead, staggered product mosaic, sidebar form, Google sign-in",
+      "props": {},
+      "sample": {},
+      "source": "import { useState } from \"react\";\nimport { motion, AnimatePresence, useReducedMotion } from \"motion/react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype Props = { app?: AppHandle };\n\nconst SERIF = \"'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif\";\nconst EASE = [0.22, 1, 0.36, 1] as const;\n\nconst DEMOS = [\n  { label: \"Buyer\", email: \"mira@atelier.test\", pw: \"thunder-summit-lark-72\" },\n  { label: \"Maker\", email: \"hale@atelier.test\", pw: \"lilac-sage-harbor-98\" },\n  { label: \"Curator\", email: \"clara@atelier.test\", pw: \"coral-melon-zephyr-40\" },\n];\n\nconst TILES = [\n  { src: \"/assets/0381c964afef3226.webp\", cap: \"Stoneware mug\", price: \"$28\", ratio: \"aspect-[3/4]\", drop: \"mt-6 lg:mt-14\" },\n  { src: \"/assets/439d1c55d4639a45.webp\", cap: \"Walnut board\", price: \"$78\", ratio: \"aspect-[3/5]\", drop: \"mt-0\" },\n  { src: \"/assets/ba8b5f11b2878645.webp\", cap: \"Carved oak stool\", price: \"$220\", ratio: \"aspect-[4/5]\", drop: \"mt-10 lg:mt-24\" },\n  { src: \"/assets/5550fbf401da4ff4.webp\", cap: \"Shibori scarf\", price: \"$85\", ratio: \"aspect-[3/5]\", drop: \"mt-3 lg:mt-8\" },\n  { src: \"/assets/53041b88ebeec82d.webp\", cap: \"Fruit bowl\", price: \"$64\", ratio: \"aspect-[3/4]\", drop: \"mt-12 lg:mt-4\" },\n];\n\nfunction GoogleG() {\n  return (\n    <svg width=\"18\" height=\"18\" viewBox=\"0 0 48 48\" aria-hidden=\"true\">\n      <path fill=\"#EA4335\" d=\"M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z\" />\n      <path fill=\"#4285F4\" d=\"M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z\" />\n      <path fill=\"#FBBC05\" d=\"M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z\" />\n      <path fill=\"#34A853\" d=\"M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z\" />\n    </svg>\n  );\n}\n\nexport default function AtelierLogin({ app }: Props) {\n  const reduce = useReducedMotion();\n  const auth = app?.auth;\n  const signup = auth?.mode === \"signup\";\n  const providers = auth?.providers ?? [];\n  const [name, setName] = useState(\"\");\n  const [email, setEmail] = useState(\"\");\n  const [password, setPassword] = useState(\"\");\n  const [busy, setBusy] = useState(false);\n  const [error, setError] = useState(\"\");\n\n  const go = async () => {\n    if (!auth || busy) return;\n    setBusy(true);\n    setError(\"\");\n    try {\n      if (signup) await auth.signUp({ name: name.trim() || email.split(\"@\")[0], email: email.trim(), password });\n      else await auth.signIn(email.trim(), password);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : \"That didn't work. Please check your details.\");\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  const provider = async (pname: string) => {\n    setError(\"\");\n    try {\n      await auth?.startProvider(pname);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : \"Couldn't start that sign-in. Please try again.\");\n    }\n  };\n\n  const field =\n    \"w-full border-0 border-b border-[#CDBDA9] bg-transparent px-0 py-3 text-[15px] text-[#2B2420] placeholder:text-[#B3A593] outline-none transition focus:border-[hsl(var(--primary))]\";\n  const lbl = \"block text-[10px] uppercase tracking-[0.28em] text-[#9A8B7B]\";\n\n  return (\n    <div className=\"min-h-screen w-full overflow-x-hidden bg-[#FBF7F2] text-[#2B2420]\" style={{ fontFamily: \"ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif\" }}>\n      <div className=\"mx-auto max-w-[1360px] px-5 pb-12 pt-5 lg:px-12 lg:pt-8\">\n        <div className=\"flex items-center justify-between border-b border-[#2B2420] pb-2 text-[10px] uppercase tracking-[0.3em] text-[#6B5E51]\">\n          <span>Atelier · The handmade issue</span>\n          <span className=\"hidden sm:inline\">Autumn · Vol. 07</span>\n          <span style={{ color: \"hsl(var(--primary))\" }}>No. 01</span>\n        </div>\n\n        <motion.h1\n          initial={reduce ? false : { opacity: 0, y: 36 }}\n          animate={{ opacity: 1, y: 0 }}\n          transition={{ duration: 1, ease: EASE }}\n          className=\"mt-3 text-center leading-[0.9] tracking-[-0.03em] text-[22vw] sm:text-[17vw] lg:text-[190px]\"\n          style={{ fontFamily: SERIF }}\n        >\n          Made by <em className=\"font-normal italic\" style={{ color: \"hsl(var(--primary))\" }}>hand.</em>\n        </motion.h1>\n        <div className=\"mt-2 flex items-center justify-between border-y border-[#E3D6C4] py-2 text-[11px] uppercase tracking-[0.24em] text-[#8A7B6B]\">\n          <span>Ceramics</span><span>Woodwork</span><span>Textiles</span><span className=\"hidden sm:inline\">Candles</span><span className=\"hidden sm:inline\">Jewellery</span>\n        </div>\n\n        <div className=\"mt-6 grid gap-8 lg:mt-8 lg:grid-cols-[1fr_340px] lg:gap-14\">\n          <div className=\"grid grid-cols-5 items-start gap-2 sm:gap-4 lg:order-1\">\n            {TILES.map((t, i) => (\n              <motion.figure\n                key={t.src}\n                initial={reduce ? false : { opacity: 0, y: 40 }}\n                animate={{ opacity: 1, y: 0 }}\n                transition={{ delay: 0.25 + i * 0.1, duration: 0.8, ease: EASE }}\n                whileHover={reduce ? undefined : { y: -6 }}\n                className={\"min-w-0 \" + t.drop}\n              >\n                <div className={\"relative w-full overflow-hidden rounded-[10px] shadow-[0_18px_36px_-22px_rgba(60,40,20,0.6)] sm:rounded-2xl \" + t.ratio} style={{ background: \"linear-gradient(135deg,#EADFD0,#D9C7B0)\" }}>\n                  <img src={t.src} alt={t.cap} loading=\"eager\" className=\"absolute inset-0 h-full w-full object-cover\" />\n                </div>\n                <figcaption className=\"mt-2 hidden sm:block\">\n                  <span className=\"block truncate text-[15px] leading-tight\" style={{ fontFamily: SERIF }}>{t.cap}</span>\n                  <span className=\"text-xs text-[#9A8B7B]\">{t.price}</span>\n                </figcaption>\n              </motion.figure>\n            ))}\n          </div>\n\n          <motion.aside\n            initial={reduce ? false : { opacity: 0, y: 24 }}\n            animate={{ opacity: 1, y: 0 }}\n            transition={{ delay: 0.5, duration: 0.8, ease: EASE }}\n            className=\"lg:order-2 lg:border-l lg:border-[#E3D6C4] lg:pl-10\"\n          >\n            <AnimatePresence mode=\"wait\" initial={false}>\n              <motion.div key={signup ? \"s\" : \"l\"} initial={reduce ? false : { opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={reduce ? undefined : { opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>\n                <p className=\"text-[10px] uppercase tracking-[0.3em]\" style={{ color: \"hsl(var(--primary))\" }}>{signup ? \"Subscribe\" : \"Members\"}</p>\n                <h2 className=\"mt-1 text-[32px] leading-tight\" style={{ fontFamily: SERIF }}>{signup ? \"Join the studio\" : \"Welcome back\"}</h2>\n                <p className=\"mt-1 text-sm text-[#7A6C5E]\">{signup ? \"Save pieces and follow the makers you love.\" : \"Sign in to browse, order and run your studio.\"}</p>\n              </motion.div>\n            </AnimatePresence>\n\n            <div className=\"mt-5 space-y-4\">\n              <AnimatePresence initial={false}>\n                {signup && (\n                  <motion.div key=\"name\" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"overflow-hidden\">\n                    <label className={lbl}>Name</label>\n                    <input aria-label=\"Name\" type=\"text\" placeholder=\"Your name\" value={name} onChange={(e) => setName(e.target.value)} className={field} />\n                  </motion.div>\n                )}\n              </AnimatePresence>\n              <div>\n                <label className={lbl}>Email</label>\n                <input aria-label=\"Email\" type=\"email\" autoComplete=\"email\" placeholder=\"you@example.com\" value={email} onChange={(e) => setEmail(e.target.value)} className={field} />\n              </div>\n              <div>\n                <label className={lbl}>Password</label>\n                <input aria-label=\"Password\" type=\"password\" autoComplete={signup ? \"new-password\" : \"current-password\"} placeholder=\"••••••••\" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => { if (e.key === \"Enter\") void go(); }} className={field} />\n              </div>\n            </div>\n\n            <AnimatePresence>\n              {error && (\n                <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-4 bg-[#F6E3DC] px-3.5 py-2.5 text-sm text-[#8C3A25]\" role=\"alert\">{error}</motion.p>\n              )}\n            </AnimatePresence>\n\n            <motion.button\n              whileHover={reduce ? undefined : { y: -1 }}\n              whileTap={reduce ? undefined : { scale: 0.98 }}\n              onClick={() => void go()}\n              disabled={busy}\n              className=\"mt-6 w-full rounded-full px-5 py-3.5 text-[15px] font-medium text-white shadow-[0_12px_26px_-12px_rgba(181,131,90,0.95)] disabled:opacity-60\"\n              style={{ background: \"hsl(var(--primary))\" }}\n            >\n              {busy ? \"One moment…\" : signup ? \"Create account\" : \"Sign in\"}\n            </motion.button>\n\n            {providers.length > 0 && (\n              <>\n                <div className=\"my-5 flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-[#B3A593]\">\n                  <span className=\"h-px flex-1 bg-[#E3D6C4]\" />or<span className=\"h-px flex-1 bg-[#E3D6C4]\" />\n                </div>\n                <div className=\"space-y-2.5\">\n                  {providers.map((p) => (\n                    <motion.button\n                      key={p.name}\n                      type=\"button\"\n                      whileTap={reduce ? undefined : { scale: 0.98 }}\n                      onClick={() => void provider(p.name)}\n                      className=\"flex w-full items-center justify-center gap-3 rounded-full border border-[#D8C9B5] bg-white px-5 py-3 text-[15px] font-medium text-[#2B2420] transition hover:border-[hsl(var(--primary))]\"\n                    >\n                      {p.name === \"google\" ? <GoogleG /> : null}\n                      Continue with {p.label}\n                    </motion.button>\n                  ))}\n                </div>\n              </>\n            )}\n\n            {auth?.canSignUp !== false && (\n              <p className=\"mt-5 text-sm text-[#7A6C5E]\">\n                {signup ? \"Already a member?\" : \"New to Atelier?\"}{\" \"}\n                <button type=\"button\" onClick={() => { setError(\"\"); auth?.setMode(signup ? \"login\" : \"signup\"); }} className=\"font-medium underline decoration-[#D9B99A] underline-offset-4\" style={{ color: \"hsl(var(--primary))\" }}>\n                  {signup ? \"Sign in instead\" : \"Create an account\"}\n                </button>\n              </p>\n            )}\n\n            {!signup && (\n              <div className=\"mt-6 border-t border-[#E3D6C4] pt-4\">\n                <p className=\"mb-2.5 text-[10px] uppercase tracking-[0.28em] text-[#9A8B7B]\">Try a demo</p>\n                <div className=\"flex flex-wrap gap-2\">\n                  {DEMOS.map((d) => (\n                    <motion.button key={d.label} type=\"button\" whileTap={reduce ? undefined : { scale: 0.94 }} onClick={() => { setEmail(d.email); setPassword(d.pw); setError(\"\"); }} className=\"rounded-full border border-[#E0D2BF] px-4 py-1.5 text-sm text-[#5C4F43] transition hover:border-[hsl(var(--primary))]\">\n                      {d.label}\n                    </motion.button>\n                  ))}\n                </div>\n              </div>\n            )}\n          </motion.aside>\n        </div>\n      </div>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "Storefront",
+      "kind": "code",
+      "purpose": "Buyer storefront: makers, product grid, product page with gallery, animated cart drawer, checkout, order timeline",
+      "props": {
+        "initialView": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "initialView": "Sample"
+      },
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, LayoutGroup, animate, useReducedMotion } from \"motion/react\";\nimport { ShoppingBag, Search, X, Plus, ArrowLeft, ChevronLeft, ChevronRight, Check, Package, Truck, CreditCard, Home, LogOut, MapPin, Sparkles } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\ntype Props = { app?: AppHandle; initialView?: string };\n\nconst SERIF = \"'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif\";\nconst INK = \"#2B2420\";\nconst SAND = \"#FBF7F2\";\nconst SAGE = \"#8A9A82\";\nconst CLAY = \"hsl(var(--primary))\";\nconst EASE = [0.22, 1, 0.36, 1] as const;\nconst SH = \"shadow-[0_1px_2px_rgba(60,40,20,0.06),0_16px_36px_-20px_rgba(60,40,20,0.45)]\";\nconst CATS = [\"all\", \"ceramics\", \"woodwork\", \"textiles\", \"knitwear\", \"candles\", \"jewellery\"];\nconst CTA = \"shadow-[0_14px_28px_-12px_rgba(181,131,90,0.95)]\";\n\nconst s = (r: R | undefined, k: string): string => (r && r[k] != null ? String(r[k]) : \"\");\nconst n = (r: R | undefined, k: string): number => (r ? Number(r[k]) || 0 : 0);\nconst money = (v: number) => \"$\" + v.toLocaleString(\"en-US\", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 });\nconst cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);\n\nfunction Counter({ value }: { value: number }) {\n  const reduce = useReducedMotion();\n  const [v, setV] = useState(value);\n  const last = useRef(value);\n  useEffect(() => {\n    if (reduce) { last.current = value; setV(value); return; }\n    const c = animate(last.current, value, { duration: 0.7, ease: \"easeOut\", onUpdate: (x) => { last.current = x; setV(x); } });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <>{\"$\" + Math.round(v).toLocaleString(\"en-US\")}</>;\n}\n\nfunction StockBadge({ stock }: { stock: number }) {\n  const out = stock <= 0;\n  const low = stock > 0 && stock <= 5;\n  return (\n    <span className=\"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium backdrop-blur\" style={{ background: out ? \"rgba(43,36,32,0.8)\" : low ? \"rgba(181,131,90,0.95)\" : \"rgba(251,247,242,0.92)\", color: out || low ? \"#fff\" : \"#4F5E48\" }}>\n      <span className=\"h-1.5 w-1.5 rounded-full\" style={{ background: out ? \"#bbb\" : low ? \"#fff\" : SAGE }} />\n      {out ? \"Sold out\" : low ? \"Only \" + stock + \" left\" : stock + \" in stock\"}\n    </span>\n  );\n}\n\nfunction Img({ src, className, alt }: { src: string; className?: string; alt: string }) {\n  return (\n    <div className={\"relative overflow-hidden \" + (className || \"\")} style={{ background: \"linear-gradient(135deg,#EADFD0,#D9C7B0)\" }}>\n      {src ? <img src={src} alt={alt} loading=\"lazy\" className=\"absolute inset-0 h-full w-full object-cover\" /> : null}\n    </div>\n  );\n}\n\nfunction Mono({ name, className }: { name: string; className?: string }) {\n  return <div className={\"grid place-items-center text-xl text-white \" + (className || \"\")} style={{ background: \"linear-gradient(135deg,#C9A27F,#8A9A82)\", fontFamily: SERIF }}>{name.charAt(0)}</div>;\n}\n\nconst STEPS = [\n  { key: \"placed\", label: \"Placed\", Icon: Check },\n  { key: \"paid\", label: \"Paid\", Icon: CreditCard },\n  { key: \"shipped\", label: \"Shipped\", Icon: Truck },\n  { key: \"delivered\", label: \"Delivered\", Icon: Home },\n];\n\nfunction Timeline({ status }: { status: string }) {\n  const reduce = useReducedMotion();\n  const idx = Math.max(0, STEPS.findIndex((x) => x.key === status));\n  return (\n    <div className=\"relative mt-5 px-1\">\n      <div className=\"absolute left-[12.5%] right-[12.5%] top-[17px] h-[3px] rounded-full bg-[#EADFD0]\" />\n      <motion.div className=\"absolute left-[12.5%] top-[17px] h-[3px] rounded-full\" style={{ background: CLAY }} initial={reduce ? false : { width: 0 }} animate={{ width: (idx / 3) * 75 + \"%\" }} transition={{ duration: 1, ease: EASE, delay: 0.2 }} />\n      <div className=\"relative grid grid-cols-4\">\n        {STEPS.map((st, i) => {\n          const on = i <= idx;\n          return (\n            <div key={st.key} className=\"flex flex-col items-center gap-2\">\n              <motion.div initial={reduce ? false : { scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: \"spring\", stiffness: 400, damping: 18, delay: 0.1 + i * 0.1 }} className=\"grid h-9 w-9 place-items-center rounded-full border-2\" style={{ background: on ? CLAY : SAND, borderColor: on ? \"transparent\" : \"#E3D6C4\", color: on ? \"#fff\" : \"#B3A593\" }}>\n                <st.Icon size={15} />\n              </motion.div>\n              <span className=\"text-[11px] font-medium\" style={{ color: on ? INK : \"#B3A593\" }}>{st.label}</span>\n            </div>\n          );\n        })}\n      </div>\n    </div>\n  );\n}\n\nfunction Stepper({ value, onChange, size = 28 }: { value: number; onChange: (v: number) => void; size?: number }) {\n  const b = \"grid place-items-center rounded-full bg-white text-base leading-none\";\n  return (\n    <div className=\"flex items-center gap-1 rounded-full bg-[#F1E6D8] p-0.5\">\n      <motion.button whileTap={{ scale: 0.85 }} onClick={() => onChange(value - 1)} aria-label=\"Less\" className={b} style={{ width: size, height: size }}>−</motion.button>\n      <span className=\"w-7 text-center text-sm font-medium\">{value}</span>\n      <motion.button whileTap={{ scale: 0.85 }} onClick={() => onChange(value + 1)} aria-label=\"More\" className={b} style={{ width: size, height: size }}>+</motion.button>\n    </div>\n  );\n}\n\nexport default function Storefront({ app, initialView }: Props) {\n  const reduce = useReducedMotion();\n  const isSeller = app?.user.role === \"seller\";\n  const [view, setView] = useState<string>(initialView === \"orders\" ? \"orders\" : \"shop\");\n  const [cat, setCat] = useState(\"all\");\n  const [q, setQ] = useState(\"\");\n  const [maker, setMaker] = useState(\"\");\n  const [openId, setOpenId] = useState(\"\");\n  const [cartOpen, setCartOpen] = useState(false);\n  const [toasts, setToasts] = useState<{ id: number; text: string; bad?: boolean }[]>([]);\n  const [address, setAddress] = useState(\"\");\n  const [placing, setPlacing] = useState(false);\n  const [done, setDone] = useState(0);\n  const tid = useRef(1);\n  const collection = useRef<HTMLDivElement>(null);\n\n  const sellers = (app?.rows(\"seller\") ?? []) as R[];\n  const allProducts = (app?.rows(\"product\") ?? []) as R[];\n  const cart = (app?.rows(\"cart_item\") ?? []) as R[];\n  const orders = (app?.rows(\"order\") ?? []) as R[];\n  const loading = app?.loading(\"product\") ?? false;\n  const products = useMemo(() => allProducts.filter((p) => s(p, \"status\") === \"approved\"), [allProducts]);\n  const byId = useMemo(() => { const m: Record<string, R> = {}; for (const p of allProducts) m[s(p, \"id\")] = p; return m; }, [allProducts]);\n  const sellerById = useMemo(() => { const m: Record<string, R> = {}; for (const x of sellers) m[s(x, \"id\")] = x; return m; }, [sellers]);\n\n  const toast = (text: string, bad?: boolean) => {\n    const id = tid.current++;\n    setToasts((t) => [...t, { id, text, bad }]);\n    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3800);\n  };\n  const toCollection = () => collection.current?.scrollIntoView({ behavior: \"smooth\" });\n\n  const filtered = useMemo(() => {\n    const t = q.trim().toLowerCase();\n    return products.filter((p) => (cat === \"all\" || s(p, \"category\") === cat) && (!maker || s(p, \"seller_id\") === maker) && (!t || (s(p, \"title\") + \" \" + s(sellerById[s(p, \"seller_id\")], \"shop_name\")).toLowerCase().includes(t)));\n  }, [products, cat, maker, q, sellerById]);\n\n  const lines = cart.map((c) => ({ c, p: byId[s(c, \"product_id\")] })).filter((l) => l.p);\n  const count = lines.reduce((a, l) => a + n(l.c, \"quantity\"), 0);\n  const subtotal = lines.reduce((a, l) => a + n(l.c, \"quantity\") * n(l.p, \"price\"), 0);\n  const featured = sellers.filter((x) => x[\"featured\"] === true || x[\"featured\"] === \"true\");\n  const makers = featured.length ? featured : sellers.slice(0, 4);\n  const openP = openId ? byId[openId] : undefined;\n  const makerRow = maker ? sellerById[maker] : undefined;\n  const heroP = products.slice().sort((a, b) => n(b, \"price\") - n(a, \"price\"))[0];\n  const coverOf = (m: R) => s(products.find((p) => s(p, \"seller_id\") === s(m, \"id\")), \"photo\");\n\n  const addToCart = async (p: R, qty: number) => {\n    const stock = n(p, \"stock\");\n    if (stock <= 0) { toast(\"That piece is sold out\", true); return; }\n    const existing = cart.find((c) => s(c, \"product_id\") === s(p, \"id\"));\n    const next = Math.min(stock, (existing ? n(existing, \"quantity\") : 0) + qty);\n    try {\n      if (existing) await app?.update(\"cart_item\", s(existing, \"id\"), { quantity: next });\n      else await app?.create(\"cart_item\", { product_id: s(p, \"id\"), quantity: next, buyer_id: app?.me(\"buyer\") });\n      toast(s(p, \"title\") + \" added to your bag\");\n    } catch (e) { toast(e instanceof Error ? e.message : \"Couldn't add to bag\", true); }\n  };\n  const setQty = async (c: R, p: R, qty: number) => {\n    if (qty <= 0) { await app?.remove(\"cart_item\", s(c, \"id\")); return; }\n    if (qty > n(p, \"stock\")) { toast(\"Only \" + n(p, \"stock\") + \" available\", true); return; }\n    await app?.update(\"cart_item\", s(c, \"id\"), { quantity: qty });\n  };\n  const checkout = async () => {\n    if (placing || !lines.length) return;\n    setPlacing(true);\n    const today = new Date().toISOString().slice(0, 10);\n    let ok = 0;\n    for (const l of lines) {\n      try {\n        await app?.create(\"order\", { buyer_id: app?.me(\"buyer\"), seller_id: s(l.p, \"seller_id\"), product_id: s(l.p, \"id\"), product_title: s(l.p, \"title\"), quantity: n(l.c, \"quantity\"), total: n(l.c, \"quantity\") * n(l.p, \"price\"), status: \"placed\", placed_on: today, ship_to: address.trim() || \"Address to be confirmed\" });\n        await app?.remove(\"cart_item\", s(l.c, \"id\"));\n        ok++;\n      } catch (e) {\n        toast(e instanceof Error ? e.message : \"Order refused\", true);\n      }\n    }\n    setPlacing(false);\n    if (ok) setDone(ok);\n  };\n\n  const myOrders = orders.slice().sort((a, b) => (s(b, \"placed_on\") + s(b, \"created_at\")).localeCompare(s(a, \"placed_on\") + s(a, \"created_at\")));\n  const nav = [{ id: \"shop\", label: \"Shop\", Icon: Sparkles }, ...(!isSeller ? [{ id: \"orders\", label: \"My orders\", Icon: Package }] : [])];\n  const go = (id: string) => { setOpenId(\"\"); setView(id); };\n  const openStudio = () => app?.navigate(\"/studio\");\n\n  return (\n    <div className=\"min-h-screen w-full pb-28 lg:pb-16\" style={{ background: SAND, color: INK, fontFamily: \"ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif\" }}>\n      <header className=\"sticky top-0 z-30 border-b border-[#EADFD0]/70 backdrop-blur-xl\" style={{ background: \"rgba(251,247,242,0.82)\" }}>\n        <div className=\"mx-auto flex h-16 max-w-[1240px] items-center gap-4 px-4 lg:px-8\">\n          <button onClick={() => go(\"shop\")} className=\"flex items-center gap-2.5\">\n            <span className=\"grid h-9 w-9 place-items-center rounded-full text-lg text-white\" style={{ background: CLAY, fontFamily: SERIF }}>A</span>\n            <span className=\"text-2xl tracking-tight\" style={{ fontFamily: SERIF }}>Atelier</span>\n          </button>\n          <nav className=\"ml-6 hidden items-center gap-1 lg:flex\">\n            {nav.map((t) => (\n              <button key={t.id} onClick={() => go(t.id)} className=\"rounded-full px-4 py-2 text-sm font-medium\" style={{ background: view === t.id ? \"#F1E6D8\" : \"transparent\", color: view === t.id ? INK : \"#8A7B6B\" }}>{t.label}</button>\n            ))}\n            {isSeller && <button onClick={openStudio} className=\"rounded-full px-4 py-2 text-sm font-medium text-[#8A7B6B]\">My studio</button>}\n          </nav>\n          <div className=\"ml-auto flex items-center gap-2\">\n            <motion.button whileTap={{ scale: 0.92 }} onClick={() => setCartOpen(true)} aria-label=\"Open bag\" className=\"relative grid h-11 w-11 place-items-center rounded-full border border-[#EADFD0] bg-white/80\">\n              <ShoppingBag size={19} />\n              <AnimatePresence>\n                {count > 0 && (\n                  <motion.span key={count} initial={{ scale: 0.4 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: \"spring\", stiffness: 500, damping: 16 }} className=\"absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-semibold text-white\" style={{ background: CLAY }}>{count}</motion.span>\n                )}\n              </AnimatePresence>\n            </motion.button>\n            <motion.button whileTap={{ scale: 0.92 }} onClick={() => void app?.auth.signOut()} aria-label=\"Sign out\" className=\"grid h-11 w-11 place-items-center rounded-full border border-[#EADFD0] bg-white/80 text-[#8A7B6B]\"><LogOut size={18} /></motion.button>\n          </div>\n        </div>\n      </header>\n\n      <main className=\"mx-auto max-w-[1240px] px-4 lg:px-8\">\n        <AnimatePresence mode=\"wait\" initial={false}>\n          {view === \"shop\" ? (\n            <motion.div key=\"shop\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>\n              <section className=\"relative mt-5 overflow-hidden rounded-[32px]\" style={{ background: \"linear-gradient(135deg,#C9A27F,#B5835A 60%,#8A9A82)\" }}>\n                <Img src={s(heroP, \"photo\")} alt=\"\" className=\"!absolute inset-0 h-full w-full\" />\n                <div className=\"absolute inset-0\" style={{ background: \"linear-gradient(100deg,rgba(43,36,32,0.8) 0%,rgba(43,36,32,0.38) 55%,rgba(43,36,32,0.05) 100%)\" }} />\n                <div className=\"relative flex min-h-[360px] flex-col justify-end gap-5 p-7 text-[#FBF7F2] sm:min-h-[420px] lg:min-h-[470px] lg:p-14\">\n                  <motion.p initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 0.85, y: 0 }} transition={{ delay: 0.15 }} className=\"text-[11px] uppercase tracking-[0.32em]\">Autumn collection · {products.length} pieces</motion.p>\n                  <motion.h1 initial={reduce ? false : { opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.2 }} className=\"max-w-[640px] text-[40px] leading-[1.02] sm:text-6xl lg:text-7xl\" style={{ fontFamily: SERIF }}>Handmade things with a maker’s name on them.</motion.h1>\n                  <motion.div initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className=\"flex flex-wrap items-center gap-3\">\n                    <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} onClick={toCollection} className=\"rounded-full bg-[#FBF7F2] px-6 py-3 text-sm font-medium text-[#2B2420] shadow-[0_14px_30px_-12px_rgba(0,0,0,0.6)]\">Shop the collection</motion.button>\n                    <span className=\"text-sm opacity-80\">{sellers.length} independent makers</span>\n                  </motion.div>\n                </div>\n              </section>\n\n              <section className=\"mt-12\">\n                <h2 className=\"mb-4 text-3xl\" style={{ fontFamily: SERIF }}>Featured makers</h2>\n                <div className=\"-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3 pt-1 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0\">\n                  {makers.map((m, i) => (\n                    <motion.button key={s(m, \"id\")} initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 * i, duration: 0.6, ease: EASE }} whileHover={{ y: -5 }} whileTap={{ scale: 0.97 }} onClick={() => { setMaker(s(m, \"id\")); setCat(\"all\"); toCollection(); }} className={\"group relative w-[260px] shrink-0 snap-start overflow-hidden rounded-3xl bg-white text-left lg:w-auto \" + SH} style={{ outline: maker === s(m, \"id\") ? \"2px solid \" + CLAY : \"none\" }}>\n                      <Img src={coverOf(m)} alt={s(m, \"shop_name\")} className=\"h-32 w-full\" />\n                      <div className=\"relative px-4 pb-4 pt-9\">\n                        <Mono name={s(m, \"shop_name\")} className=\"absolute -top-7 left-4 h-14 w-14 rounded-full border-[3px] border-white\" />\n                        <p className=\"text-lg leading-tight\" style={{ fontFamily: SERIF }}>{s(m, \"shop_name\")}</p>\n                        <p className=\"mt-0.5 flex items-center gap-1 text-xs text-[#8A7B6B]\"><MapPin size={12} />{s(m, \"location\")}</p>\n                        <p className=\"mt-2 line-clamp-2 text-[13px] text-[#6B5E51]\">{s(m, \"tagline\")}</p>\n                      </div>\n                    </motion.button>\n                  ))}\n                </div>\n              </section>\n\n              <section ref={collection} className=\"mt-12 scroll-mt-24\">\n                <AnimatePresence>\n                  {makerRow && (\n                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: \"auto\" }} exit={{ opacity: 0, height: 0 }} className=\"overflow-hidden\">\n                      <div className=\"mb-6 flex gap-4 rounded-3xl bg-[#F1E6D8] p-5\">\n                        <Mono name={s(makerRow, \"shop_name\")} className=\"h-16 w-16 shrink-0 rounded-full\" />\n                        <div className=\"min-w-0 flex-1\">\n                          <p className=\"text-xl\" style={{ fontFamily: SERIF }}>{s(makerRow, \"shop_name\")} <span className=\"text-sm text-[#8A7B6B]\">· {s(makerRow, \"name\")}</span></p>\n                          <p className=\"mt-1 text-sm leading-relaxed text-[#5C4F43]\">{s(makerRow, \"story\")}</p>\n                        </div>\n                        <button onClick={() => setMaker(\"\")} aria-label=\"Clear maker\" className=\"grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/70\"><X size={15} /></button>\n                      </div>\n                    </motion.div>\n                  )}\n                </AnimatePresence>\n                <div className=\"flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between\">\n                  <h2 className=\"text-3xl\" style={{ fontFamily: SERIF }}>The collection</h2>\n                  <div className=\"relative lg:w-72\">\n                    <Search size={16} className=\"absolute left-4 top-1/2 -translate-y-1/2 text-[#A89A8A]\" />\n                    <input aria-label=\"Search pieces\" value={q} onChange={(e) => setQ(e.target.value)} placeholder=\"Search pieces or makers\" className=\"w-full rounded-full border border-[#E6DACB] bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-[hsl(var(--primary))]\" />\n                  </div>\n                </div>\n                <div className=\"-mx-4 mt-4 overflow-x-auto px-4 lg:mx-0 lg:px-0\">\n                  <LayoutGroup id=\"cats\">\n                    <div className=\"flex w-max gap-2 pb-1\">\n                      {CATS.map((c) => (\n                        <button key={c} onClick={() => setCat(c)} className=\"relative rounded-full border border-[#E6DACB] px-4 py-2 text-sm\" style={{ color: cat === c ? \"#fff\" : \"#6B5E51\" }}>\n                          {cat === c && <motion.span layoutId=\"catpill\" className=\"absolute inset-0 rounded-full\" style={{ background: INK }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n                          <span className=\"relative\">{cap(c)}</span>\n                        </button>\n                      ))}\n                    </div>\n                  </LayoutGroup>\n                </div>\n\n                {loading && !allProducts.length ? (\n                  <div className=\"mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4\">{[0, 1, 2, 3, 4, 5, 6, 7].map((i) => <div key={i} className=\"aspect-[4/5] animate-pulse rounded-3xl bg-[#EFE5D8]\" />)}</div>\n                ) : filtered.length === 0 ? (\n                  <div className=\"mt-10 rounded-3xl border border-dashed border-[#DCCDB9] py-16 text-center\">\n                    <Search className=\"mx-auto text-[#B3A593]\" />\n                    <p className=\"mt-3 text-2xl\" style={{ fontFamily: SERIF }}>Nothing matches yet</p>\n                    <p className=\"mt-1 text-sm text-[#8A7B6B]\">Try another category or clear your search.</p>\n                    <button onClick={() => { setQ(\"\"); setCat(\"all\"); setMaker(\"\"); }} className=\"mt-5 rounded-full px-5 py-2.5 text-sm text-white\" style={{ background: CLAY }}>Reset filters</button>\n                  </div>\n                ) : (\n                  <motion.div layout className=\"mt-6 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-x-6\">\n                    <AnimatePresence mode=\"popLayout\">\n                      {filtered.map((p, i) => {\n                        const stock = n(p, \"stock\");\n                        return (\n                          <motion.article key={s(p, \"id\")} layout initial={reduce ? false : { opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ duration: 0.5, ease: EASE, delay: Math.min(i, 8) * 0.045 }} whileHover={reduce ? undefined : { y: -6 }} whileTap={{ scale: 0.97 }} className=\"group cursor-pointer\" onClick={() => setOpenId(s(p, \"id\"))}>\n                            <motion.div layoutId={\"photo-\" + s(p, \"id\")} className={\"relative overflow-hidden rounded-3xl \" + SH}>\n                              <div className=\"relative aspect-[4/5] overflow-hidden\" style={{ background: \"linear-gradient(135deg,#EADFD0,#D9C7B0)\" }}>\n                                <img src={s(p, \"photo\")} alt={s(p, \"title\")} loading=\"lazy\" className=\"absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]\" />\n                                {stock <= 0 && <div className=\"absolute inset-0 bg-white/35\" />}\n                              </div>\n                              <div className=\"absolute left-3 top-3\"><StockBadge stock={stock} /></div>\n                              <motion.button aria-label={\"Add \" + s(p, \"title\") + \" to bag\"} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.85 }} transition={{ type: \"spring\", stiffness: 500, damping: 18 }} onClick={(e) => { e.stopPropagation(); void addToCart(p, 1); }} disabled={stock <= 0} className=\"absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-white/95 shadow-lg disabled:opacity-40\"><Plus size={19} /></motion.button>\n                            </motion.div>\n                            <div className=\"mt-3 px-1\">\n                              <p className=\"text-[11px] uppercase tracking-[0.18em] text-[#9A8B7B]\">{s(sellerById[s(p, \"seller_id\")], \"shop_name\")}</p>\n                              <div className=\"mt-1 flex items-start justify-between gap-2\">\n                                <h3 className=\"text-[17px] leading-snug\" style={{ fontFamily: SERIF }}>{s(p, \"title\")}</h3>\n                                <span className=\"shrink-0 pt-0.5 text-[15px] font-medium\">{money(n(p, \"price\"))}</span>\n                              </div>\n                            </div>\n                          </motion.article>\n                        );\n                      })}\n                    </AnimatePresence>\n                  </motion.div>\n                )}\n              </section>\n            </motion.div>\n          ) : (\n            <motion.div key=\"orders\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0 }} transition={{ duration: 0.4, ease: EASE }} className=\"pt-8\">\n              <p className=\"text-[11px] uppercase tracking-[0.3em] text-[#9A8B7B]\">Your purchases</p>\n              <h1 className=\"mt-2 text-5xl\" style={{ fontFamily: SERIF }}>My orders</h1>\n              {myOrders.length === 0 ? (\n                <div className=\"mt-10 rounded-3xl border border-dashed border-[#DCCDB9] py-20 text-center\">\n                  <Package className=\"mx-auto text-[#B3A593]\" size={32} />\n                  <p className=\"mt-4 text-2xl\" style={{ fontFamily: SERIF }}>No orders yet</p>\n                  <p className=\"mt-1 text-sm text-[#8A7B6B]\">Anything you buy appears here with its journey.</p>\n                  <button onClick={() => go(\"shop\")} className=\"mt-6 rounded-full px-6 py-3 text-sm text-white\" style={{ background: CLAY }}>Start browsing</button>\n                </div>\n              ) : (\n                <div className=\"mt-8 grid gap-5 lg:grid-cols-2\">\n                  {myOrders.map((o, i) => {\n                    const p = byId[s(o, \"product_id\")];\n                    const st = s(o, \"status\");\n                    return (\n                      <motion.article key={s(o, \"id\")} initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 8) * 0.07, duration: 0.55, ease: EASE }} className={\"rounded-[28px] bg-white p-5 \" + SH}>\n                        <div className=\"flex gap-4\">\n                          <Img src={s(p, \"photo\")} alt={s(o, \"product_title\")} className=\"h-24 w-24 shrink-0 rounded-2xl\" />\n                          <div className=\"min-w-0 flex-1\">\n                            <div className=\"flex items-start justify-between gap-2\">\n                              <h3 className=\"text-xl leading-tight\" style={{ fontFamily: SERIF }}>{s(o, \"product_title\")}</h3>\n                              <span className=\"rounded-full px-2.5 py-1 text-[11px] font-medium\" style={{ background: st === \"delivered\" ? \"rgba(138,154,130,0.22)\" : \"#F1E6D8\", color: st === \"delivered\" ? \"#4F5E48\" : \"#8A5E3B\" }}>{cap(st)}</span>\n                            </div>\n                            <p className=\"mt-1 text-sm text-[#8A7B6B]\">{s(sellerById[s(o, \"seller_id\")], \"shop_name\")} · Qty {n(o, \"quantity\")}</p>\n                            <p className=\"mt-2 text-lg font-medium\">{money(n(o, \"total\"))}</p>\n                            <p className=\"text-xs text-[#9A8B7B]\">Ordered {s(o, \"placed_on\")}</p>\n                          </div>\n                        </div>\n                        <Timeline status={st} />\n                      </motion.article>\n                    );\n                  })}\n                </div>\n              )}\n            </motion.div>\n          )}\n        </AnimatePresence>\n      </main>\n\n      <AnimatePresence>\n        {openP && (\n          <ProductSheet key={openId} p={openP} maker={sellerById[s(openP, \"seller_id\")]} count={count} onBack={() => setOpenId(\"\")} onCart={() => setCartOpen(true)} onAdd={(qty, buy) => { void addToCart(openP, qty).then(() => { if (buy) setCartOpen(true); }); }} onMaker={() => { setMaker(s(openP, \"seller_id\")); setOpenId(\"\"); setView(\"shop\"); }} reduce={!!reduce} />\n        )}\n      </AnimatePresence>\n\n      <AnimatePresence>\n        {cartOpen && (\n          <>\n            <motion.div key=\"bd\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setCartOpen(false)} className=\"fixed inset-0 z-50 bg-[#2B2420]/45 backdrop-blur-[2px]\" />\n            <motion.aside key=\"drawer\" role=\"dialog\" aria-label=\"Your bag\" initial={{ x: \"100%\" }} animate={{ x: 0 }} exit={{ x: \"100%\" }} transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 320, damping: 34 }} className=\"fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-[440px] flex-col rounded-l-[32px] bg-[#FBF7F2] shadow-[-30px_0_60px_-30px_rgba(0,0,0,0.5)]\">\n              <div className=\"flex items-center justify-between px-6 pb-3 pt-6\">\n                <h2 className=\"text-3xl\" style={{ fontFamily: SERIF }}>Your bag</h2>\n                <button onClick={() => { setCartOpen(false); setDone(0); }} aria-label=\"Close bag\" className=\"grid h-10 w-10 place-items-center rounded-full bg-white\"><X size={18} /></button>\n              </div>\n              {done > 0 ? (\n                <div className=\"flex flex-1 flex-col items-center justify-center px-8 text-center\">\n                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: \"spring\", stiffness: 260, damping: 14 }} className=\"grid h-20 w-20 place-items-center rounded-full text-white\" style={{ background: SAGE }}><Check size={36} /></motion.div>\n                  <p className=\"mt-6 text-3xl\" style={{ fontFamily: SERIF }}>Order placed</p>\n                  <p className=\"mt-2 text-sm text-[#8A7B6B]\">Sent to the makers. We’ll tell you when it ships.</p>\n                  <button onClick={() => { setDone(0); setCartOpen(false); go(isSeller ? \"shop\" : \"orders\"); }} className=\"mt-7 rounded-full px-7 py-3 text-sm text-white\" style={{ background: CLAY }}>{isSeller ? \"Keep browsing\" : \"View my orders\"}</button>\n                </div>\n              ) : lines.length === 0 ? (\n                <div className=\"flex flex-1 flex-col items-center justify-center px-8 text-center\">\n                  <ShoppingBag size={36} className=\"text-[#C9B8A3]\" />\n                  <p className=\"mt-4 text-2xl\" style={{ fontFamily: SERIF }}>Your bag is empty</p>\n                  <p className=\"mt-1 text-sm text-[#8A7B6B]\">Find something made just for you.</p>\n                  <button onClick={() => setCartOpen(false)} className=\"mt-6 rounded-full px-6 py-3 text-sm text-white\" style={{ background: CLAY }}>Keep browsing</button>\n                </div>\n              ) : (\n                <>\n                  <div className=\"flex-1 space-y-3 overflow-y-auto px-6 py-2\">\n                    <AnimatePresence initial={false}>\n                      {lines.map(({ c, p }, i) => (\n                        <motion.div key={s(c, \"id\")} layout initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 60 }} transition={{ delay: i * 0.04, type: \"spring\", stiffness: 380, damping: 30 }} className=\"flex gap-3 rounded-3xl bg-white p-3 shadow-[0_8px_24px_-16px_rgba(60,40,20,0.4)]\">\n                          <Img src={s(p, \"photo\")} alt={s(p, \"title\")} className=\"h-20 w-20 shrink-0 rounded-2xl\" />\n                          <div className=\"flex min-w-0 flex-1 flex-col justify-between\">\n                            <div className=\"flex justify-between gap-2\">\n                              <div className=\"min-w-0\">\n                                <p className=\"truncate text-[16px]\" style={{ fontFamily: SERIF }}>{s(p, \"title\")}</p>\n                                <p className=\"truncate text-xs text-[#9A8B7B]\">{s(sellerById[s(p, \"seller_id\")], \"shop_name\")}</p>\n                              </div>\n                              <button onClick={() => void setQty(c, p, 0)} aria-label=\"Remove\" className=\"text-[#B3A593]\"><X size={16} /></button>\n                            </div>\n                            <div className=\"flex items-center justify-between\">\n                              <Stepper value={n(c, \"quantity\")} onChange={(v) => void setQty(c, p, v)} />\n                              <span className=\"font-medium\">{money(n(c, \"quantity\") * n(p, \"price\"))}</span>\n                            </div>\n                          </div>\n                        </motion.div>\n                      ))}\n                    </AnimatePresence>\n                  </div>\n                  <div className=\"space-y-3 border-t border-[#EADFD0] px-6 pb-6 pt-4\">\n                    <input aria-label=\"Delivery address\" value={address} onChange={(e) => setAddress(e.target.value)} placeholder=\"Delivery address\" className=\"w-full rounded-2xl border border-[#E6DACB] bg-white px-4 py-3 text-sm outline-none focus:border-[hsl(var(--primary))]\" />\n                    <div className=\"flex items-end justify-between\">\n                      <span className=\"text-sm text-[#8A7B6B]\">Subtotal · free shipping</span>\n                      <span className=\"text-3xl\" style={{ fontFamily: SERIF }}><Counter value={subtotal} /></span>\n                    </div>\n                    <motion.button whileTap={{ scale: 0.97 }} whileHover={{ y: -1 }} onClick={() => void checkout()} disabled={placing} className={\"w-full rounded-2xl py-4 text-[15px] font-medium text-white disabled:opacity-60 \" + CTA} style={{ background: CLAY }}>{placing ? \"Placing order…\" : \"Place order · \" + money(subtotal)}</motion.button>\n                  </div>\n                </>\n              )}\n            </motion.aside>\n          </>\n        )}\n      </AnimatePresence>\n\n      <div className=\"pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex flex-col items-center gap-2 px-4 lg:bottom-8\">\n        <AnimatePresence>\n          {toasts.map((t) => (\n            <motion.div key={t.id} layout initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className=\"pointer-events-auto max-w-[420px] rounded-2xl px-4 py-3 text-sm text-white shadow-xl\" style={{ background: t.bad ? \"#8C3A25\" : INK }}>{t.text}</motion.div>\n          ))}\n        </AnimatePresence>\n      </div>\n\n      <nav className=\"fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 lg:hidden\">\n        <LayoutGroup id=\"tabs\">\n          <div className=\"flex items-center gap-1 rounded-full border border-white/60 p-1.5 shadow-[0_18px_40px_-14px_rgba(60,40,20,0.55)] backdrop-blur-xl\" style={{ background: \"rgba(251,247,242,0.9)\" }}>\n            {nav.map((t) => (\n              <button key={t.id} onClick={() => go(t.id)} className=\"relative flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium\" style={{ color: view === t.id ? \"#fff\" : \"#7A6C5E\" }}>\n                {view === t.id && <motion.span layoutId=\"tabpill\" className=\"absolute inset-0 rounded-full\" style={{ background: INK }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n                <t.Icon size={17} className=\"relative\" /><span className=\"relative\">{t.label}</span>\n              </button>\n            ))}\n            {isSeller && <button onClick={openStudio} className=\"flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-[#7A6C5E]\"><Home size={17} />Studio</button>}\n          </div>\n        </LayoutGroup>\n      </nav>\n    </div>\n  );\n}\n\ntype SheetProps = { p: R; maker: R | undefined; count: number; onBack: () => void; onCart: () => void; onAdd: (qty: number, buy: boolean) => void; onMaker: () => void; reduce: boolean };\n\nfunction ProductSheet({ p, maker, count, onBack, onCart, onAdd, onMaker, reduce }: SheetProps) {\n  const photos = [s(p, \"photo\"), s(p, \"photo_2\"), s(p, \"photo_3\")].filter(Boolean);\n  const [idx, setIdx] = useState(0);\n  const [dir, setDir] = useState(1);\n  const [qty, setQty] = useState(1);\n  const stock = n(p, \"stock\");\n  const step = (d: number) => { if (!photos.length) return; setDir(d); setIdx((i) => (i + d + photos.length) % photos.length); };\n  const pick = (i: number) => { setDir(i > idx ? 1 : -1); setIdx(i); };\n\n  return (\n    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className=\"fixed inset-0 z-40 overflow-y-auto\" style={{ background: SAND, color: INK }}>\n      <div className=\"sticky top-0 z-10 flex h-16 items-center justify-between border-b border-[#EADFD0]/70 px-4 backdrop-blur-xl lg:px-8\" style={{ background: \"rgba(251,247,242,0.85)\" }}>\n        <motion.button whileTap={{ scale: 0.94 }} onClick={onBack} className=\"flex items-center gap-2 rounded-full border border-[#EADFD0] bg-white px-4 py-2.5 text-sm\"><ArrowLeft size={16} />Back</motion.button>\n        <motion.button whileTap={{ scale: 0.92 }} onClick={onCart} aria-label=\"Open bag\" className=\"relative grid h-11 w-11 place-items-center rounded-full border border-[#EADFD0] bg-white\"><ShoppingBag size={19} />{count > 0 && <span className=\"absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[11px] font-semibold text-white\" style={{ background: CLAY }}>{count}</span>}</motion.button>\n      </div>\n      <div className=\"mx-auto grid max-w-[1180px] gap-8 px-4 pb-24 pt-5 lg:grid-cols-[1.1fr_1fr] lg:gap-14 lg:px-8 lg:pt-10\">\n        <div className=\"lg:sticky lg:top-24 lg:self-start\">\n          <motion.div layoutId={\"photo-\" + s(p, \"id\")} className=\"relative aspect-square overflow-hidden rounded-[32px] shadow-[0_24px_60px_-28px_rgba(60,40,20,0.55)]\" style={{ background: \"linear-gradient(135deg,#EADFD0,#D9C7B0)\" }}>\n            <AnimatePresence initial={false} custom={dir}>\n              <motion.img key={idx} custom={dir} src={photos[idx] || \"\"} alt={s(p, \"title\")} drag={photos.length > 1 ? \"x\" : false} dragConstraints={{ left: 0, right: 0 }} dragElastic={0.5} onDragEnd={(_, info) => { if (info.offset.x < -60) step(1); else if (info.offset.x > 60) step(-1); }} variants={{ enter: (d: number) => ({ x: reduce ? 0 : d * 80, opacity: 0, scale: 1.04 }), center: { x: 0, opacity: 1, scale: 1 }, exit: (d: number) => ({ x: reduce ? 0 : d * -80, opacity: 0, scale: 0.98 }) }} initial=\"enter\" animate=\"center\" exit=\"exit\" transition={{ duration: 0.45, ease: EASE }} className=\"absolute inset-0 h-full w-full cursor-grab object-cover active:cursor-grabbing\" />\n            </AnimatePresence>\n            {photos.length > 1 && (\n              <>\n                <button onClick={() => step(-1)} aria-label=\"Previous photo\" className=\"absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/85 shadow\"><ChevronLeft size={18} /></button>\n                <button onClick={() => step(1)} aria-label=\"Next photo\" className=\"absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/85 shadow\"><ChevronRight size={18} /></button>\n                <div className=\"absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/25 px-2.5 py-1.5 backdrop-blur\">\n                  {photos.map((_, i) => <motion.span key={i} animate={{ width: i === idx ? 18 : 6, opacity: i === idx ? 1 : 0.6 }} className=\"h-1.5 rounded-full bg-white\" />)}\n                </div>\n              </>\n            )}\n          </motion.div>\n          <div className=\"mt-4 flex gap-3\">\n            {photos.map((ph, i) => (\n              <motion.button key={i} whileTap={{ scale: 0.94 }} onClick={() => pick(i)} aria-label={\"Photo \" + (i + 1)} className=\"relative h-20 w-20 overflow-hidden rounded-2xl\" style={{ outline: i === idx ? \"2px solid \" + CLAY : \"2px solid transparent\", outlineOffset: 2 }}>\n                <img src={ph} alt=\"\" className=\"h-full w-full object-cover\" />\n              </motion.button>\n            ))}\n          </div>\n        </div>\n\n        <motion.div initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.6, ease: EASE }}>\n          <p className=\"text-[11px] uppercase tracking-[0.3em] text-[#9A8B7B]\">{cap(s(p, \"category\"))}</p>\n          <h1 className=\"mt-2 text-4xl leading-[1.05] lg:text-5xl\" style={{ fontFamily: SERIF }}>{s(p, \"title\")}</h1>\n          <div className=\"mt-4 flex items-center gap-4\">\n            <span className=\"text-3xl\" style={{ fontFamily: SERIF }}>{money(n(p, \"price\"))}</span>\n            <span className=\"rounded-full bg-[#F1E6D8]\"><StockBadge stock={stock} /></span>\n          </div>\n          <p className=\"mt-5 text-[15px] leading-relaxed text-[#5C4F43]\">{s(p, \"description\")}</p>\n          {s(p, \"materials\") ? <p className=\"mt-4 text-sm text-[#8A7B6B]\"><span className=\"font-medium text-[#2B2420]\">Materials</span> · {s(p, \"materials\")}</p> : null}\n\n          <div className=\"mt-7 flex items-center gap-3\">\n            <Stepper value={qty} size={40} onChange={(v) => setQty(Math.min(Math.max(1, stock), Math.max(1, v)))} />\n            <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.96 }} transition={{ type: \"spring\", stiffness: 500, damping: 24 }} disabled={stock <= 0} onClick={() => onAdd(qty, false)} className=\"flex-1 rounded-full border-2 border-[#2B2420] py-3.5 text-[15px] font-medium disabled:opacity-40\">Add to bag</motion.button>\n          </div>\n          <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} disabled={stock <= 0} onClick={() => onAdd(qty, true)} className={\"mt-3 w-full rounded-full py-4 text-[15px] font-medium text-white disabled:opacity-40 \" + CTA} style={{ background: CLAY }}>{stock <= 0 ? \"Currently sold out\" : \"Buy now · \" + money(qty * n(p, \"price\"))}</motion.button>\n\n          {maker && (\n            <div className=\"mt-10 rounded-[28px] bg-[#F1E6D8] p-6\">\n              <p className=\"mb-3 text-[11px] uppercase tracking-[0.28em] text-[#9A8B7B]\">Meet the maker</p>\n              <div className=\"flex items-center gap-4\">\n                <Mono name={s(maker, \"shop_name\")} className=\"h-16 w-16 shrink-0 rounded-full\" />\n                <div>\n                  <p className=\"text-xl leading-tight\" style={{ fontFamily: SERIF }}>{s(maker, \"shop_name\")}</p>\n                  <p className=\"flex items-center gap-1 text-sm text-[#8A7B6B]\"><MapPin size={13} />{s(maker, \"name\")} · {s(maker, \"location\")}</p>\n                </div>\n              </div>\n              <p className=\"mt-4 text-[15px] leading-relaxed text-[#5C4F43]\">{s(maker, \"story\")}</p>\n              <button onClick={onMaker} className=\"mt-4 text-sm font-medium underline underline-offset-4\" style={{ color: CLAY }}>See everything from {s(maker, \"shop_name\")}</button>\n            </div>\n          )}\n        </motion.div>\n      </div>\n    </motion.div>\n  );\n}\n"
+    },
+    {
+      "name": "Studio",
+      "kind": "code",
+      "purpose": "Seller studio: earnings this month (animated), my products with add/edit sheet, incoming orders to mark shipped",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, LayoutGroup, animate, useReducedMotion } from \"motion/react\";\nimport { LayoutDashboard, Package, Truck, ShoppingBag, LogOut, Plus, Pencil, X, Check, Clock, TrendingUp, Home, Sparkles } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\ntype Props = { app?: AppHandle };\n\nconst SERIF = \"'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif\";\nconst INK = \"#2B2420\";\nconst SAND = \"#FBF7F2\";\nconst SAGE = \"#8A9A82\";\nconst CLAY = \"hsl(var(--primary))\";\nconst EASE = [0.22, 1, 0.36, 1] as const;\nconst SH = \"shadow-[0_1px_2px_rgba(60,40,20,0.06),0_16px_36px_-20px_rgba(60,40,20,0.45)]\";\nconst CATS = [\"ceramics\", \"woodwork\", \"textiles\", \"knitwear\", \"candles\", \"jewellery\"];\n\nconst s = (r: R | undefined, k: string): string => (r && r[k] != null ? String(r[k]) : \"\");\nconst n = (r: R | undefined, k: string): number => (r ? Number(r[k]) || 0 : 0);\nconst money = (v: number) => \"$\" + v.toLocaleString(\"en-US\", { maximumFractionDigits: 0 });\nconst cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);\n\nfunction Counter({ value, size }: { value: number; size?: string }) {\n  const reduce = useReducedMotion();\n  const [v, setV] = useState(0);\n  const last = useRef(0);\n  useEffect(() => {\n    if (reduce) { last.current = value; setV(value); return; }\n    const c = animate(last.current, value, { duration: 1.2, ease: \"easeOut\", onUpdate: (x) => { last.current = x; setV(x); } });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <span className={size} style={{ fontFamily: SERIF }}>{money(v)}</span>;\n}\n\nfunction Img({ src, className, alt }: { src: string; className?: string; alt: string }) {\n  return (\n    <div className={\"relative overflow-hidden \" + (className || \"\")} style={{ background: \"linear-gradient(135deg,#EADFD0,#D9C7B0)\" }}>\n      {src ? <img src={src} alt={alt} loading=\"lazy\" className=\"absolute inset-0 h-full w-full object-cover\" /> : null}\n    </div>\n  );\n}\n\nfunction Pill({ status }: { status: string }) {\n  const map: Record<string, [string, string]> = {\n    approved: [\"rgba(138,154,130,0.25)\", \"#4F5E48\"], pending: [\"#F6E7C9\", \"#8A6420\"], hidden: [\"#ECE6DF\", \"#7A6C5E\"],\n    placed: [\"#F6E7C9\", \"#8A6420\"], paid: [\"rgba(181,131,90,0.2)\", \"#8A5E3B\"], shipped: [\"rgba(138,154,130,0.25)\", \"#4F5E48\"], delivered: [\"rgba(138,154,130,0.25)\", \"#4F5E48\"],\n  };\n  const [bg, fg] = map[status] || [\"#ECE6DF\", \"#7A6C5E\"];\n  return <span className=\"rounded-full px-2.5 py-1 text-[11px] font-medium\" style={{ background: bg, color: fg }}>{cap(status)}</span>;\n}\n\nconst EMPTY = { title: \"\", description: \"\", category: \"ceramics\", price: \"\", stock: \"\", photo: \"\", photo_2: \"\", photo_3: \"\", materials: \"\" };\n\nexport default function Studio({ app }: Props) {\n  const reduce = useReducedMotion();\n  const [tab, setTab] = useState(\"overview\");\n  const [month, setMonth] = useState(\"\");\n  const [filter, setFilter] = useState(\"all\");\n  const [sheet, setSheet] = useState<null | { id: string }>(null);\n  const [form, setForm] = useState<Record<string, string>>(EMPTY);\n  const [saving, setSaving] = useState(false);\n  const [toast, setToast] = useState<{ text: string; bad?: boolean } | null>(null);\n  const [busy, setBusy] = useState(\"\");\n  const [aiBusy, setAiBusy] = useState(false);\n  const [aiDraft, setAiDraft] = useState(\"\");\n  const [aiNote, setAiNote] = useState(\"\");\n\n  useEffect(() => { setMonth(new Date().toISOString().slice(0, 7)); }, []);\n  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3400); return () => clearTimeout(t); }, [toast]);\n\n  const me = app?.me(\"seller\");\n  const sellers = (app?.rows(\"seller\") ?? []) as R[];\n  const mine = sellers.find((x) => s(x, \"id\") === me);\n  const products = ((app?.rows(\"product\") ?? []) as R[]).filter((p) => s(p, \"seller_id\") === me);\n  const orders = ((app?.rows(\"order\") ?? []) as R[]).filter((o) => s(o, \"seller_id\") === me).sort((a, b) => (s(b, \"placed_on\") + s(b, \"created_at\")).localeCompare(s(a, \"placed_on\") + s(a, \"created_at\")));\n  const buyers = (app?.rows(\"buyer\") ?? []) as R[];\n  const buyerName = (id: string) => s(buyers.find((b) => s(b, \"id\") === id), \"name\") || \"Customer\";\n  const loading = app?.loading(\"order\") ?? false;\n\n  const earned = (o: R) => [\"paid\", \"shipped\", \"delivered\"].includes(s(o, \"status\"));\n  const monthEarn = useMemo(() => orders.filter((o) => earned(o) && month && s(o, \"placed_on\").startsWith(month)).reduce((a, o) => a + n(o, \"total\"), 0), [orders, month]);\n  const lastMonthEarn = useMemo(() => orders.filter((o) => earned(o) && month && !s(o, \"placed_on\").startsWith(month)).reduce((a, o) => a + n(o, \"total\"), 0), [orders, month]);\n  const toShip = orders.filter((o) => s(o, \"status\") === \"paid\").length;\n  const live = products.filter((p) => s(p, \"status\") === \"approved\").length;\n  const pending = products.filter((p) => s(p, \"status\") === \"pending\").length;\n  const shown = orders.filter((o) => filter === \"all\" || s(o, \"status\") === filter);\n  const byId = useMemo(() => { const m: Record<string, R> = {}; for (const p of (app?.rows(\"product\") ?? []) as R[]) m[s(p, \"id\")] = p; return m; }, [app, products.length]);\n\n  const weeks = useMemo(() => {\n    const out: { label: string; value: number }[] = [];\n    const buckets = [\"Wk 1\", \"Wk 2\", \"Wk 3\", \"Wk 4\"];\n    buckets.forEach((b, i) => out.push({ label: b, value: orders.filter((o) => earned(o) && month && s(o, \"placed_on\").startsWith(month) && Math.min(3, Math.floor((Number(s(o, \"placed_on\").slice(8, 10)) - 1) / 8)) === i).reduce((a, o) => a + n(o, \"total\"), 0) }));\n    return out;\n  }, [orders, month]);\n  const maxWeek = Math.max(1, ...weeks.map((w) => w.value));\n\n  const flash = (text: string, bad?: boolean) => setToast({ text, bad });\n  const openSheet = (p?: R) => {\n    setForm(p ? { title: s(p, \"title\"), description: s(p, \"description\"), category: s(p, \"category\") || \"ceramics\", price: s(p, \"price\"), stock: s(p, \"stock\"), photo: s(p, \"photo\"), photo_2: s(p, \"photo_2\"), photo_3: s(p, \"photo_3\"), materials: s(p, \"materials\") } : EMPTY);\n    setAiDraft(\"\"); setAiNote(\"\");\n    setSheet({ id: p ? s(p, \"id\") : \"\" });\n  };\n  const save = async () => {\n    if (saving) return;\n    if (!form.title.trim() || !form.photo.trim() || !(Number(form.price) >= 0) || form.price === \"\") { flash(\"Add a title, price and a photo URL\", true); return; }\n    setSaving(true);\n    const values: R = { title: form.title.trim(), description: form.description.trim() || \"Handmade with care.\", category: form.category, price: Number(form.price), stock: Math.max(0, Number(form.stock) || 0), photo: form.photo.trim(), photo_2: form.photo_2.trim() || undefined, photo_3: form.photo_3.trim() || undefined, materials: form.materials.trim() || undefined };\n    try {\n      if (sheet && sheet.id) { await app?.update(\"product\", sheet.id, values); flash(\"Changes saved\"); }\n      else { await app?.create(\"product\", { ...values, seller_id: me, status: \"pending\" }); flash(\"Sent for curator approval\"); }\n      setSheet(null);\n    } catch (e) { flash(e instanceof Error ? e.message : \"Couldn't save\", true); }\n    setSaving(false);\n  };\n  const describe = async () => {\n    if (aiBusy) return;\n    if (!form.title.trim()) { setAiNote(\"Add a title first so I know what I'm describing.\"); return; }\n    setAiBusy(true); setAiNote(\"\"); setAiDraft(\"\");\n    try {\n      const prompt = \"Title: \" + form.title.trim() + \"\\nCategory: \" + form.category + \"\\nMaterials: \" + (form.materials.trim() || \"not given\");\n      const text = await app?.ai.ask(prompt, { system: \"You write product copy for a handmade marketplace. Reply with exactly two warm, specific sentences describing the piece for a buyer. No title, no quotes, no emoji, no invented facts beyond the materials given.\", maxTokens: 160 });\n      const clean = (text || \"\").trim();\n      if (!clean) throw new Error(\"empty\");\n      setAiDraft(clean);\n    } catch { setAiNote(\"AI is resting right now, try again soon.\"); }\n    setAiBusy(false);\n  };\n  const advance = async (o: R, to: string) => {\n    setBusy(s(o, \"id\"));\n    try {\n      try { await app?.transition(\"order\", s(o, \"id\"), \"status\", to); }\n      catch { await app?.update(\"order\", s(o, \"id\"), { status: to }); }\n      flash(to === \"shipped\" ? \"Marked as shipped\" : \"Marked as delivered\");\n    } catch (e) { flash(e instanceof Error ? e.message : \"Couldn't update\", true); }\n    setBusy(\"\");\n  };\n\n  const nav = [\n    { id: \"overview\", label: \"Overview\", Icon: LayoutDashboard },\n    { id: \"products\", label: \"Products\", Icon: Package },\n    { id: \"orders\", label: \"Orders\", Icon: Truck, badge: toShip },\n  ];\n  const input = \"w-full rounded-2xl border border-[#E6DACB] bg-white px-4 py-3 text-sm outline-none focus:border-[hsl(var(--primary))]\";\n\n  return (\n    <div className=\"min-h-screen w-full lg:grid lg:grid-cols-[250px_1fr]\" style={{ background: SAND, color: INK, fontFamily: \"ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif\" }}>\n      <aside className=\"hidden border-r border-[#EADFD0] bg-[#F7F0E7] p-6 lg:flex lg:min-h-screen lg:flex-col\">\n        <div className=\"flex items-center gap-2.5\">\n          <span className=\"grid h-9 w-9 place-items-center rounded-full text-lg text-white\" style={{ background: CLAY, fontFamily: SERIF }}>A</span>\n          <span className=\"text-2xl\" style={{ fontFamily: SERIF }}>Studio</span>\n        </div>\n        <LayoutGroup id=\"side\">\n          <nav className=\"mt-10 space-y-1\">\n            {nav.map((t) => (\n              <button key={t.id} onClick={() => setTab(t.id)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium\" style={{ color: tab === t.id ? INK : \"#8A7B6B\" }}>\n                {tab === t.id && <motion.span layoutId=\"sidepill\" className=\"absolute inset-0 rounded-2xl bg-white shadow-sm\" transition={{ type: \"spring\", stiffness: 420, damping: 34 }} />}\n                <t.Icon size={18} className=\"relative\" /><span className=\"relative\">{t.label}</span>\n                {t.badge ? <span className=\"relative ml-auto rounded-full px-2 py-0.5 text-[11px] text-white\" style={{ background: CLAY }}>{t.badge}</span> : null}\n              </button>\n            ))}\n          </nav>\n        </LayoutGroup>\n        <div className=\"mt-auto space-y-1\">\n          <button onClick={() => app?.navigate(\"/shop\")} className=\"flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[#8A7B6B]\"><ShoppingBag size={18} />Visit the shop</button>\n          <button onClick={() => void app?.auth.signOut()} className=\"flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[#8A7B6B]\"><LogOut size={18} />Sign out</button>\n        </div>\n      </aside>\n\n      <div className=\"min-w-0 pb-28 lg:pb-12\">\n        <header className=\"flex items-center justify-between px-5 pb-2 pt-6 lg:px-10 lg:pt-9\">\n          <div className=\"flex items-center gap-3\">\n            <div className=\"grid h-12 w-12 place-items-center rounded-full text-xl text-white\" style={{ background: \"linear-gradient(135deg,#C9A27F,#8A9A82)\", fontFamily: SERIF }}>{s(mine, \"shop_name\").charAt(0) || \"A\"}</div>\n            <div>\n              <p className=\"text-[11px] uppercase tracking-[0.28em] text-[#9A8B7B]\">Your studio</p>\n              <h1 className=\"text-2xl leading-tight lg:text-3xl\" style={{ fontFamily: SERIF }}>{s(mine, \"shop_name\") || \"Studio\"}</h1>\n            </div>\n          </div>\n          <div className=\"flex gap-2 lg:hidden\">\n            <button onClick={() => app?.navigate(\"/shop\")} aria-label=\"Visit shop\" className=\"grid h-11 w-11 place-items-center rounded-full border border-[#EADFD0] bg-white\"><ShoppingBag size={18} /></button>\n            <button onClick={() => void app?.auth.signOut()} aria-label=\"Sign out\" className=\"grid h-11 w-11 place-items-center rounded-full border border-[#EADFD0] bg-white text-[#8A7B6B]\"><LogOut size={18} /></button>\n          </div>\n        </header>\n\n        <main className=\"px-5 pt-4 lg:px-10\">\n          <AnimatePresence mode=\"wait\" initial={false}>\n            {tab === \"overview\" && (\n              <motion.div key=\"o\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>\n                <div className=\"grid gap-5 lg:grid-cols-[1.4fr_1fr]\">\n                  <div className=\"relative overflow-hidden rounded-[32px] p-7 text-[#FBF7F2] lg:p-9\" style={{ background: \"linear-gradient(135deg,#B5835A,#8E6240 70%,#6F7B68)\" }}>\n                    <p className=\"text-[11px] uppercase tracking-[0.3em] opacity-80\">Earned this month</p>\n                    <div className=\"mt-3 text-6xl lg:text-7xl\"><Counter value={monthEarn} /></div>\n                    <p className=\"mt-3 flex items-center gap-2 text-sm opacity-90\"><TrendingUp size={16} />{money(lastMonthEarn)} earned in earlier months</p>\n                    <div className=\"mt-7 flex h-24 items-end gap-3\">\n                      {weeks.map((w, i) => (\n                        <div key={w.label} className=\"flex flex-1 flex-col items-center gap-1.5\">\n                          <motion.div initial={reduce ? false : { height: 0 }} animate={{ height: Math.max(6, (w.value / maxWeek) * 76) }} transition={{ delay: 0.3 + i * 0.1, duration: 0.8, ease: EASE }} className=\"w-full rounded-t-xl bg-white/85\" />\n                          <span className=\"text-[10px] opacity-75\">{w.label}</span>\n                        </div>\n                      ))}\n                    </div>\n                  </div>\n                  <div className=\"grid grid-cols-3 gap-3 lg:grid-cols-1\">\n                    {[{ l: \"To ship\", v: toShip, Icon: Truck }, { l: \"Live pieces\", v: live, Icon: Check }, { l: \"In review\", v: pending, Icon: Clock }].map((x, i) => (\n                      <motion.div key={x.l} initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.08 }} className={\"rounded-3xl bg-white p-4 lg:flex lg:items-center lg:justify-between lg:p-5 \" + SH}>\n                        <div><p className=\"text-xs text-[#9A8B7B]\">{x.l}</p><p className=\"mt-1 text-3xl\" style={{ fontFamily: SERIF }}>{x.v}</p></div>\n                        <x.Icon size={22} className=\"mt-2 text-[#B5835A] lg:mt-0\" />\n                      </motion.div>\n                    ))}\n                  </div>\n                </div>\n                <h2 className=\"mb-3 mt-9 text-2xl\" style={{ fontFamily: SERIF }}>Latest orders</h2>\n                <div className=\"space-y-3\">\n                  {loading && !orders.length ? <div className=\"h-20 animate-pulse rounded-3xl bg-[#EFE5D8]\" /> : orders.slice(0, 4).map((o, i) => (\n                    <motion.div key={s(o, \"id\")} initial={reduce ? false : { opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.07 }} className={\"flex items-center gap-4 rounded-3xl bg-white p-3 pr-5 \" + SH}>\n                      <Img src={s(byId[s(o, \"product_id\")], \"photo\")} alt=\"\" className=\"h-14 w-14 shrink-0 rounded-2xl\" />\n                      <div className=\"min-w-0 flex-1\"><p className=\"truncate text-[15px]\" style={{ fontFamily: SERIF }}>{s(o, \"product_title\")}</p><p className=\"truncate text-xs text-[#9A8B7B]\">{buyerName(s(o, \"buyer_id\"))} · {s(o, \"placed_on\")}</p></div>\n                      <div className=\"text-right\"><p className=\"font-medium\">{money(n(o, \"total\"))}</p><Pill status={s(o, \"status\")} /></div>\n                    </motion.div>\n                  ))}\n                  {!loading && orders.length === 0 && <p className=\"rounded-3xl border border-dashed border-[#DCCDB9] py-10 text-center text-sm text-[#8A7B6B]\">No orders yet — they will appear here the moment someone buys.</p>}\n                </div>\n              </motion.div>\n            )}\n\n            {tab === \"products\" && (\n              <motion.div key=\"p\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>\n                <div className=\"flex items-end justify-between\">\n                  <h2 className=\"text-3xl\" style={{ fontFamily: SERIF }}>My products</h2>\n                  <motion.button whileTap={{ scale: 0.95 }} whileHover={{ y: -2 }} onClick={() => openSheet()} className=\"flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white shadow-[0_14px_28px_-12px_rgba(181,131,90,0.95)]\" style={{ background: CLAY }}><Plus size={17} />Add product</motion.button>\n                </div>\n                {products.length === 0 ? (\n                  <div className=\"mt-8 rounded-3xl border border-dashed border-[#DCCDB9] py-16 text-center\"><Package className=\"mx-auto text-[#B3A593]\" size={30} /><p className=\"mt-3 text-2xl\" style={{ fontFamily: SERIF }}>Your shelf is empty</p><p className=\"mt-1 text-sm text-[#8A7B6B]\">Add your first piece — curators approve new products before they go live.</p></div>\n                ) : (\n                  <div className=\"mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4\">\n                    {products.map((p, i) => (\n                      <motion.div key={s(p, \"id\")} layout initial={reduce ? false : { opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 8) * 0.05, duration: 0.5, ease: EASE }} whileHover={{ y: -4 }} whileTap={{ scale: 0.97 }} onClick={() => openSheet(p)} className={\"cursor-pointer overflow-hidden rounded-3xl bg-white \" + SH}>\n                        <div className=\"relative\"><Img src={s(p, \"photo\")} alt={s(p, \"title\")} className=\"aspect-[4/3] w-full\" /><div className=\"absolute left-3 top-3\"><Pill status={s(p, \"status\")} /></div><span className=\"absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white/90\"><Pencil size={15} /></span></div>\n                        <div className=\"p-4\"><p className=\"truncate text-[16px]\" style={{ fontFamily: SERIF }}>{s(p, \"title\")}</p><p className=\"mt-1 flex justify-between text-sm\"><span className=\"font-medium\">{money(n(p, \"price\"))}</span><span style={{ color: n(p, \"stock\") <= 2 ? \"#B5835A\" : \"#8A7B6B\" }}>{n(p, \"stock\") <= 0 ? \"Sold out\" : n(p, \"stock\") + \" in stock\"}</span></p></div>\n                      </motion.div>\n                    ))}\n                  </div>\n                )}\n              </motion.div>\n            )}\n\n            {tab === \"orders\" && (\n              <motion.div key=\"r\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>\n                <h2 className=\"text-3xl\" style={{ fontFamily: SERIF }}>Incoming orders</h2>\n                <LayoutGroup id=\"flt\">\n                  <div className=\"-mx-5 mt-4 overflow-x-auto px-5\"><div className=\"flex w-max gap-2\">\n                    {[\"all\", \"placed\", \"paid\", \"shipped\", \"delivered\"].map((f) => (\n                      <button key={f} onClick={() => setFilter(f)} className=\"relative rounded-full border border-[#E6DACB] px-4 py-2 text-sm\" style={{ color: filter === f ? \"#fff\" : \"#6B5E51\" }}>\n                        {filter === f && <motion.span layoutId=\"fltpill\" className=\"absolute inset-0 rounded-full\" style={{ background: INK }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n                        <span className=\"relative\">{f === \"paid\" ? \"To ship\" : cap(f)}</span>\n                      </button>\n                    ))}\n                  </div></div>\n                </LayoutGroup>\n                <div className=\"mt-6 grid gap-4 lg:grid-cols-2\">\n                  <AnimatePresence mode=\"popLayout\">\n                    {shown.map((o, i) => (\n                      <motion.div key={s(o, \"id\")} layout initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: Math.min(i, 6) * 0.05, duration: 0.45, ease: EASE }} className={\"rounded-3xl bg-white p-4 \" + SH}>\n                        <div className=\"flex gap-4\">\n                          <Img src={s(byId[s(o, \"product_id\")], \"photo\")} alt=\"\" className=\"h-20 w-20 shrink-0 rounded-2xl\" />\n                          <div className=\"min-w-0 flex-1\">\n                            <div className=\"flex items-start justify-between gap-2\"><p className=\"text-[17px] leading-tight\" style={{ fontFamily: SERIF }}>{s(o, \"product_title\")}</p><Pill status={s(o, \"status\")} /></div>\n                            <p className=\"mt-1 text-sm text-[#8A7B6B]\">{buyerName(s(o, \"buyer_id\"))} · Qty {n(o, \"quantity\")} · {money(n(o, \"total\"))}</p>\n                            <p className=\"mt-0.5 truncate text-xs text-[#9A8B7B]\">Ship to {s(o, \"ship_to\") || \"—\"}</p>\n                          </div>\n                        </div>\n                        <div className=\"mt-3 flex justify-end\">\n                          {s(o, \"status\") === \"paid\" && <motion.button whileTap={{ scale: 0.94 }} disabled={busy === s(o, \"id\")} onClick={() => void advance(o, \"shipped\")} className=\"flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white disabled:opacity-60\" style={{ background: CLAY }}><Truck size={16} />Mark shipped</motion.button>}\n                          {s(o, \"status\") === \"shipped\" && <motion.button whileTap={{ scale: 0.94 }} disabled={busy === s(o, \"id\")} onClick={() => void advance(o, \"delivered\")} className=\"flex items-center gap-2 rounded-full border border-[#2B2420] px-5 py-2.5 text-sm font-medium disabled:opacity-60\"><Home size={16} />Mark delivered</motion.button>}\n                          {s(o, \"status\") === \"placed\" && <span className=\"text-xs text-[#9A8B7B]\">Waiting for payment</span>}\n                          {s(o, \"status\") === \"delivered\" && <span className=\"flex items-center gap-1 text-xs\" style={{ color: SAGE }}><Check size={14} />Completed</span>}\n                        </div>\n                      </motion.div>\n                    ))}\n                  </AnimatePresence>\n                </div>\n                {shown.length === 0 && <p className=\"mt-8 rounded-3xl border border-dashed border-[#DCCDB9] py-12 text-center text-sm text-[#8A7B6B]\">Nothing here right now.</p>}\n              </motion.div>\n            )}\n          </AnimatePresence>\n        </main>\n      </div>\n\n      <nav className=\"fixed inset-x-0 bottom-4 z-30 flex justify-center px-4 lg:hidden\">\n        <LayoutGroup id=\"mtabs\">\n          <div className=\"flex gap-1 rounded-full border border-white/60 p-1.5 shadow-[0_18px_40px_-14px_rgba(60,40,20,0.55)] backdrop-blur-xl\" style={{ background: \"rgba(251,247,242,0.9)\" }}>\n            {nav.map((t) => (\n              <button key={t.id} onClick={() => setTab(t.id)} className=\"relative flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium\" style={{ color: tab === t.id ? \"#fff\" : \"#7A6C5E\" }}>\n                {tab === t.id && <motion.span layoutId=\"mpill\" className=\"absolute inset-0 rounded-full\" style={{ background: INK }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n                <t.Icon size={17} className=\"relative\" /><span className=\"relative\">{t.label}</span>\n              </button>\n            ))}\n          </div>\n        </LayoutGroup>\n      </nav>\n\n      <AnimatePresence>\n        {sheet && (\n          <>\n            <motion.div key=\"bd\" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSheet(null)} className=\"fixed inset-0 z-40 bg-[#2B2420]/45 backdrop-blur-[2px]\" />\n            <motion.div key=\"sh\" role=\"dialog\" aria-label=\"Product\" initial={{ y: \"100%\" }} animate={{ y: 0 }} exit={{ y: \"100%\" }} transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 320, damping: 34 }} className=\"fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92vh] w-full max-w-[560px] flex-col rounded-t-[32px] bg-[#FBF7F2] shadow-2xl lg:bottom-auto lg:top-1/2 lg:-translate-y-1/2 lg:rounded-[32px]\">\n              <div className=\"flex items-center justify-between px-6 pb-2 pt-6\"><h2 className=\"text-2xl\" style={{ fontFamily: SERIF }}>{sheet.id ? \"Edit product\" : \"New product\"}</h2><button onClick={() => setSheet(null)} aria-label=\"Close\" className=\"grid h-10 w-10 place-items-center rounded-full bg-white\"><X size={18} /></button></div>\n              <div className=\"space-y-3 overflow-y-auto px-6 pb-3 pt-2\">\n                {form.photo ? <Img src={form.photo} alt=\"Preview\" className=\"h-36 w-full rounded-2xl\" /> : null}\n                <input aria-label=\"Title\" placeholder=\"Title\" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={input} />\n                <textarea aria-label=\"Description\" placeholder=\"Tell the story of this piece\" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={input} />\n                <div className=\"-mt-1\">\n                  <motion.button type=\"button\" whileTap={{ scale: 0.96 }} onClick={() => void describe()} disabled={aiBusy} className=\"inline-flex items-center gap-2 rounded-full border border-[#D9B99A] bg-[#F7EBDD] px-4 py-2 text-sm font-medium text-[#8A5E3B] disabled:opacity-70\">\n                    <motion.span animate={aiBusy && !reduce ? { rotate: 360 } : { rotate: 0 }} transition={aiBusy ? { repeat: Infinity, duration: 1.6, ease: \"linear\" } : { duration: 0 }} className=\"inline-flex\"><Sparkles size={15} /></motion.span>\n                    {aiBusy ? \"Writing…\" : \"Describe my piece\"}\n                  </motion.button>\n                  <AnimatePresence>\n                    {aiNote && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className=\"mt-2 text-sm text-[#8C3A25]\" role=\"status\">{aiNote}</motion.p>}\n                    {aiDraft && (\n                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className=\"mt-3 rounded-2xl border border-[#E6DACB] bg-white p-3\">\n                        <p className=\"mb-1 text-[10px] uppercase tracking-[0.24em] text-[#9A8B7B]\">Suggested description · edit freely</p>\n                        <textarea aria-label=\"Suggested description\" rows={3} value={aiDraft} onChange={(e) => setAiDraft(e.target.value)} className=\"w-full resize-none bg-transparent text-sm leading-relaxed outline-none\" />\n                        <div className=\"mt-2 flex justify-end gap-2\">\n                          <button type=\"button\" onClick={() => setAiDraft(\"\")} className=\"rounded-full px-4 py-1.5 text-sm text-[#8A7B6B]\">Dismiss</button>\n                          <button type=\"button\" onClick={() => { setForm({ ...form, description: aiDraft.trim() }); setAiDraft(\"\"); }} className=\"flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white\" style={{ background: CLAY }}><Check size={14} />Use this</button>\n                        </div>\n                      </motion.div>\n                    )}\n                  </AnimatePresence>\n                </div>\n                <div className=\"grid grid-cols-3 gap-3\">\n                  <input aria-label=\"Price\" type=\"number\" min={0} placeholder=\"Price $\" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={input} />\n                  <input aria-label=\"Stock\" type=\"number\" min={0} placeholder=\"Stock\" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} className={input} />\n                  <select aria-label=\"Category\" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={input}>{CATS.map((c) => <option key={c} value={c}>{cap(c)}</option>)}</select>\n                </div>\n                <input aria-label=\"Photo URL\" placeholder=\"Main photo URL (https://…)\" value={form.photo} onChange={(e) => setForm({ ...form, photo: e.target.value })} className={input} />\n                <div className=\"grid grid-cols-2 gap-3\">\n                  <input aria-label=\"Second photo URL\" placeholder=\"2nd photo URL\" value={form.photo_2} onChange={(e) => setForm({ ...form, photo_2: e.target.value })} className={input} />\n                  <input aria-label=\"Third photo URL\" placeholder=\"3rd photo URL\" value={form.photo_3} onChange={(e) => setForm({ ...form, photo_3: e.target.value })} className={input} />\n                </div>\n                <input aria-label=\"Materials\" placeholder=\"Materials\" value={form.materials} onChange={(e) => setForm({ ...form, materials: e.target.value })} className={input} />\n              </div>\n              <div className=\"px-6 pb-6 pt-3\"><motion.button whileTap={{ scale: 0.97 }} onClick={() => void save()} disabled={saving} className=\"w-full rounded-2xl py-4 text-[15px] font-medium text-white shadow-[0_14px_28px_-12px_rgba(181,131,90,0.95)] disabled:opacity-60\" style={{ background: CLAY }}>{saving ? \"Saving…\" : sheet.id ? \"Save changes\" : \"Submit for approval\"}</motion.button></div>\n            </motion.div>\n          </>\n        )}\n      </AnimatePresence>\n\n      <AnimatePresence>\n        {toast && <motion.div key={toast.text} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className=\"fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-2xl px-5 py-3 text-sm text-white shadow-xl lg:bottom-8\" style={{ background: toast.bad ? \"#8C3A25\" : INK }}>{toast.text}</motion.div>}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "AdminConsole",
+      "kind": "code",
+      "purpose": "Curator console: approve new products, sales overview",
+      "props": {},
+      "sample": {},
+      "source": "import { useEffect, useMemo, useRef, useState } from \"react\";\nimport { motion, AnimatePresence, LayoutGroup, animate, useReducedMotion } from \"motion/react\";\nimport { ShieldCheck, TrendingUp, LogOut, Check, EyeOff, Clock, Package, DollarSign, Users, ShoppingBag } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype R = Record<string, unknown>;\ntype Props = { app?: AppHandle };\n\nconst SERIF = \"'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif\";\nconst INK = \"#2B2420\";\nconst SAND = \"#FBF7F2\";\nconst SAGE = \"#8A9A82\";\nconst CLAY = \"hsl(var(--primary))\";\nconst EASE = [0.22, 1, 0.36, 1] as const;\nconst SH = \"shadow-[0_1px_2px_rgba(60,40,20,0.06),0_16px_36px_-20px_rgba(60,40,20,0.45)]\";\n\nconst s = (r: R | undefined, k: string): string => (r && r[k] != null ? String(r[k]) : \"\");\nconst n = (r: R | undefined, k: string): number => (r ? Number(r[k]) || 0 : 0);\nconst money = (v: number) => \"$\" + v.toLocaleString(\"en-US\", { maximumFractionDigits: 0 });\nconst cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);\n\nfunction Counter({ value, money: asMoney = true }: { value: number; money?: boolean }) {\n  const reduce = useReducedMotion();\n  const [v, setV] = useState(0);\n  const last = useRef(0);\n  useEffect(() => {\n    if (reduce) { last.current = value; setV(value); return; }\n    const c = animate(last.current, value, { duration: 1.2, ease: \"easeOut\", onUpdate: (x) => { last.current = x; setV(x); } });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <span style={{ fontFamily: SERIF }}>{asMoney ? money(v) : Math.round(v).toLocaleString(\"en-US\")}</span>;\n}\n\nfunction Img({ src, className, alt }: { src: string; className?: string; alt: string }) {\n  return (\n    <div className={\"relative overflow-hidden \" + (className || \"\")} style={{ background: \"linear-gradient(135deg,#EADFD0,#D9C7B0)\" }}>\n      {src ? <img src={src} alt={alt} loading=\"lazy\" className=\"absolute inset-0 h-full w-full object-cover\" /> : null}\n    </div>\n  );\n}\n\nconst STATUS = [\"placed\", \"paid\", \"shipped\", \"delivered\"];\n\nexport default function AdminConsole({ app }: Props) {\n  const reduce = useReducedMotion();\n  const [tab, setTab] = useState(\"approvals\");\n  const [toast, setToast] = useState(\"\");\n  const [busy, setBusy] = useState(\"\");\n  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(\"\"), 3000); return () => clearTimeout(t); }, [toast]);\n\n  const products = (app?.rows(\"product\") ?? []) as R[];\n  const sellers = (app?.rows(\"seller\") ?? []) as R[];\n  const orders = (app?.rows(\"order\") ?? []) as R[];\n  const sellerName = (id: string) => s(sellers.find((x) => s(x, \"id\") === id), \"shop_name\") || \"Maker\";\n  const pending = products.filter((p) => s(p, \"status\") === \"pending\");\n  const live = products.filter((p) => s(p, \"status\") === \"approved\").length;\n  const paidOrders = orders.filter((o) => s(o, \"status\") !== \"placed\");\n  const gmv = paidOrders.reduce((a, o) => a + n(o, \"total\"), 0);\n  const avg = paidOrders.length ? gmv / paidOrders.length : 0;\n  const bySeller = useMemo(() => {\n    const m: Record<string, number> = {};\n    for (const o of paidOrders) m[s(o, \"seller_id\")] = (m[s(o, \"seller_id\")] || 0) + n(o, \"total\");\n    return Object.entries(m).sort((a, b) => b[1] - a[1]);\n  }, [paidOrders.length, sellers.length]);\n  const topMax = Math.max(1, ...bySeller.map((x) => x[1]));\n  const byStatus = STATUS.map((st) => ({ st, c: orders.filter((o) => s(o, \"status\") === st).length }));\n  const maxStatus = Math.max(1, ...byStatus.map((x) => x.c));\n  const recent = orders.slice().sort((a, b) => s(b, \"placed_on\").localeCompare(s(a, \"placed_on\"))).slice(0, 6);\n\n  const decide = async (p: R, status: string) => {\n    setBusy(s(p, \"id\"));\n    try { await app?.update(\"product\", s(p, \"id\"), { status }); setToast(status === \"approved\" ? s(p, \"title\") + \" is now live\" : s(p, \"title\") + \" was hidden\"); }\n    catch (e) { setToast(e instanceof Error ? e.message : \"Couldn't update\"); }\n    setBusy(\"\");\n  };\n\n  const nav = [{ id: \"approvals\", label: \"Approvals\", Icon: ShieldCheck, badge: pending.length }, { id: \"sales\", label: \"Sales\", Icon: TrendingUp }];\n\n  return (\n    <div className=\"min-h-screen w-full lg:grid lg:grid-cols-[250px_1fr]\" style={{ background: SAND, color: INK, fontFamily: \"ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif\" }}>\n      <aside className=\"hidden border-r border-[#EADFD0] bg-[#F7F0E7] p-6 lg:flex lg:min-h-screen lg:flex-col\">\n        <div className=\"flex items-center gap-2.5\"><span className=\"grid h-9 w-9 place-items-center rounded-full text-lg text-white\" style={{ background: CLAY, fontFamily: SERIF }}>A</span><span className=\"text-2xl\" style={{ fontFamily: SERIF }}>Curator</span></div>\n        <LayoutGroup id=\"aside\">\n          <nav className=\"mt-10 space-y-1\">\n            {nav.map((t) => (\n              <button key={t.id} onClick={() => setTab(t.id)} className=\"relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium\" style={{ color: tab === t.id ? INK : \"#8A7B6B\" }}>\n                {tab === t.id && <motion.span layoutId=\"apill\" className=\"absolute inset-0 rounded-2xl bg-white shadow-sm\" transition={{ type: \"spring\", stiffness: 420, damping: 34 }} />}\n                <t.Icon size={18} className=\"relative\" /><span className=\"relative\">{t.label}</span>\n                {t.badge ? <span className=\"relative ml-auto rounded-full px-2 py-0.5 text-[11px] text-white\" style={{ background: CLAY }}>{t.badge}</span> : null}\n              </button>\n            ))}\n          </nav>\n        </LayoutGroup>\n        <div className=\"mt-auto space-y-1\">\n          <button onClick={() => app?.navigate(\"/team\")} className=\"flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[#8A7B6B]\"><Users size={18} />Team & access</button>\n          <button onClick={() => void app?.auth.signOut()} className=\"flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-[#8A7B6B]\"><LogOut size={18} />Sign out</button>\n        </div>\n      </aside>\n\n      <div className=\"min-w-0 pb-28 lg:pb-12\">\n        <header className=\"flex items-center justify-between px-5 pb-2 pt-6 lg:px-10 lg:pt-9\">\n          <div><p className=\"text-[11px] uppercase tracking-[0.28em] text-[#9A8B7B]\">Atelier admin</p><h1 className=\"text-3xl lg:text-4xl\" style={{ fontFamily: SERIF }}>{tab === \"approvals\" ? \"Approve new pieces\" : \"Marketplace sales\"}</h1></div>\n          <button onClick={() => void app?.auth.signOut()} aria-label=\"Sign out\" className=\"grid h-11 w-11 place-items-center rounded-full border border-[#EADFD0] bg-white text-[#8A7B6B] lg:hidden\"><LogOut size={18} /></button>\n        </header>\n\n        <main className=\"px-5 pt-4 lg:px-10\">\n          <AnimatePresence mode=\"wait\" initial={false}>\n            {tab === \"approvals\" ? (\n              <motion.div key=\"a\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>\n                <p className=\"mb-5 flex items-center gap-2 text-sm text-[#8A7B6B]\"><Clock size={15} /><Counter value={pending.length} money={false} /> waiting for review · {live} live in the shop</p>\n                {pending.length === 0 ? (\n                  <div className=\"rounded-3xl border border-dashed border-[#DCCDB9] py-20 text-center\"><motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: \"spring\", stiffness: 260, damping: 14 }} className=\"mx-auto grid h-16 w-16 place-items-center rounded-full text-white\" style={{ background: SAGE }}><Check size={30} /></motion.div><p className=\"mt-4 text-2xl\" style={{ fontFamily: SERIF }}>All caught up</p><p className=\"mt-1 text-sm text-[#8A7B6B]\">New submissions from makers will land here.</p></div>\n                ) : (\n                  <div className=\"grid gap-5 lg:grid-cols-2\">\n                    <AnimatePresence mode=\"popLayout\">\n                      {pending.map((p, i) => (\n                        <motion.div key={s(p, \"id\")} layout initial={reduce ? false : { opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 80, scale: 0.95 }} transition={{ delay: i * 0.08, duration: 0.5, ease: EASE }} className={\"overflow-hidden rounded-[28px] bg-white \" + SH}>\n                          <Img src={s(p, \"photo\")} alt={s(p, \"title\")} className=\"h-52 w-full\" />\n                          <div className=\"p-5\">\n                            <p className=\"text-[11px] uppercase tracking-[0.2em] text-[#9A8B7B]\">{sellerName(s(p, \"seller_id\"))} · {cap(s(p, \"category\"))}</p>\n                            <div className=\"mt-1 flex items-start justify-between gap-3\"><h3 className=\"text-2xl leading-tight\" style={{ fontFamily: SERIF }}>{s(p, \"title\")}</h3><span className=\"text-lg font-medium\">{money(n(p, \"price\"))}</span></div>\n                            <p className=\"mt-2 line-clamp-3 text-sm leading-relaxed text-[#6B5E51]\">{s(p, \"description\")}</p>\n                            <p className=\"mt-2 text-xs text-[#9A8B7B]\">{n(p, \"stock\")} in stock · {s(p, \"materials\")}</p>\n                            <div className=\"mt-4 flex gap-3\">\n                              <motion.button whileTap={{ scale: 0.95 }} whileHover={{ y: -1 }} disabled={busy === s(p, \"id\")} onClick={() => void decide(p, \"approved\")} className=\"flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-medium text-white disabled:opacity-60\" style={{ background: CLAY }}><Check size={16} />Approve</motion.button>\n                              <motion.button whileTap={{ scale: 0.95 }} disabled={busy === s(p, \"id\")} onClick={() => void decide(p, \"hidden\")} className=\"flex items-center justify-center gap-2 rounded-full border border-[#E3D6C4] px-5 py-3 text-sm font-medium text-[#6B5E51] disabled:opacity-60\"><EyeOff size={16} />Hide</motion.button>\n                            </div>\n                          </div>\n                        </motion.div>\n                      ))}\n                    </AnimatePresence>\n                  </div>\n                )}\n              </motion.div>\n            ) : (\n              <motion.div key=\"s\" initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: EASE }}>\n                <div className=\"grid grid-cols-2 gap-4 lg:grid-cols-4\">\n                  {[{ l: \"Gross sales\", node: <Counter value={gmv} />, Icon: DollarSign, hero: true }, { l: \"Orders\", node: <Counter value={orders.length} money={false} />, Icon: ShoppingBag }, { l: \"Avg. order\", node: <Counter value={avg} />, Icon: TrendingUp }, { l: \"Live pieces\", node: <Counter value={live} money={false} />, Icon: Package }].map((x, i) => (\n                    <motion.div key={x.l} initial={reduce ? false : { opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08, ease: EASE }} className={\"rounded-3xl p-5 \" + (x.hero ? \"col-span-2 text-[#FBF7F2] lg:col-span-1\" : \"bg-white \") + SH} style={x.hero ? { background: \"linear-gradient(135deg,#B5835A,#8E6240 70%,#6F7B68)\" } : undefined}>\n                      <x.Icon size={18} className={x.hero ? \"opacity-80\" : \"text-[#B5835A]\"} />\n                      <p className=\"mt-3 text-4xl\">{x.node}</p>\n                      <p className={\"mt-1 text-xs \" + (x.hero ? \"opacity-80\" : \"text-[#9A8B7B]\")}>{x.l}</p>\n                    </motion.div>\n                  ))}\n                </div>\n                <div className=\"mt-6 grid gap-5 lg:grid-cols-2\">\n                  <div className={\"rounded-[28px] bg-white p-6 \" + SH}>\n                    <h2 className=\"text-xl\" style={{ fontFamily: SERIF }}>Sales by maker</h2>\n                    <div className=\"mt-4 space-y-3\">\n                      {bySeller.length === 0 ? <p className=\"text-sm text-[#8A7B6B]\">No sales yet.</p> : bySeller.map(([id, v], i) => (\n                        <div key={id}><div className=\"mb-1 flex justify-between text-sm\"><span>{sellerName(id)}</span><span className=\"font-medium\">{money(v)}</span></div><div className=\"h-2.5 overflow-hidden rounded-full bg-[#F1E6D8]\"><motion.div initial={reduce ? false : { width: 0 }} animate={{ width: (v / topMax) * 100 + \"%\" }} transition={{ delay: 0.2 + i * 0.08, duration: 0.9, ease: EASE }} className=\"h-full rounded-full\" style={{ background: i === 0 ? CLAY : SAGE }} /></div></div>\n                      ))}\n                    </div>\n                  </div>\n                  <div className={\"rounded-[28px] bg-white p-6 \" + SH}>\n                    <h2 className=\"text-xl\" style={{ fontFamily: SERIF }}>Order pipeline</h2>\n                    <div className=\"mt-5 flex h-40 items-end gap-4\">\n                      {byStatus.map((x, i) => (\n                        <div key={x.st} className=\"flex flex-1 flex-col items-center gap-2\"><span className=\"text-sm font-medium\">{x.c}</span><motion.div initial={reduce ? false : { height: 0 }} animate={{ height: Math.max(8, (x.c / maxStatus) * 100) }} transition={{ delay: 0.3 + i * 0.1, duration: 0.8, ease: EASE }} className=\"w-full rounded-t-2xl\" style={{ background: i % 2 ? SAGE : \"#C9A27F\" }} /><span className=\"text-[11px] text-[#8A7B6B]\">{cap(x.st)}</span></div>\n                      ))}\n                    </div>\n                  </div>\n                </div>\n                <h2 className=\"mb-3 mt-8 text-2xl\" style={{ fontFamily: SERIF }}>Recent orders</h2>\n                <div className={\"overflow-hidden rounded-[28px] bg-white \" + SH}>\n                  {recent.map((o, i) => (\n                    <motion.div key={s(o, \"id\")} initial={reduce ? false : { opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.05 }} className=\"flex items-center gap-3 border-b border-[#F1E6D8] px-5 py-4 last:border-0\">\n                      <div className=\"min-w-0 flex-1\"><p className=\"truncate text-[15px]\" style={{ fontFamily: SERIF }}>{s(o, \"product_title\")}</p><p className=\"truncate text-xs text-[#9A8B7B]\">{sellerName(s(o, \"seller_id\"))} · {s(o, \"placed_on\")}</p></div>\n                      <span className=\"rounded-full bg-[#F1E6D8] px-2.5 py-1 text-[11px] text-[#8A5E3B]\">{cap(s(o, \"status\"))}</span>\n                      <span className=\"w-16 text-right font-medium\">{money(n(o, \"total\"))}</span>\n                    </motion.div>\n                  ))}\n                </div>\n              </motion.div>\n            )}\n          </AnimatePresence>\n        </main>\n      </div>\n\n      <nav className=\"fixed inset-x-0 bottom-4 z-30 flex justify-center px-4 lg:hidden\">\n        <LayoutGroup id=\"atabs\">\n          <div className=\"flex gap-1 rounded-full border border-white/60 p-1.5 shadow-[0_18px_40px_-14px_rgba(60,40,20,0.55)] backdrop-blur-xl\" style={{ background: \"rgba(251,247,242,0.9)\" }}>\n            {nav.map((t) => (\n              <button key={t.id} onClick={() => setTab(t.id)} className=\"relative flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium\" style={{ color: tab === t.id ? \"#fff\" : \"#7A6C5E\" }}>\n                {tab === t.id && <motion.span layoutId=\"ampill\" className=\"absolute inset-0 rounded-full\" style={{ background: INK }} transition={{ type: \"spring\", stiffness: 420, damping: 32 }} />}\n                <t.Icon size={17} className=\"relative\" /><span className=\"relative\">{t.label}</span>\n                {t.badge ? <span className=\"relative rounded-full px-1.5 text-[11px]\" style={{ background: CLAY, color: \"#fff\" }}>{t.badge}</span> : null}\n              </button>\n            ))}\n          </div>\n        </LayoutGroup>\n      </nav>\n\n      <AnimatePresence>\n        {toast && <motion.div key={toast} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className=\"fixed bottom-24 left-1/2 z-[60] -translate-x-1/2 rounded-2xl px-5 py-3 text-sm text-white shadow-xl lg:bottom-8\" style={{ background: INK }}>{toast}</motion.div>}\n      </AnimatePresence>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "demo_logins": [
+    {
+      "persona": "seller",
+      "row": "b9e7504f-3463-5607-97c2-bf4e7a2fe7e5"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "order-placed",
+      "title": "Order placed: reserve stock and tell the maker",
+      "on": {
+        "entity": "order",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const p = await ctx.db.get('product', String(row.product_id)); if (p) { const left = Math.max(0, Number(p.stock) - Number(row.quantity)); await ctx.db.update('product', String(p.id), { stock: left }); ctx.log('stock now ' + left); }",
+          "checked": "69e89f7c1dcc17ef"
+        },
+        {
+          "action": "notify",
+          "role": "seller",
+          "to": {
+            "ref": "seller_id",
+            "entity": "seller"
+          },
+          "title": "New order: {{product_title}}",
+          "body": "{{quantity}} x {{product_title}} - ${{total}}. Ship to {{ship_to}}."
+        }
+      ]
+    },
+    {
+      "id": "payment-callback",
+      "title": "Payment provider callback (inbound webhook)",
+      "on": {
+        "webhook": "payment-callback"
+      },
+      "do": [
+        {
+          "action": "record",
+          "entity": "payment"
+        }
+      ]
+    },
+    {
+      "id": "payment-marks-paid",
+      "title": "A successful payment marks the order paid",
+      "on": {
+        "entity": "payment",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const o = await ctx.db.get('order', String(row.order_id)); if (o && String(row.state) === 'succeeded' && String(o.status) === 'placed') { await ctx.db.update('order', String(o.id), { status: 'paid' }); ctx.log('order ' + String(o.id) + ' marked paid'); }",
+          "checked": "1a47fa1e161cdaf8"
+        }
+      ]
+    },
+    {
+      "id": "order-paid",
+      "title": "Tell the maker an order is paid",
+      "on": {
+        "entity": "order",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "paid"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "role": "seller",
+          "to": {
+            "ref": "seller_id",
+            "entity": "seller"
+          },
+          "title": "Paid - ready to pack",
+          "body": "{{product_title}} has been paid for. Time to wrap it up."
+        }
+      ]
+    },
+    {
+      "id": "order-shipped",
+      "title": "Tell the buyer their order shipped",
+      "on": {
+        "entity": "order",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "shipped"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "role": "buyer",
+          "to": {
+            "ref": "buyer_id",
+            "entity": "buyer"
+          },
+          "title": "Your order is on its way",
+          "body": "{{product_title}} has shipped."
+        }
+      ]
+    }
+  ]
+}

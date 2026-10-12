@@ -1,0 +1,201 @@
+{
+ "items": [
+  {
+   "clip": "clips/tablefor.cues.json",
+   "name": "Tablefor",
+   "tag": "Restaurant",
+   "url": "tablefor.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/stride.cues.json",
+   "name": "Stride",
+   "tag": "Coaching",
+   "url": "stride.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/ledgerly.cues.json",
+   "name": "Ledgerly",
+   "tag": "Finance",
+   "url": "ledgerly.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "Budgets",
+     "dur": 4.6
+    }
+   ]
+  },
+  {
+   "clip": "clips/kanbo.cues.json",
+   "name": "Kanbo",
+   "tag": "Team board",
+   "url": "kanbo.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/atelier.cues.json",
+   "name": "Atelier",
+   "tag": "Marketplace",
+   "url": "atelier.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/clinicly.cues.json",
+   "name": "Clinicly",
+   "tag": "Clinic",
+   "url": "clinicly.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "Private patient",
+     "dur": 4.6,
+     "skip": 2.2
+    }
+   ]
+  },
+  {
+   "clip": "clips/eventra.cues.json",
+   "name": "Eventra",
+   "tag": "Events",
+   "url": "eventra.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/learnly.cues.json",
+   "name": "Learnly",
+   "tag": "Courses",
+   "url": "learnly.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/nook.cues.json",
+   "name": "Nook",
+   "tag": "Stays",
+   "url": "nook.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  },
+  {
+   "clip": "clips/relay.cues.json",
+   "name": "Relay",
+   "tag": "Help desk",
+   "url": "relay.apps.appbricx.com",
+   "shots": [
+    {
+     "cue": "sign-in screen",
+     "skip": 0.4,
+     "dur": 2.5,
+     "caption": "Its own sign-in screen"
+    },
+    {
+     "cue": "In-app AI",
+     "after": true,
+     "dur": 4.6,
+     "skip": 0.8
+    }
+   ]
+  }
+ ]
+}

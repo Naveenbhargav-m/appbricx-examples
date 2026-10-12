@@ -1,0 +1,27 @@
+{
+  "name": "@appbricx/cli",
+  "version": "0.1.0",
+  "description": "appbricx developer CLI — write, check, apply, verify and deploy an app contract from your terminal or coding agent",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "appbricx": "./bin/appbricx.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "type-check": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "appbricx": {
+      "url": "${env:APPBRICX_API}/mcp?project=${env:APPBRICX_PROJECT}",
+      "headers": { "Authorization": "Bearer ${env:APPBRICX_TOKEN}" }
+    }
+  }
+}

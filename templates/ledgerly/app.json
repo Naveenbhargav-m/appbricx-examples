@@ -1,0 +1,1393 @@
+{
+  "app": {
+    "name": "Ledgerly",
+    "tagline": "Your money, crystal clear",
+    "theme": "modern-minimal",
+    "nav_style": "sidebar",
+    "density": "comfortable",
+    "brand_icon": "Wallet",
+    "brand_color": "#2F6BFF",
+    "direction": "editorial"
+  },
+  "personas": [
+    {
+      "id": "member",
+      "label": "Member",
+      "description": "manages their own money",
+      "kind": "consumer"
+    },
+    {
+      "id": "admin",
+      "label": "Team",
+      "description": "Ledgerly team - manages sign-ins only, cannot see member money",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": null,
+  "basket": null,
+  "entities": [
+    {
+      "name": "admin",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "member",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "photo",
+          "type": "image",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "read": "own",
+          "update": "own"
+        },
+        "admin": {
+          "read": "all",
+          "update": "none",
+          "delete": "none",
+          "create": false
+        }
+      }
+    },
+    {
+      "name": "account",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "member_id",
+          "type": "ref",
+          "ref": "member"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "kind",
+          "type": "enum",
+          "enum_values": [
+            "checking",
+            "savings",
+            "credit",
+            "cash"
+          ]
+        },
+        {
+          "name": "balance",
+          "type": "number"
+        },
+        {
+          "name": "institution",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        },
+        "admin": {
+          "read": "none",
+          "update": "none",
+          "delete": "none",
+          "create": false
+        }
+      },
+      "owner_refs": [
+        "member_id"
+      ],
+      "actor_ref": "member_id"
+    },
+    {
+      "name": "budget",
+      "label_field": "category",
+      "fields": [
+        {
+          "name": "member_id",
+          "type": "ref",
+          "ref": "member"
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "enum_values": [
+            "groceries",
+            "dining",
+            "transport",
+            "shopping",
+            "bills",
+            "health",
+            "fun",
+            "other"
+          ]
+        },
+        {
+          "name": "monthly_limit",
+          "type": "number"
+        }
+      ],
+      "unique": [
+        [
+          "member_id",
+          "category"
+        ]
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        },
+        "admin": {
+          "read": "none",
+          "update": "none",
+          "delete": "none",
+          "create": false
+        }
+      },
+      "owner_refs": [
+        "member_id"
+      ],
+      "actor_ref": "member_id",
+      "rules": [
+        {
+          "id": "limit-positive",
+          "on": "both",
+          "message": "A budget limit must be greater than zero.",
+          "check": "return Number(row.monthly_limit) > 0;"
+        }
+      ]
+    },
+    {
+      "name": "bill",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "member_id",
+          "type": "ref",
+          "ref": "member"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "day_of_month",
+          "type": "number"
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "enum_values": [
+            "groceries",
+            "dining",
+            "transport",
+            "shopping",
+            "bills",
+            "health",
+            "fun",
+            "other"
+          ]
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        },
+        "admin": {
+          "read": "none",
+          "update": "none",
+          "delete": "none",
+          "create": false
+        }
+      },
+      "owner_refs": [
+        "member_id"
+      ],
+      "actor_ref": "member_id",
+      "rules": [
+        {
+          "id": "day-range",
+          "on": "both",
+          "message": "Day of month must be between 1 and 31.",
+          "check": "const d = Number(row.day_of_month); return d >= 1 && d <= 31;"
+        }
+      ]
+    },
+    {
+      "name": "transaction",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "member_id",
+          "type": "ref",
+          "ref": "member"
+        },
+        {
+          "name": "account_id",
+          "type": "ref",
+          "ref": "account",
+          "optional": true
+        },
+        {
+          "name": "bill_id",
+          "type": "ref",
+          "ref": "bill",
+          "optional": true
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "enum_values": [
+            "groceries",
+            "dining",
+            "transport",
+            "shopping",
+            "bills",
+            "health",
+            "fun",
+            "income",
+            "other"
+          ]
+        },
+        {
+          "name": "date",
+          "type": "date"
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "alert",
+          "type": "enum",
+          "enum_values": [
+            "ok",
+            "over"
+          ],
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "create": true,
+          "read": "own",
+          "update": "own",
+          "delete": "own"
+        },
+        "admin": {
+          "read": "none",
+          "update": "none",
+          "delete": "none",
+          "create": false
+        }
+      },
+      "owner_refs": [
+        "member_id"
+      ],
+      "actor_ref": "member_id",
+      "rules": [
+        {
+          "id": "amount-and-date",
+          "on": "both",
+          "message": "Amount must be non-zero and the date no more than 1 day in the future.",
+          "check": "const amt = Number(row.amount); if (!amt) return 'Amount must be non-zero.'; const d = String(row.date || '').slice(0, 10); const limit = new Date(new Date(ctx.now()).getTime() + 86400000).toISOString().slice(0, 10); if (d > limit) return 'Date cannot be more than 1 day in the future.'; return true;"
+        }
+      ]
+    }
+  ],
+  "seeds": {
+    "admin": [
+      {
+        "id": "689b6a1f-ebea-5f5a-8a7d-189b97d0eae8",
+        "name": "Ledgerly Team"
+      }
+    ],
+    "member": [
+      {
+        "id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Maya Chen",
+        "photo": "/assets/bf5e514885d02e7e.webp"
+      },
+      {
+        "id": "1ca99d21-1772-5dca-804c-fb16f23992e3",
+        "name": "Alex Rivera",
+        "photo": "/assets/5e661b935821fc51.webp"
+      },
+      {
+        "id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Daniel Okafor",
+        "photo": "/assets/eb36bf0b7211a8a8.webp"
+      }
+    ],
+    "account": [
+      {
+        "id": "d29e508f-95a8-5de1-9eb7-0c9b2972e75e",
+        "member_id": "1ca99d21-1772-5dca-804c-fb16f23992e3",
+        "name": "Everyday Checking",
+        "kind": "checking",
+        "balance": 1200,
+        "institution": "Citi"
+      },
+      {
+        "id": "fd87299a-a56e-52a0-bae2-de5fdaf32dfa",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "High-yield Savings",
+        "kind": "savings",
+        "balance": 12400,
+        "institution": "Ally"
+      },
+      {
+        "id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Sapphire Visa",
+        "kind": "credit",
+        "balance": -642.3,
+        "institution": "Chase"
+      },
+      {
+        "id": "eac7a256-1b19-54e4-b8e5-1efdb0b3b390",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Cash wallet",
+        "kind": "cash",
+        "balance": 120,
+        "institution": "Cash"
+      },
+      {
+        "id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Everyday Checking",
+        "kind": "checking",
+        "balance": 4820.55,
+        "institution": "Chase"
+      },
+      {
+        "id": "c9401a82-893c-5d94-a8b7-5ff66fe02f55",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Rainy-day Savings",
+        "kind": "savings",
+        "balance": 6150,
+        "institution": "Marcus"
+      },
+      {
+        "id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Travel Card",
+        "kind": "credit",
+        "balance": -310,
+        "institution": "Amex"
+      },
+      {
+        "id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Main Checking",
+        "kind": "checking",
+        "balance": 2310.4,
+        "institution": "Wells Fargo"
+      }
+    ],
+    "budget": [
+      {
+        "id": "9fc617a5-d2d0-5698-b7a4-3ed5a3fea5db",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "groceries",
+        "monthly_limit": 450
+      },
+      {
+        "id": "f5d7368e-be25-52d0-a289-8a40dc981a8e",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "dining",
+        "monthly_limit": 220
+      },
+      {
+        "id": "6abef82f-52c5-583e-8639-a67a9591a876",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "transport",
+        "monthly_limit": 150
+      },
+      {
+        "id": "b14eb9a2-eaf0-52f6-96c9-135424478d11",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "shopping",
+        "monthly_limit": 250
+      },
+      {
+        "id": "467659df-97a7-5f27-923e-141b5d9054a2",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "bills",
+        "monthly_limit": 1800
+      },
+      {
+        "id": "7acecfa7-55f7-5f35-8a44-a21502fa50b9",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "health",
+        "monthly_limit": 120
+      },
+      {
+        "id": "c955afba-ed2e-54b9-895a-5213979ffab7",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "category": "fun",
+        "monthly_limit": 150
+      },
+      {
+        "id": "5d7b727d-5f6e-58b9-ae2b-c93e4dd877cc",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "category": "groceries",
+        "monthly_limit": 300
+      },
+      {
+        "id": "d9a1bce8-7595-50d6-8f27-e40cb32e147d",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "category": "dining",
+        "monthly_limit": 120
+      },
+      {
+        "id": "7c3db001-85f1-5d35-8fc2-74b9105ea7cc",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "category": "transport",
+        "monthly_limit": 80
+      },
+      {
+        "id": "ef43c039-ae4e-533a-8143-865f15636529",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "category": "shopping",
+        "monthly_limit": 120
+      },
+      {
+        "id": "10c89e2f-35b4-537c-b432-fb8b3e12012d",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "category": "fun",
+        "monthly_limit": 100
+      }
+    ],
+    "bill": [
+      {
+        "id": "eef4757a-f75c-5376-b85c-87f49fd4f0c9",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Rent — Pine Street",
+        "amount": 1450,
+        "day_of_month": 1,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "a9e34f67-60f3-5a6d-8801-bdbee8a67d12",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Equinox Gym",
+        "amount": 45,
+        "day_of_month": 5,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "e5a2cd51-cf0a-58bc-ac82-f968ba86523f",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Netflix",
+        "amount": 15.49,
+        "day_of_month": 17,
+        "category": "fun",
+        "active": true
+      },
+      {
+        "id": "1a3829cf-e1b5-5fc2-8027-c178754bc283",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Con Edison",
+        "amount": 86,
+        "day_of_month": 20,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "aec5dead-2245-599b-9cc9-7981fb268ee7",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Verizon",
+        "amount": 62,
+        "day_of_month": 25,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "948095da-0c28-558c-8c78-b6769a701411",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Car insurance",
+        "amount": 128.5,
+        "day_of_month": 11,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "641d50c6-4028-5bd4-b3d2-3ae2bb71a1db",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "name": "Spotify",
+        "amount": 11.99,
+        "day_of_month": 14,
+        "category": "fun",
+        "active": true
+      },
+      {
+        "id": "4f5cfabc-2843-5756-964b-7f5e0a85e2a6",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Rent — Mission St",
+        "amount": 1180,
+        "day_of_month": 1,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "b2bd9b4e-9091-5a27-8a0b-c6bda630f41b",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Comcast Internet",
+        "amount": 59.99,
+        "day_of_month": 8,
+        "category": "bills",
+        "active": true
+      },
+      {
+        "id": "559150db-f5d2-5d92-84e0-8c30c1d18c12",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "name": "Disney+",
+        "amount": 13.99,
+        "day_of_month": 22,
+        "category": "fun",
+        "active": true
+      }
+    ],
+    "transaction": [
+      {
+        "id": "8b0dd901-b082-5601-97bc-9918258ed7b5",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "title": "Northwind payroll",
+        "amount": 4200,
+        "category": "income",
+        "date": "2026-10-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "51da4579-6286-5d5c-8b37-81b431c2d6b8",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "bill_id": "eef4757a-f75c-5376-b85c-87f49fd4f0c9",
+        "title": "Rent — Pine Street",
+        "amount": -1450,
+        "category": "bills",
+        "date": "2026-10-01T00:00:00.000Z",
+        "note": "Recurring bill",
+        "alert": "ok"
+      },
+      {
+        "id": "cafc4059-7ae2-5cb5-89fc-8b8b5b2ba334",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "bill_id": "a9e34f67-60f3-5a6d-8801-bdbee8a67d12",
+        "title": "Equinox Gym",
+        "amount": -45,
+        "category": "bills",
+        "date": "2026-10-05T00:00:00.000Z",
+        "note": "Recurring bill",
+        "alert": "ok"
+      },
+      {
+        "id": "3232dd62-5020-506c-9391-7d6b8ca48c4c",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Whole Foods",
+        "amount": -86.4,
+        "category": "groceries",
+        "date": "2026-10-02T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "cb43efa6-827f-53f2-ad66-d9f6124a75e6",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Trader Joe's",
+        "amount": -54.2,
+        "category": "groceries",
+        "date": "2026-10-05T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "f1424661-cb44-51bc-b4e2-69c0296ceab4",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "eac7a256-1b19-54e4-b8e5-1efdb0b3b390",
+        "title": "Farmers Market",
+        "amount": -38.75,
+        "category": "groceries",
+        "date": "2026-10-09T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "d99bedcd-97ee-5284-8457-698f71ae992d",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Costco",
+        "amount": -112.3,
+        "category": "groceries",
+        "date": "2026-10-10T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "08737d52-cb13-5244-b2cf-de11ba04259a",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Blue Bottle Coffee",
+        "amount": -6.5,
+        "category": "dining",
+        "date": "2026-10-03T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "43b7720d-8568-5b48-b802-c39fd746d033",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Sushi Zen",
+        "amount": -64,
+        "category": "dining",
+        "date": "2026-10-04T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "391467b8-a2db-59e1-992e-e02dd23eefe5",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Chipotle",
+        "amount": -14.25,
+        "category": "dining",
+        "date": "2026-10-07T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "295f8a77-bd9b-5598-8943-bd028633124d",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Nopa — dinner",
+        "amount": -98.5,
+        "category": "dining",
+        "date": "2026-10-08T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "b67de598-7b90-51c3-a61d-af4cd3af85ae",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Joe & The Juice",
+        "amount": -9.8,
+        "category": "dining",
+        "date": "2026-10-10T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "eb508950-f0b7-5f9d-9e94-2f95b38238b7",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Sunday brunch at Zazie",
+        "amount": -52,
+        "category": "dining",
+        "date": "2026-10-06T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "6b167036-d0e8-523b-88a9-4f616f3161a6",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Uber",
+        "amount": -23.4,
+        "category": "transport",
+        "date": "2026-10-02T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "b4e7eb31-22a0-56bb-9d0c-f70a4d3e3886",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Shell fuel",
+        "amount": -48,
+        "category": "transport",
+        "date": "2026-10-06T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "29a5a4eb-e870-5581-b631-e85662dd08dd",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "title": "Clipper card reload",
+        "amount": -30,
+        "category": "transport",
+        "date": "2026-10-09T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "6677da85-f74d-5f88-8e5d-27dd98699fe4",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Uniqlo",
+        "amount": -79.9,
+        "category": "shopping",
+        "date": "2026-10-05T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "51ce83fb-3d5e-5012-b924-478437c6b880",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Amazon",
+        "amount": -42.15,
+        "category": "shopping",
+        "date": "2026-10-08T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "4814e3fa-d4dc-5881-9905-6413d92610a4",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "CVS Pharmacy",
+        "amount": -22.4,
+        "category": "health",
+        "date": "2026-10-07T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "c34a7439-35da-56af-aef6-1100c8b1263b",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "AMC Theatres",
+        "amount": -28,
+        "category": "fun",
+        "date": "2026-10-04T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "65aded44-a1ab-58a7-9e06-0d814e8219ef",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Steam",
+        "amount": -19.99,
+        "category": "fun",
+        "date": "2026-10-10T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "a89124af-e5b7-5782-ac99-36b584db1df5",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "title": "Freelance — logo project",
+        "amount": 650,
+        "category": "income",
+        "date": "2026-10-08T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "975668b1-87c1-597a-a50d-d5c365069161",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "title": "Northwind payroll",
+        "amount": 4200,
+        "category": "income",
+        "date": "2026-09-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "1893f981-6ccd-5a73-aec8-68fba21ff4e4",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "bill_id": "eef4757a-f75c-5376-b85c-87f49fd4f0c9",
+        "title": "Rent — Pine Street",
+        "amount": -1450,
+        "category": "bills",
+        "date": "2026-09-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "33bfe6d3-a20c-5d16-8ef6-125077ee28b9",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "bill_id": "a9e34f67-60f3-5a6d-8801-bdbee8a67d12",
+        "title": "Equinox Gym",
+        "amount": -45,
+        "category": "bills",
+        "date": "2026-09-05T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "ecfe1f55-356b-53ca-8e8f-8e47bcf98d3d",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Whole Foods",
+        "amount": -212.6,
+        "category": "groceries",
+        "date": "2026-09-14T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "1055c7f8-1a7a-596d-b08d-b09365e5de72",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Nopa — dinner",
+        "amount": -134.2,
+        "category": "dining",
+        "date": "2026-09-20T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "1317b177-4348-5f13-b4cc-21763d259072",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Chipotle",
+        "amount": -38.4,
+        "category": "dining",
+        "date": "2026-09-11T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "6f44631c-aaf2-5f89-bc9e-de0aa307e3d0",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Uber",
+        "amount": -61.3,
+        "category": "transport",
+        "date": "2026-09-18T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "11dce82d-2473-5fea-b95f-6a2ee293b01b",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Nordstrom",
+        "amount": -184,
+        "category": "shopping",
+        "date": "2026-09-22T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "5b011884-7702-5ccc-8e44-b821a209b3a9",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "title": "Dr. Patel copay",
+        "amount": -40,
+        "category": "health",
+        "date": "2026-09-15T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "431451a7-7ed6-5df9-b902-9edb23f2843b",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Concert tickets",
+        "amount": -120,
+        "category": "fun",
+        "date": "2026-09-27T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "04901908-3216-53fe-ac92-3ae75ab9d4e7",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Trader Joe's",
+        "amount": -148.35,
+        "category": "groceries",
+        "date": "2026-09-28T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "a33e7ce5-65d4-55e1-a99d-520176aba5f2",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "bill_id": "1a3829cf-e1b5-5fc2-8027-c178754bc283",
+        "title": "Con Edison",
+        "amount": -86,
+        "category": "bills",
+        "date": "2026-09-20T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "94f33818-d63f-5185-91fc-9723942bdbb3",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "title": "Northwind payroll",
+        "amount": 4200,
+        "category": "income",
+        "date": "2026-08-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "9205ab88-74be-512e-ac17-2c1842d3d5f3",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "104969a4-73af-5c72-b9a6-a1a16a23b20d",
+        "bill_id": "eef4757a-f75c-5376-b85c-87f49fd4f0c9",
+        "title": "Rent — Pine Street",
+        "amount": -1450,
+        "category": "bills",
+        "date": "2026-08-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "5cef3517-f995-5045-b99b-d539d9857a10",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Whole Foods",
+        "amount": -301.1,
+        "category": "groceries",
+        "date": "2026-08-16T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "fc1ef954-5d4d-5ad0-9a53-f0c6942acddf",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Dinner out",
+        "amount": -188.4,
+        "category": "dining",
+        "date": "2026-08-19T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "f3d65ee4-2b44-5325-9f63-c926865490f5",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Uber",
+        "amount": -92.1,
+        "category": "transport",
+        "date": "2026-08-23T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "8a3667a9-9f93-5467-be94-9883445c394c",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Zara",
+        "amount": -143,
+        "category": "shopping",
+        "date": "2026-08-26T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "995d46e8-1460-5cae-bc1d-e38ec2a4309c",
+        "member_id": "11bc231c-2a50-595e-9758-48eba19c00d7",
+        "account_id": "71690fba-228c-59fa-84cc-0b00c344d205",
+        "title": "Kayak rental",
+        "amount": -76,
+        "category": "fun",
+        "date": "2026-08-30T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "d0af652b-0f1f-5778-ba99-ac88dd288595",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "title": "Brightline paycheck",
+        "amount": 3150,
+        "category": "income",
+        "date": "2026-10-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "ca9f5729-cff7-54f4-8019-86604ae1b392",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "bill_id": "4f5cfabc-2843-5756-964b-7f5e0a85e2a6",
+        "title": "Rent — Mission St",
+        "amount": -1180,
+        "category": "bills",
+        "date": "2026-10-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "758135c5-3d54-5206-8d1e-2a0c1a007346",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "bill_id": "b2bd9b4e-9091-5a27-8a0b-c6bda630f41b",
+        "title": "Comcast Internet",
+        "amount": -59.99,
+        "category": "bills",
+        "date": "2026-10-08T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "3497d5a4-a32d-58ce-840b-820bfebbefba",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Safeway",
+        "amount": -92.15,
+        "category": "groceries",
+        "date": "2026-10-03T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "1593ad23-c06e-5926-95f6-74d3ffd2fd1f",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Safeway",
+        "amount": -61.4,
+        "category": "groceries",
+        "date": "2026-10-09T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "693ad74c-1f20-5f75-98ad-6b11ca6aa13b",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "La Taqueria",
+        "amount": -18.5,
+        "category": "dining",
+        "date": "2026-10-04T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "0c06553c-eb2a-5b26-ac67-3250e6ebe581",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Dinner at Delfina",
+        "amount": -84,
+        "category": "dining",
+        "date": "2026-10-07T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "e2e5e755-6141-5b6a-9441-a0d59ad250f5",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Lyft",
+        "amount": -17.2,
+        "category": "transport",
+        "date": "2026-10-05T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "b025cfc7-c32d-5151-a2bf-3a475fa7a4b6",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "title": "BART",
+        "amount": -25,
+        "category": "transport",
+        "date": "2026-10-09T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "1f73530d-e439-53db-b16c-63257896891d",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Nike",
+        "amount": -96,
+        "category": "shopping",
+        "date": "2026-10-06T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "00208b1d-68d2-5cb6-9b3a-ec570c3357f1",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "title": "Walgreens",
+        "amount": -31.8,
+        "category": "health",
+        "date": "2026-10-02T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "99497d2d-e14c-5b8a-b2af-4c24ff5d74ce",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Bowling night",
+        "amount": -42,
+        "category": "fun",
+        "date": "2026-10-10T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "cdad2411-2a71-5784-9a0c-d639f63ed78f",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "title": "Brightline paycheck",
+        "amount": 3150,
+        "category": "income",
+        "date": "2026-09-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "dc49d0b2-a845-5857-a9b2-6630050825cb",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f64dc254-51da-5775-b82a-86a3ae561101",
+        "bill_id": "4f5cfabc-2843-5756-964b-7f5e0a85e2a6",
+        "title": "Rent — Mission St",
+        "amount": -1180,
+        "category": "bills",
+        "date": "2026-09-01T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "3f3b5f84-6f46-53dd-9c19-584399c22daa",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Whole Foods",
+        "amount": -203.7,
+        "category": "groceries",
+        "date": "2026-09-15T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "b8c095fe-2edd-518e-996c-331beb9e6640",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Brunch",
+        "amount": -112.6,
+        "category": "dining",
+        "date": "2026-09-21T00:00:00.000Z",
+        "alert": "ok"
+      },
+      {
+        "id": "22279dac-d68b-5b48-a59c-ef39135a7a62",
+        "member_id": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+        "account_id": "f551f39b-b75e-58fa-8a40-ecfc68678485",
+        "title": "Patagonia",
+        "amount": -78.4,
+        "category": "shopping",
+        "date": "2026-09-24T00:00:00.000Z",
+        "alert": "ok"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "dashboard",
+      "route": "/dashboard",
+      "title": "Home",
+      "icon": "LayoutDashboard",
+      "personas": [
+        "member"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "DashboardScreen"
+      }
+    },
+    {
+      "name": "transactions",
+      "route": "/transactions",
+      "title": "Activity",
+      "icon": "List",
+      "personas": [
+        "member"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "TransactionsScreen"
+      }
+    },
+    {
+      "name": "budgets",
+      "route": "/budgets",
+      "title": "Budgets",
+      "icon": "Target",
+      "personas": [
+        "member"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "BudgetsScreen"
+      }
+    },
+    {
+      "name": "insights",
+      "route": "/insights",
+      "title": "Insights",
+      "icon": "Sparkles",
+      "personas": [
+        "member"
+      ],
+      "chrome": "none",
+      "layout": {
+        "kind": "custom",
+        "custom": "InsightsScreen"
+      }
+    },
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team & access",
+      "icon": "Users",
+      "personas": [
+        "admin"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Team & access",
+            "subtitle": "Who can sign in, and what they can do."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Add a person",
+              "emptyCopy": "It is just you so far. Add people and pick their role."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "auth": {
+    "screen": "LedgerlyAuth",
+    "google": true,
+    "layout": "centered",
+    "decor": "auto",
+    "signupPersonaChoice": false
+  },
+  "components": [
+    {
+      "name": "DashboardScreen",
+      "kind": "code",
+      "purpose": "Home: animated balance, account cards, spending donut, budget bars, upcoming bills",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useMemo, useState } from 'react';\nimport { motion, animate, useReducedMotion } from 'motion/react';\nimport { LayoutDashboard, List, Target, Sparkles, LogOut, ShoppingCart, Utensils, Truck, ShoppingBag, FileText, HeartPulse, Film, TrendingUp, TrendingDown, Circle, ChevronRight, Wallet, CreditCard } from 'lucide-react';\nimport type { AppHandle } from '@app/kit/primitives';\n\ntype R = Record<string, unknown>;\ntype Icon = typeof Circle;\nconst CATS: Record<string, { label: string; color: string; Icon: Icon }> = {\n  groceries: { label: 'Groceries', color: '#10B981', Icon: ShoppingCart },\n  dining: { label: 'Dining', color: '#F59E0B', Icon: Utensils },\n  transport: { label: 'Transport', color: '#8B5CF6', Icon: Truck },\n  shopping: { label: 'Shopping', color: '#EC4899', Icon: ShoppingBag },\n  bills: { label: 'Bills', color: '#2F6BFF', Icon: FileText },\n  health: { label: 'Health', color: '#06B6D4', Icon: HeartPulse },\n  fun: { label: 'Fun', color: '#F97316', Icon: Film },\n  income: { label: 'Income', color: '#22C55E', Icon: TrendingUp },\n  other: { label: 'Other', color: '#94A3B8', Icon: Circle },\n};\nconst cat = (k: string) => CATS[k] || CATS.other;\nconst money = (n: number, d = 2) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });\nconst ymd = (d: Date) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');\nconst MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\nconst sd = (s: string) => MONTHS[Number(s.slice(5, 7)) - 1] + ' ' + Number(s.slice(8, 10));\nconst CARD = 'rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-14px_rgba(15,23,42,0.14)]';\nconst TABS = [\n  { k: 'dashboard', label: 'Home', route: '/dashboard', Icon: LayoutDashboard },\n  { k: 'transactions', label: 'Activity', route: '/transactions', Icon: List },\n  { k: 'budgets', label: 'Budgets', route: '/budgets', Icon: Target },\n  { k: 'insights', label: 'Insights', route: '/insights', Icon: Sparkles },\n];\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  const name = String(app?.user.name || 'You');\n  return (\n    <div className='min-h-screen overflow-x-hidden bg-[#F4F6FB] text-slate-900 lg:flex'>\n      <aside className='sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/70 bg-white p-6 lg:flex'>\n        <div className='flex items-center gap-2.5'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-[0_8px_18px_-6px_rgba(47,107,255,0.7)]'>L</div>\n          <span className='text-xl font-semibold tracking-tight'>Ledgerly</span>\n        </div>\n        <nav className='mt-10 flex flex-col gap-1'>\n          {TABS.map((t) => (\n            <button key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ' + (active === t.k ? 'text-primary' : 'text-slate-500 hover:text-slate-900')}>\n              {active === t.k && <motion.span layoutId='side-pill' className='absolute inset-0 rounded-2xl bg-primary/10' transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}\n              <t.Icon size={19} className='relative' />\n              <span className='relative'>{t.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className='mt-auto flex items-center gap-3 rounded-2xl bg-slate-50 p-3'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary'>{name[0]}</div>\n          <div className='min-w-0 flex-1'>\n            <div className='truncate text-sm font-semibold'>{name}</div>\n            <div className='text-xs text-slate-400'>Member</div>\n          </div>\n          <button aria-label='Sign out' onClick={() => app?.auth.signOut()} className='rounded-lg p-2 text-slate-400 hover:bg-white hover:text-slate-700'><LogOut size={16} /></button>\n        </div>\n      </aside>\n      <main className='min-w-0 flex-1 pb-28 lg:pb-12'>\n        <div className='mx-auto w-full max-w-5xl px-4 pt-6 lg:px-10 lg:pt-10'>{children}</div>\n      </main>\n      <nav className='fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/70 bg-white/85 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden'>\n        <div className='mx-auto flex max-w-md justify-around'>\n          {TABS.map((t) => (\n            <motion.button whileTap={{ scale: 0.9 }} key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex w-20 flex-col items-center gap-1 rounded-2xl py-1.5 text-[11px] font-medium ' + (active === t.k ? 'text-primary' : 'text-slate-400')}>\n              <t.Icon size={22} strokeWidth={active === t.k ? 2.4 : 1.9} />\n              {t.label}\n              {active === t.k && <motion.span layoutId='tab-dot' className='absolute -top-2 h-1 w-8 rounded-full bg-primary' />}\n            </motion.button>\n          ))}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nfunction Rise({ i = 0, className = '', children }: { i?: number; className?: string; children: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  return (\n    <motion.div className={'min-w-0 ' + className} initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 170, damping: 22, delay: reduce ? 0 : i * 0.07 }}>\n      {children}\n    </motion.div>\n  );\n}\n\nfunction CountUp({ value, className }: { value: number; className?: string }) {\n  const reduce = useReducedMotion();\n  const [v, setV] = useState(reduce ? value : 0);\n  useEffect(() => {\n    if (reduce) { setV(value); return; }\n    const c = animate(0, value, { duration: 1.2, ease: [0.22, 1, 0.36, 1], onUpdate: (x) => setV(x) });\n    return () => c.stop();\n  }, [value, reduce]);\n  return <span className={className}>{money(v)}</span>;\n}\n\nexport default function DashboardScreen({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [now, setNow] = useState<Date | null>(null);\n  const [hot, setHot] = useState<string | null>(null);\n  useEffect(() => { setNow(new Date()); }, []);\n  const txs = (app?.rows('transaction') || []) as R[];\n  const accounts = (app?.rows('account') || []) as R[];\n  const budgets = (app?.rows('budget') || []) as R[];\n  const bills = (app?.rows('bill') || []) as R[];\n  const me = (app?.rows('member') || [])[0] as R | undefined;\n  const loading = !now || (!!app?.loading('transaction') && txs.length === 0);\n  const ym = now ? ymd(now).slice(0, 7) : '';\n  const first = String(app?.user.name || 'there').split(' ')[0];\n  const hour = now ? now.getHours() : 12;\n  const greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';\n\n  const d = useMemo(() => {\n    const spend: Record<string, number> = {};\n    let income = 0;\n    let spent = 0;\n    for (const t of txs) {\n      if (String(t.date).slice(0, 7) !== ym) continue;\n      const a = Number(t.amount);\n      if (a < 0) { spend[String(t.category)] = (spend[String(t.category)] || 0) - a; spent -= a; } else income += a;\n    }\n    const list = Object.keys(spend).map((k) => ({ k, v: spend[k] })).sort((a, b) => b.v - a.v);\n    return { spend, income, spent, list };\n  }, [txs, ym]);\n\n  const balance = accounts.reduce((s, a) => s + Number(a.balance || 0), 0);\n  const net = d.income - d.spent;\n\n  const upcoming = useMemo(() => {\n    if (!now) return [];\n    const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());\n    const dim = (y: number, m: number) => new Date(y, m + 1, 0).getDate();\n    const paid = new Set(txs.filter((t) => t.bill_id && String(t.date).slice(0, 7) === ym).map((t) => String(t.bill_id)));\n    return bills.filter((b) => b.active !== false).map((b) => {\n      const day = Number(b.day_of_month);\n      let dt = new Date(t0.getFullYear(), t0.getMonth(), Math.min(day, dim(t0.getFullYear(), t0.getMonth())));\n      if (dt < t0) dt = new Date(t0.getFullYear(), t0.getMonth() + 1, Math.min(day, dim(t0.getFullYear(), t0.getMonth() + 1)));\n      return { b, dt, days: Math.round((dt.getTime() - t0.getTime()) / 86400000), paid: paid.has(String(b.id)) && dt.getMonth() === t0.getMonth() };\n    }).sort((a, b) => a.days - b.days).slice(0, 4);\n  }, [bills, txs, now, ym]);\n\n  const recent = [...txs].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 5);\n  const budgetRows = budgets.map((b) => {\n    const lim = Number(b.monthly_limit);\n    const sp = d.spend[String(b.category)] || 0;\n    return { k: String(b.category), lim, sp, pct: lim ? sp / lim : 0 };\n  }).sort((a, b) => b.pct - a.pct);\n\n  const C = 2 * Math.PI * 46;\n  let off = 0;\n  const segs = d.list.map((s) => { const len = d.spent ? (s.v / d.spent) * C : 0; const seg = { ...s, len, off }; off += len; return seg; });\n  const hotItem = d.list.find((s) => s.k === hot);\n\n  const kindStyle: Record<string, string> = {\n    checking: 'from-slate-900 to-slate-700',\n    savings: 'from-primary to-[#1A3FB8]',\n    credit: 'from-violet-500 to-fuchsia-500',\n    cash: 'from-emerald-500 to-teal-500',\n  };\n\n  return (\n    <Shell app={app} active='dashboard'>\n      <Rise>\n        <div className='mb-6 flex items-center justify-between'>\n          <div>\n            <div className='text-sm font-medium text-slate-400'>{greet}</div>\n            <div className='text-3xl font-semibold tracking-tight lg:text-4xl'>{first}</div>\n          </div>\n          {me && me.photo ? (\n            <img src={String(me.photo)} alt='' className='h-12 w-12 rounded-full bg-primary/15 object-cover ring-4 ring-white shadow-md' />\n          ) : (\n            <div className='flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 font-bold text-primary'>{first[0]}</div>\n          )}\n        </div>\n      </Rise>\n\n      {loading ? (\n        <div className='space-y-4'>\n          <div className='h-52 animate-pulse rounded-3xl bg-slate-200/70' />\n          <div className='grid grid-cols-2 gap-4'><div className='h-32 animate-pulse rounded-3xl bg-slate-200/70' /><div className='h-32 animate-pulse rounded-3xl bg-slate-200/70' /></div>\n          <div className='h-64 animate-pulse rounded-3xl bg-slate-200/70' />\n        </div>\n      ) : (\n        <div className='grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-3'>\n          <Rise i={1} className='lg:col-span-2 lg:row-start-1'>\n            <div className='relative overflow-hidden rounded-[32px] bg-gradient-to-br from-primary via-primary to-[#1A3FB8] p-6 text-white shadow-[0_24px_50px_-18px_rgba(47,107,255,0.75)] lg:p-8'>\n              <div className='pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10' />\n              <div className='pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-[#7FA6FF]/25 blur-2xl' />\n              <div className='relative text-sm font-medium text-white/70'>Total balance</div>\n              <CountUp value={balance} className='relative mt-1 block text-5xl font-semibold tracking-tight tabular-nums lg:text-6xl' />\n              <div className='relative mt-5 flex flex-wrap gap-2.5'>\n                <div className='flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-medium backdrop-blur'><TrendingUp size={15} /> In {money(d.income, 0)}</div>\n                <div className='flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-medium backdrop-blur'><TrendingDown size={15} /> Out {money(d.spent, 0)}</div>\n                <div className='rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-primary'>{net >= 0 ? '+' : '-'}{money(Math.abs(net), 0)} this month</div>\n              </div>\n            </div>\n          </Rise>\n\n          <Rise i={3} className='lg:col-span-2 lg:row-start-2'>\n            <div className='mb-3 flex items-center justify-between'><div className='text-lg font-semibold'>Accounts</div><span className='text-xs text-slate-400'>{accounts.length} linked</span></div>\n            <div className='-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-3 lg:mx-0 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0'>\n              {accounts.map((a, i) => {\n                const k = String(a.kind);\n                const AI = k === 'credit' ? CreditCard : Wallet;\n                return (\n                  <motion.div key={String(a.id)} whileTap={{ scale: 0.97 }} whileHover={{ y: -3 }} initial={reduce ? false : { opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 + i * 0.07, type: 'spring', stiffness: 180, damping: 22 }} className={'relative w-[220px] shrink-0 snap-start overflow-hidden rounded-3xl bg-gradient-to-br p-5 text-white shadow-lg lg:w-auto ' + (kindStyle[k] || kindStyle.checking)}>\n                    <div className='pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10' />\n                    <div className='relative flex items-center justify-between text-white/80'><AI size={18} /><span className='text-[11px] font-semibold uppercase tracking-wider'>{k}</span></div>\n                    <div className='relative mt-6 text-xs text-white/70'>{String(a.name)}</div>\n                    <div className='relative text-2xl font-semibold tabular-nums'>{money(Number(a.balance))}</div>\n                  </motion.div>\n                );\n              })}\n            </div>\n          </Rise>\n\n          <Rise i={2} className='lg:col-start-3 lg:row-span-2 lg:row-start-1'>\n            <div className={CARD + ' h-full'}>\n              <div className='flex items-center justify-between'><div className='text-lg font-semibold'>Spending</div><span className='text-xs text-slate-400'>This month</span></div>\n              {d.list.length === 0 ? (\n                <div className='py-10 text-center text-sm text-slate-400'>No spending yet this month.</div>\n              ) : (\n                <>\n                  <div className='relative mx-auto mt-4 h-44 w-44'>\n                    <svg viewBox='0 0 120 120' className='h-full w-full'>\n                      <g transform='rotate(-90 60 60)'>\n                        <circle cx='60' cy='60' r='46' fill='none' stroke='#EEF1F7' strokeWidth='12' />\n                        {segs.map((s, i) => (\n                          <motion.circle key={s.k} cx='60' cy='60' r='46' fill='none' stroke={cat(s.k).color} strokeWidth={hot === s.k ? 15 : 12} strokeDashoffset={-s.off} initial={reduce ? false : { strokeDasharray: '0 ' + C }} animate={{ strokeDasharray: Math.max(s.len - 2, 0.01) + ' ' + C }} transition={{ duration: 0.9, delay: 0.3 + i * 0.08, ease: [0.22, 1, 0.36, 1] }} style={{ opacity: hot && hot !== s.k ? 0.35 : 1, transition: 'opacity .2s, stroke-width .2s' }} />\n                        ))}\n                      </g>\n                    </svg>\n                    <div className='pointer-events-none absolute inset-0 flex flex-col items-center justify-center'>\n                      <div className='text-[11px] font-medium uppercase tracking-wider text-slate-400'>{hotItem ? cat(hotItem.k).label : 'Spent'}</div>\n                      <div className='text-2xl font-semibold tabular-nums'>{money(hotItem ? hotItem.v : d.spent, 0)}</div>\n                    </div>\n                  </div>\n                  <div className='mt-4 space-y-1'>\n                    {d.list.slice(0, 5).map((s) => (\n                      <div key={s.k} onMouseEnter={() => setHot(s.k)} onMouseLeave={() => setHot(null)} onClick={() => setHot(hot === s.k ? null : s.k)} className='flex cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 text-sm hover:bg-slate-50'>\n                        <span className='h-2.5 w-2.5 rounded-full' style={{ background: cat(s.k).color }} />\n                        <span className='flex-1 text-slate-600'>{cat(s.k).label}</span>\n                        <span className='font-medium tabular-nums'>{money(s.v, 0)}</span>\n                      </div>\n                    ))}\n                  </div>\n                </>\n              )}\n            </div>\n          </Rise>\n\n          <Rise i={4} className='lg:col-span-2 lg:row-start-3'>\n            <div className={CARD}>\n              <div className='mb-4 flex items-center justify-between'><div className='text-lg font-semibold'>Budgets</div><button onClick={() => app?.navigate('/budgets')} className='flex items-center text-sm font-medium text-primary'>Manage <ChevronRight size={16} /></button></div>\n              {budgetRows.length === 0 && <div className='py-6 text-center text-sm text-slate-400'>No budgets yet. Set a monthly limit to track a category.</div>}\n              <div className='space-y-5'>\n                {budgetRows.map((b, i) => {\n                  const over = b.sp > b.lim;\n                  const c = cat(b.k);\n                  return (\n                    <div key={b.k}>\n                      <div className='mb-1.5 flex items-center gap-3'>\n                        <div className='flex h-9 w-9 items-center justify-center rounded-xl' style={{ background: c.color + '1F', color: c.color }}><c.Icon size={17} /></div>\n                        <div className='flex-1 text-sm font-semibold'>{c.label}</div>\n                        <div className={'text-sm tabular-nums ' + (over ? 'font-semibold text-red-500' : 'text-slate-500')}>{money(b.sp, 0)} <span className='text-slate-300'>/</span> {money(b.lim, 0)}</div>\n                      </div>\n                      <div className='h-2.5 overflow-hidden rounded-full bg-slate-100'>\n                        <motion.div className='h-full rounded-full' style={{ background: over ? '#EF4444' : c.color }} initial={reduce ? false : { width: 0 }} animate={{ width: Math.min(b.pct, 1) * 100 + '%' }} transition={{ duration: 0.9, delay: 0.4 + i * 0.07, ease: [0.22, 1, 0.36, 1] }} />\n                      </div>\n                      <div className={'mt-1 text-xs ' + (over ? 'text-red-500' : 'text-slate-400')}>{over ? money(b.sp - b.lim, 0) + ' over budget' : money(b.lim - b.sp, 0) + ' left'}</div>\n                    </div>\n                  );\n                })}\n              </div>\n            </div>\n          </Rise>\n\n          <Rise i={5} className='lg:col-start-3 lg:row-start-3 lg:self-start'>\n            <div className={CARD}>\n              <div className='mb-3 text-lg font-semibold'>Upcoming bills</div>\n              {upcoming.length === 0 && <div className='py-6 text-center text-sm text-slate-400'>No recurring bills.</div>}\n              <div className='space-y-3'>\n                {upcoming.map((u) => (\n                  <div key={String(u.b.id)} className='flex items-center gap-3'>\n                    <div className='flex h-12 w-12 flex-col items-center justify-center rounded-2xl bg-slate-50 leading-none'>\n                      <span className='text-[10px] font-semibold uppercase text-slate-400'>{MONTHS[u.dt.getMonth()]}</span>\n                      <span className='mt-0.5 text-lg font-semibold'>{u.dt.getDate()}</span>\n                    </div>\n                    <div className='min-w-0 flex-1'>\n                      <div className='truncate text-sm font-semibold'>{String(u.b.name)}</div>\n                      <div className={'text-xs ' + (u.days === 0 && !u.paid ? 'font-medium text-amber-500' : 'text-slate-400')}>{u.paid ? 'Paid' : u.days === 0 ? 'Due today' : u.days === 1 ? 'Tomorrow' : 'In ' + u.days + ' days'}</div>\n                    </div>\n                    <div className='text-sm font-semibold tabular-nums'>{money(Number(u.b.amount))}</div>\n                  </div>\n                ))}\n              </div>\n            </div>\n          </Rise>\n\n          <Rise i={6} className='lg:col-span-3 lg:row-start-4'>\n            <div className={CARD}>\n              <div className='mb-2 flex items-center justify-between'><div className='text-lg font-semibold'>Recent activity</div><button onClick={() => app?.navigate('/transactions')} className='flex items-center text-sm font-medium text-primary'>See all <ChevronRight size={16} /></button></div>\n              <div className='divide-y divide-slate-100'>\n                {recent.map((t) => {\n                  const c = cat(String(t.category));\n                  const a = Number(t.amount);\n                  return (\n                    <div key={String(t.id)} className='flex items-center gap-3 py-3'>\n                      <div className='flex h-10 w-10 items-center justify-center rounded-2xl' style={{ background: c.color + '1F', color: c.color }}><c.Icon size={18} /></div>\n                      <div className='min-w-0 flex-1'><div className='truncate text-sm font-semibold'>{String(t.title)}</div><div className='text-xs text-slate-400'>{c.label} · {sd(String(t.date))}</div></div>\n                      <div className={'text-sm font-semibold tabular-nums ' + (a > 0 ? 'text-emerald-600' : '')}>{a > 0 ? '+' : ''}{money(a)}</div>\n                    </div>\n                  );\n                })}\n              </div>\n            </div>\n          </Rise>\n        </div>\n      )}\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "TransactionsScreen",
+      "kind": "code",
+      "purpose": "Searchable grouped transaction list with swipe cards and a bottom-sheet editor",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useMemo, useState } from 'react';\nimport { motion, AnimatePresence, animate, useAnimationControls, useDragControls, useReducedMotion } from 'motion/react';\nimport { LayoutDashboard, List, Target, Sparkles, LogOut, ShoppingCart, Utensils, Truck, ShoppingBag, FileText, HeartPulse, Film, TrendingUp, TrendingDown, Circle, Plus, Search, Trash2, X, Check, Inbox } from 'lucide-react';\nimport type { AppHandle } from '@app/kit/primitives';\n\ntype R = Record<string, unknown>;\ntype Icon = typeof Circle;\nconst CATS: Record<string, { label: string; color: string; Icon: Icon }> = {\n  groceries: { label: 'Groceries', color: '#10B981', Icon: ShoppingCart },\n  dining: { label: 'Dining', color: '#F59E0B', Icon: Utensils },\n  transport: { label: 'Transport', color: '#8B5CF6', Icon: Truck },\n  shopping: { label: 'Shopping', color: '#EC4899', Icon: ShoppingBag },\n  bills: { label: 'Bills', color: '#2F6BFF', Icon: FileText },\n  health: { label: 'Health', color: '#06B6D4', Icon: HeartPulse },\n  fun: { label: 'Fun', color: '#F97316', Icon: Film },\n  income: { label: 'Income', color: '#22C55E', Icon: TrendingUp },\n  other: { label: 'Other', color: '#94A3B8', Icon: Circle },\n};\nconst EXPENSE = ['groceries', 'dining', 'transport', 'shopping', 'bills', 'health', 'fun', 'other'];\nconst cat = (k: string) => CATS[k] || CATS.other;\nconst money = (n: number, d = 2) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });\nconst ymd = (d: Date) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');\nconst CARD = 'rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-14px_rgba(15,23,42,0.14)]';\nconst TABS = [\n  { k: 'dashboard', label: 'Home', route: '/dashboard', Icon: LayoutDashboard },\n  { k: 'transactions', label: 'Activity', route: '/transactions', Icon: List },\n  { k: 'budgets', label: 'Budgets', route: '/budgets', Icon: Target },\n  { k: 'insights', label: 'Insights', route: '/insights', Icon: Sparkles },\n];\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  const name = String(app?.user.name || 'You');\n  return (\n    <div className='min-h-screen overflow-x-hidden bg-[#F4F6FB] text-slate-900 lg:flex'>\n      <aside className='sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/70 bg-white p-6 lg:flex'>\n        <div className='flex items-center gap-2.5'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-[0_8px_18px_-6px_rgba(47,107,255,0.7)]'>L</div>\n          <span className='text-xl font-semibold tracking-tight'>Ledgerly</span>\n        </div>\n        <nav className='mt-10 flex flex-col gap-1'>\n          {TABS.map((t) => (\n            <button key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ' + (active === t.k ? 'text-primary' : 'text-slate-500 hover:text-slate-900')}>\n              {active === t.k && <motion.span layoutId='side-pill' className='absolute inset-0 rounded-2xl bg-primary/10' transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}\n              <t.Icon size={19} className='relative' />\n              <span className='relative'>{t.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className='mt-auto flex items-center gap-3 rounded-2xl bg-slate-50 p-3'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary'>{name[0]}</div>\n          <div className='min-w-0 flex-1'>\n            <div className='truncate text-sm font-semibold'>{name}</div>\n            <div className='text-xs text-slate-400'>Member</div>\n          </div>\n          <button aria-label='Sign out' onClick={() => app?.auth.signOut()} className='rounded-lg p-2 text-slate-400 hover:bg-white hover:text-slate-700'><LogOut size={16} /></button>\n        </div>\n      </aside>\n      <main className='min-w-0 flex-1 pb-28 lg:pb-12'>\n        <div className='mx-auto w-full max-w-5xl px-4 pt-6 lg:px-10 lg:pt-10'>{children}</div>\n      </main>\n      <nav className='fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/70 bg-white/85 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden'>\n        <div className='mx-auto flex max-w-md justify-around'>\n          {TABS.map((t) => (\n            <motion.button whileTap={{ scale: 0.9 }} key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex w-20 flex-col items-center gap-1 rounded-2xl py-1.5 text-[11px] font-medium ' + (active === t.k ? 'text-primary' : 'text-slate-400')}>\n              <t.Icon size={22} strokeWidth={active === t.k ? 2.4 : 1.9} />\n              {t.label}\n              {active === t.k && <motion.span layoutId='tab-dot' className='absolute -top-2 h-1 w-8 rounded-full bg-primary' />}\n            </motion.button>\n          ))}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nfunction Rise({ i = 0, className = '', children }: { i?: number; className?: string; children: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  return (\n    <motion.div className={'min-w-0 ' + className} initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 170, damping: 22, delay: reduce ? 0 : i * 0.07 }}>\n      {children}\n    </motion.div>\n  );\n}\n\nfunction TxSheet({ app, tx, accounts, today, onClose, onDone }: { app?: AppHandle; tx: R | null; accounts: R[]; today: string; onClose: () => void; onDone: (msg: string) => void }) {\n  const controls = useDragControls();\n  const a0 = tx ? Number(tx.amount) : 0;\n  const [kind, setKind] = useState<'expense' | 'income'>(tx && a0 > 0 ? 'income' : 'expense');\n  const [amount, setAmount] = useState(tx ? String(Math.abs(a0)) : '');\n  const [title, setTitle] = useState(tx ? String(tx.title) : '');\n  const [category, setCategory] = useState(tx && tx.category !== 'income' ? String(tx.category) : 'groceries');\n  const [accountId, setAccountId] = useState(tx && tx.account_id ? String(tx.account_id) : '');\n  const [date, setDate] = useState(tx ? String(tx.date).slice(0, 10) : today);\n  const [note, setNote] = useState(tx && tx.note ? String(tx.note) : '');\n  const [err, setErr] = useState('');\n  const [shake, setShake] = useState(0);\n  const [busy, setBusy] = useState(false);\n  const field = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15';\n  const lbl = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500';\n\n  const save = async () => {\n    if (!app || busy) return;\n    setErr('');\n    setBusy(true);\n    const n = parseFloat(amount.replace(/,/g, ''));\n    const v = isFinite(n) ? n : 0;\n    const values: R = {\n      title: title.trim() || (kind === 'income' ? 'Income' : 'Expense'),\n      amount: kind === 'expense' ? -Math.abs(v) : Math.abs(v),\n      category: kind === 'income' ? 'income' : category,\n      date,\n      account_id: accountId || null,\n      note: note.trim() || null,\n    };\n    try {\n      if (tx) await app.update('transaction', String(tx.id), values);\n      else await app.create('transaction', { ...values, member_id: app.me('member') });\n      onDone(tx ? 'Transaction updated' : 'Transaction added');\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : 'Could not save this transaction');\n      setShake((s) => s + 1);\n      setBusy(false);\n    }\n  };\n  const del = async () => {\n    if (!app || !tx) return;\n    try { await app.remove('transaction', String(tx.id)); onDone('Transaction deleted'); } catch (e) { setErr('Could not delete'); }\n  };\n\n  return (\n    <motion.div className='fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-[2px] lg:items-center' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>\n      <motion.div\n        onClick={(e) => e.stopPropagation()}\n        drag='y'\n        dragControls={controls}\n        dragListener={false}\n        dragConstraints={{ top: 0, bottom: 0 }}\n        dragElastic={{ top: 0, bottom: 0.5 }}\n        onDragEnd={(_, i) => { if (i.offset.y > 110) onClose(); }}\n        initial={{ y: '100%' }}\n        animate={{ y: 0 }}\n        exit={{ y: '100%' }}\n        transition={{ type: 'spring', stiffness: 320, damping: 34 }}\n        className='max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[32px] bg-white px-6 pb-8 pt-3 shadow-2xl lg:rounded-[32px]'\n      >\n        <div onPointerDown={(e) => controls.start(e)} className='mx-auto mb-3 flex h-6 w-full cursor-grab touch-none justify-center lg:hidden'><div className='mt-1 h-1.5 w-12 rounded-full bg-slate-200' /></div>\n        <div className='mb-4 flex items-center justify-between'>\n          <div className='text-xl font-semibold'>{tx ? 'Edit transaction' : 'New transaction'}</div>\n          <button aria-label='Close' onClick={onClose} className='rounded-full bg-slate-100 p-2 text-slate-500'><X size={16} /></button>\n        </div>\n        <div className='relative mb-5 grid grid-cols-2 rounded-2xl bg-slate-100 p-1'>\n          {(['expense', 'income'] as const).map((k) => (\n            <button key={k} onClick={() => setKind(k)} className={'relative z-10 rounded-xl py-2 text-sm font-semibold capitalize transition-colors ' + (kind === k ? 'text-slate-900' : 'text-slate-400')}>\n              {kind === k && <motion.span layoutId='kind-pill' className='absolute inset-0 -z-10 rounded-xl bg-white shadow' transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}\n              {k}\n            </button>\n          ))}\n        </div>\n        <div className='mb-5 flex items-center justify-center gap-1'>\n          <span className={'text-4xl font-semibold ' + (kind === 'expense' ? 'text-slate-300' : 'text-emerald-400')}>{kind === 'expense' ? '-$' : '+$'}</span>\n          <input aria-label='Amount' inputMode='decimal' value={amount} onChange={(e) => setAmount(e.target.value)} placeholder='0.00' className='w-44 bg-transparent text-center text-5xl font-semibold tabular-nums outline-none placeholder:text-slate-200' />\n        </div>\n        <div className='space-y-4'>\n          <div><label className={lbl}>Merchant</label><input className={field} value={title} onChange={(e) => setTitle(e.target.value)} placeholder='Where did it go?' /></div>\n          {kind === 'expense' && (\n            <div>\n              <label className={lbl}>Category</label>\n              <div className='grid grid-cols-4 gap-2'>\n                {EXPENSE.map((k) => {\n                  const c = cat(k);\n                  const on = category === k;\n                  return (\n                    <motion.button whileTap={{ scale: 0.92 }} key={k} onClick={() => setCategory(k)} className={'flex flex-col items-center gap-1 rounded-2xl border-2 py-2.5 text-[11px] font-medium ' + (on ? 'bg-white' : 'border-transparent bg-slate-50 text-slate-500')} style={on ? { borderColor: c.color, color: c.color } : undefined}>\n                      <c.Icon size={18} />\n                      {c.label}\n                    </motion.button>\n                  );\n                })}\n              </div>\n            </div>\n          )}\n          <div className='grid grid-cols-2 gap-3'>\n            <div><label className={lbl}>Date</label><input type='date' className={field} value={date} onChange={(e) => setDate(e.target.value)} /></div>\n            <div>\n              <label className={lbl}>Account</label>\n              <select className={field} value={accountId} onChange={(e) => setAccountId(e.target.value)}>\n                <option value=''>None</option>\n                {accounts.map((a) => <option key={String(a.id)} value={String(a.id)}>{String(a.name)}</option>)}\n              </select>\n            </div>\n          </div>\n          <div><label className={lbl}>Note</label><input className={field} value={note} onChange={(e) => setNote(e.target.value)} placeholder='Optional' /></div>\n        </div>\n        <AnimatePresence>\n          {err && (\n            <motion.div key={shake} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: [0, -8, 8, -5, 5, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className='mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600'>{err}</motion.div>\n          )}\n        </AnimatePresence>\n        <div className='mt-6 flex gap-3'>\n          {tx && <motion.button whileTap={{ scale: 0.95 }} onClick={del} aria-label='Delete' className='flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500'><Trash2 size={20} /></motion.button>}\n          <motion.button whileTap={{ scale: 0.97 }} onClick={save} disabled={busy} className='flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-[0_12px_26px_-10px_rgba(47,107,255,0.8)] disabled:opacity-60'>\n            <Check size={18} /> {busy ? 'Saving' : tx ? 'Save changes' : 'Add transaction'}\n          </motion.button>\n        </div>\n      </motion.div>\n    </motion.div>\n  );\n}\n\nfunction TxRow({ t, open, setOpen, onEdit, onDelete }: { t: R; open: boolean; setOpen: (v: boolean) => void; onEdit: () => void; onDelete: () => void }) {\n  const ctl = useAnimationControls();\n  const [peek, setPeek] = useState(false);\n  const c = cat(String(t.category));\n  const a = Number(t.amount);\n  useEffect(() => { ctl.start({ x: open ? -96 : 0, transition: { type: 'spring', stiffness: 400, damping: 36 } }); }, [open, ctl]);\n  return (\n    <div className='relative overflow-hidden rounded-2xl'>\n      <div className={'absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-red-500 ' + (open || peek ? 'visible' : 'invisible')}>\n        <button aria-label='Delete transaction' onClick={onDelete} className='flex h-full w-full items-center justify-center text-white'><Trash2 size={20} /></button>\n      </div>\n      <motion.div\n        drag='x'\n        dragConstraints={{ left: -96, right: 0 }}\n        dragElastic={0.08}\n        animate={ctl}\n        onDragStart={() => setPeek(true)}\n        onDragEnd={(_, i) => { const x = (open ? -96 : 0) + i.offset.x; const next = x < -48; setOpen(next); ctl.start({ x: next ? -96 : 0 }); if (!next) window.setTimeout(() => setPeek(false), 300); }}\n        onTap={() => { if (open) setOpen(false); else onEdit(); }}\n        whileTap={{ scale: 0.985 }}\n        className='relative flex cursor-pointer items-center gap-3 bg-white px-4 py-3.5'\n      >\n        <div className='flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl' style={{ background: c.color + '1F', color: c.color }}><c.Icon size={19} /></div>\n        <div className='min-w-0 flex-1'>\n          <div className='truncate text-[15px] font-semibold'>{String(t.title)}</div>\n          <div className='truncate text-xs text-slate-400'>{c.label}{t.note ? ' · ' + String(t.note) : ''}</div>\n        </div>\n        {t.alert === 'over' && <span className='rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500'>Over budget</span>}\n        <div className={'text-[15px] font-semibold tabular-nums ' + (a > 0 ? 'text-emerald-600' : 'text-slate-900')}>{a > 0 ? '+' : ''}{money(a)}</div>\n      </motion.div>\n    </div>\n  );\n}\n\nexport default function TransactionsScreen({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [now, setNow] = useState<Date | null>(null);\n  const [q, setQ] = useState('');\n  const [filter, setFilter] = useState('all');\n  const [sheet, setSheet] = useState<{ tx: R | null } | null>(null);\n  const [openId, setOpenId] = useState<string | null>(null);\n  const [toast, setToast] = useState('');\n  useEffect(() => { setNow(new Date()); }, []);\n  useEffect(() => { if (!toast) return; const id = window.setTimeout(() => setToast(''), 2600); return () => window.clearTimeout(id); }, [toast]);\n\n  const txs = (app?.rows('transaction') || []) as R[];\n  const accounts = (app?.rows('account') || []) as R[];\n  const loading = !now || (!!app?.loading('transaction') && txs.length === 0);\n  const today = now ? ymd(now) : '';\n  const yest = now ? ymd(new Date(now.getTime() - 86400000)) : '';\n  const ym = today.slice(0, 7);\n\n  const filtered = useMemo(() => {\n    const s = q.trim().toLowerCase();\n    return txs.filter((t) => (filter === 'all' || String(t.category) === filter) && (!s || (String(t.title) + ' ' + cat(String(t.category)).label + ' ' + String(t.note || '')).toLowerCase().includes(s)))\n      .sort((a, b) => String(b.date).localeCompare(String(a.date)));\n  }, [txs, q, filter]);\n\n  const groups = useMemo(() => {\n    const m: { date: string; items: R[]; net: number }[] = [];\n    for (const t of filtered) {\n      const dt = String(t.date).slice(0, 10);\n      let g = m[m.length - 1];\n      if (!g || g.date !== dt) { g = { date: dt, items: [], net: 0 }; m.push(g); }\n      g.items.push(t);\n      g.net += Number(t.amount);\n    }\n    return m;\n  }, [filtered]);\n\n  const month = useMemo(() => {\n    let inc = 0;\n    let out = 0;\n    const by: Record<string, number> = {};\n    for (const t of txs) {\n      if (String(t.date).slice(0, 7) !== ym) continue;\n      const a = Number(t.amount);\n      if (a > 0) inc += a; else { out -= a; by[String(t.category)] = (by[String(t.category)] || 0) - a; }\n    }\n    const top = Object.keys(by).map((k) => ({ k, v: by[k] })).sort((a, b) => b.v - a.v).slice(0, 5);\n    return { inc, out, top };\n  }, [txs, ym]);\n\n  const dayLabel = (d: string) => d === today ? 'Today' : d === yest ? 'Yesterday' : new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });\n  const usedCats = Array.from(new Set(txs.map((t) => String(t.category))));\n  const closeSheet = () => setSheet(null);\n  const del = async (t: R) => { try { await app?.remove('transaction', String(t.id)); setOpenId(null); setToast('Transaction deleted'); } catch (e) { setToast('Could not delete'); } };\n\n  return (\n    <Shell app={app} active='transactions'>\n      <Rise>\n        <div className='mb-5 flex items-end justify-between'>\n          <div>\n            <div className='text-sm font-medium text-slate-400'>All accounts</div>\n            <div className='text-3xl font-semibold tracking-tight lg:text-4xl'>Activity</div>\n          </div>\n          <motion.button whileTap={{ scale: 0.95 }} whileHover={{ y: -1 }} onClick={() => setSheet({ tx: null })} className='hidden items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_24px_-10px_rgba(47,107,255,0.8)] lg:flex'><Plus size={18} /> Add transaction</motion.button>\n        </div>\n      </Rise>\n\n      <div className='lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8'>\n        <div className='min-w-0'>\n          <Rise i={1}>\n            <div className='relative'>\n              <Search size={18} className='pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400' />\n              <input aria-label='Search transactions' value={q} onChange={(e) => setQ(e.target.value)} placeholder='Search merchants, categories, notes' className='w-full rounded-2xl border border-transparent bg-white py-3.5 pl-11 pr-4 text-[15px] shadow-[0_1px_2px_rgba(15,23,42,0.05)] outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/15' />\n            </div>\n            <div className='-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0'>\n              {['all', ...usedCats].map((k) => (\n                <motion.button whileTap={{ scale: 0.94 }} key={k} onClick={() => setFilter(k)} className={'shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ' + (filter === k ? 'bg-slate-900 text-white' : 'bg-white text-slate-500')}>{k === 'all' ? 'All' : cat(k).label}</motion.button>\n              ))}\n            </div>\n          </Rise>\n\n          <div className='mt-3 grid grid-cols-2 gap-3 lg:hidden'>\n            <div className={CARD + ' !p-4'}><div className='flex items-center gap-1.5 text-xs text-slate-400'><TrendingDown size={14} /> Spent</div><div className='mt-1 text-xl font-semibold tabular-nums'>{money(month.out, 0)}</div></div>\n            <div className={CARD + ' !p-4'}><div className='flex items-center gap-1.5 text-xs text-slate-400'><TrendingUp size={14} /> Income</div><div className='mt-1 text-xl font-semibold tabular-nums text-emerald-600'>{money(month.inc, 0)}</div></div>\n          </div>\n\n          {loading ? (\n            <div className='mt-6 space-y-3'>{[0, 1, 2, 3, 4].map((i) => <div key={i} className='h-[74px] animate-pulse rounded-2xl bg-slate-200/70' />)}</div>\n          ) : groups.length === 0 ? (\n            <Rise className='mt-10'>\n              <div className='flex flex-col items-center rounded-3xl bg-white px-6 py-14 text-center'>\n                <div className='flex h-16 w-16 items-center justify-center rounded-3xl bg-primary/10 text-primary'><Inbox size={28} /></div>\n                <div className='mt-4 text-lg font-semibold'>{q || filter !== 'all' ? 'No matches' : 'No transactions yet'}</div>\n                <div className='mt-1 max-w-xs text-sm text-slate-400'>{q || filter !== 'all' ? 'Try a different search or category.' : 'Add your first transaction to start tracking.'}</div>\n                <button onClick={() => setSheet({ tx: null })} className='mt-5 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground'>Add transaction</button>\n              </div>\n            </Rise>\n          ) : (\n            <div className='mt-6 space-y-6'>\n              {groups.map((g, gi) => (\n                <motion.div key={g.date} initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(gi, 6) * 0.06, type: 'spring', stiffness: 180, damping: 24 }}>\n                  <div className='mb-2 flex items-baseline justify-between px-1'>\n                    <div className='text-sm font-semibold text-slate-700'>{dayLabel(g.date)}</div>\n                    <div className='text-xs font-medium tabular-nums text-slate-400'>{g.net >= 0 ? '+' : '-'}{money(Math.abs(g.net))}</div>\n                  </div>\n                  <div className='space-y-2'>\n                    <AnimatePresence initial={false}>\n                      {g.items.map((t) => (\n                        <motion.div key={String(t.id)} layout exit={{ opacity: 0, scale: 0.94, height: 0 }} className='rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_20px_-12px_rgba(15,23,42,0.12)]'>\n                          <TxRow t={t} open={openId === String(t.id)} setOpen={(v) => setOpenId(v ? String(t.id) : null)} onEdit={() => setSheet({ tx: t })} onDelete={() => del(t)} />\n                        </motion.div>\n                      ))}\n                    </AnimatePresence>\n                  </div>\n                </motion.div>\n              ))}\n            </div>\n          )}\n        </div>\n\n        <aside className='hidden lg:block'>\n          <div className='sticky top-10 space-y-5'>\n            <Rise i={2}>\n              <div className={CARD}>\n                <div className='text-sm font-medium text-slate-400'>This month</div>\n                <div className='mt-3 grid grid-cols-2 gap-3'>\n                  <div><div className='text-xs text-slate-400'>Spent</div><div className='text-2xl font-semibold tabular-nums'>{money(month.out, 0)}</div></div>\n                  <div><div className='text-xs text-slate-400'>Income</div><div className='text-2xl font-semibold tabular-nums text-emerald-600'>{money(month.inc, 0)}</div></div>\n                </div>\n                <div className='mt-5 space-y-3'>\n                  {month.top.map((s, i) => (\n                    <div key={s.k}>\n                      <div className='mb-1 flex justify-between text-xs'><span className='font-medium text-slate-600'>{cat(s.k).label}</span><span className='tabular-nums text-slate-400'>{money(s.v, 0)}</span></div>\n                      <div className='h-1.5 overflow-hidden rounded-full bg-slate-100'><motion.div className='h-full rounded-full' style={{ background: cat(s.k).color }} initial={{ width: 0 }} animate={{ width: (month.top[0] ? (s.v / month.top[0].v) * 100 : 0) + '%' }} transition={{ duration: 0.8, delay: 0.2 + i * 0.06 }} /></div>\n                    </div>\n                  ))}\n                </div>\n              </div>\n            </Rise>\n          </div>\n        </aside>\n      </div>\n\n      <motion.button whileTap={{ scale: 0.9 }} initial={reduce ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.4 }} aria-label='Add transaction' onClick={() => setSheet({ tx: null })} className='fixed bottom-24 right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_14px_30px_-8px_rgba(47,107,255,0.85)] lg:hidden'><Plus size={26} /></motion.button>\n\n      <AnimatePresence>\n        {sheet && <TxSheet key='sheet' app={app} tx={sheet.tx} accounts={accounts} today={today} onClose={closeSheet} onDone={(m) => { closeSheet(); setOpenId(null); setToast(m); }} />}\n      </AnimatePresence>\n\n      <div className='pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex justify-center lg:bottom-10'>\n        <AnimatePresence>\n          {toast && (\n            <motion.div key={toast} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }} className='flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-2xl'><Check size={16} className='text-emerald-400' /> {toast}</motion.div>\n          )}\n        </AnimatePresence>\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "BudgetsScreen",
+      "kind": "code",
+      "purpose": "Monthly category budgets and recurring bills with sheet editors",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useMemo, useState } from 'react';\nimport { motion, AnimatePresence, useDragControls, useReducedMotion } from 'motion/react';\nimport { LayoutDashboard, List, Target, Sparkles, LogOut, ShoppingCart, Utensils, Truck, ShoppingBag, FileText, HeartPulse, Film, TrendingUp, Circle, Plus, Trash2, X, Check, CalendarDays } from 'lucide-react';\nimport type { AppHandle } from '@app/kit/primitives';\n\ntype R = Record<string, unknown>;\ntype Icon = typeof Circle;\nconst CATS: Record<string, { label: string; color: string; Icon: Icon }> = {\n  groceries: { label: 'Groceries', color: '#10B981', Icon: ShoppingCart },\n  dining: { label: 'Dining', color: '#F59E0B', Icon: Utensils },\n  transport: { label: 'Transport', color: '#8B5CF6', Icon: Truck },\n  shopping: { label: 'Shopping', color: '#EC4899', Icon: ShoppingBag },\n  bills: { label: 'Bills', color: '#2F6BFF', Icon: FileText },\n  health: { label: 'Health', color: '#06B6D4', Icon: HeartPulse },\n  fun: { label: 'Fun', color: '#F97316', Icon: Film },\n  income: { label: 'Income', color: '#22C55E', Icon: TrendingUp },\n  other: { label: 'Other', color: '#94A3B8', Icon: Circle },\n};\nconst EXPENSE = ['groceries', 'dining', 'transport', 'shopping', 'bills', 'health', 'fun', 'other'];\nconst cat = (k: string) => CATS[k] || CATS.other;\nconst money = (n: number, d = 2) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });\nconst ymd = (d: Date) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');\nconst CARD = 'rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-14px_rgba(15,23,42,0.14)]';\nconst TABS = [\n  { k: 'dashboard', label: 'Home', route: '/dashboard', Icon: LayoutDashboard },\n  { k: 'transactions', label: 'Activity', route: '/transactions', Icon: List },\n  { k: 'budgets', label: 'Budgets', route: '/budgets', Icon: Target },\n  { k: 'insights', label: 'Insights', route: '/insights', Icon: Sparkles },\n];\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  const name = String(app?.user.name || 'You');\n  return (\n    <div className='min-h-screen overflow-x-hidden bg-[#F4F6FB] text-slate-900 lg:flex'>\n      <aside className='sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/70 bg-white p-6 lg:flex'>\n        <div className='flex items-center gap-2.5'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-[0_8px_18px_-6px_rgba(47,107,255,0.7)]'>L</div>\n          <span className='text-xl font-semibold tracking-tight'>Ledgerly</span>\n        </div>\n        <nav className='mt-10 flex flex-col gap-1'>\n          {TABS.map((t) => (\n            <button key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ' + (active === t.k ? 'text-primary' : 'text-slate-500 hover:text-slate-900')}>\n              {active === t.k && <motion.span layoutId='side-pill' className='absolute inset-0 rounded-2xl bg-primary/10' transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}\n              <t.Icon size={19} className='relative' />\n              <span className='relative'>{t.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className='mt-auto flex items-center gap-3 rounded-2xl bg-slate-50 p-3'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary'>{name[0]}</div>\n          <div className='min-w-0 flex-1'>\n            <div className='truncate text-sm font-semibold'>{name}</div>\n            <div className='text-xs text-slate-400'>Member</div>\n          </div>\n          <button aria-label='Sign out' onClick={() => app?.auth.signOut()} className='rounded-lg p-2 text-slate-400 hover:bg-white hover:text-slate-700'><LogOut size={16} /></button>\n        </div>\n      </aside>\n      <main className='min-w-0 flex-1 pb-28 lg:pb-12'>\n        <div className='mx-auto w-full max-w-5xl px-4 pt-6 lg:px-10 lg:pt-10'>{children}</div>\n      </main>\n      <nav className='fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/70 bg-white/85 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden'>\n        <div className='mx-auto flex max-w-md justify-around'>\n          {TABS.map((t) => (\n            <motion.button whileTap={{ scale: 0.9 }} key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex w-20 flex-col items-center gap-1 rounded-2xl py-1.5 text-[11px] font-medium ' + (active === t.k ? 'text-primary' : 'text-slate-400')}>\n              <t.Icon size={22} strokeWidth={active === t.k ? 2.4 : 1.9} />\n              {t.label}\n              {active === t.k && <motion.span layoutId='tab-dot' className='absolute -top-2 h-1 w-8 rounded-full bg-primary' />}\n            </motion.button>\n          ))}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nfunction Rise({ i = 0, className = '', children }: { i?: number; className?: string; children: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  return (\n    <motion.div className={'min-w-0 ' + className} initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 170, damping: 22, delay: reduce ? 0 : i * 0.07 }}>\n      {children}\n    </motion.div>\n  );\n}\n\nfunction Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {\n  const controls = useDragControls();\n  return (\n    <motion.div className='fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-[2px] lg:items-center' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>\n      <motion.div\n        onClick={(e) => e.stopPropagation()}\n        drag='y'\n        dragControls={controls}\n        dragListener={false}\n        dragConstraints={{ top: 0, bottom: 0 }}\n        dragElastic={{ top: 0, bottom: 0.5 }}\n        onDragEnd={(_, i) => { if (i.offset.y > 110) onClose(); }}\n        initial={{ y: '100%' }}\n        animate={{ y: 0 }}\n        exit={{ y: '100%' }}\n        transition={{ type: 'spring', stiffness: 320, damping: 34 }}\n        className='max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[32px] bg-white px-6 pb-8 pt-3 shadow-2xl lg:rounded-[32px]'\n      >\n        <div onPointerDown={(e) => controls.start(e)} className='mx-auto mb-3 flex h-6 w-full cursor-grab touch-none justify-center lg:hidden'><div className='mt-1 h-1.5 w-12 rounded-full bg-slate-200' /></div>\n        <div className='mb-5 flex items-center justify-between'>\n          <div className='text-xl font-semibold'>{title}</div>\n          <button aria-label='Close' onClick={onClose} className='rounded-full bg-slate-100 p-2 text-slate-500'><X size={16} /></button>\n        </div>\n        {children}\n      </motion.div>\n    </motion.div>\n  );\n}\n\nconst FIELD = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15';\nconst LBL = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500';\n\nfunction CatPicker({ value, onChange, options }: { value: string; onChange: (k: string) => void; options: string[] }) {\n  return (\n    <div className='grid grid-cols-4 gap-2'>\n      {options.map((k) => {\n        const c = cat(k);\n        const on = value === k;\n        return (\n          <motion.button whileTap={{ scale: 0.92 }} key={k} onClick={() => onChange(k)} className={'flex flex-col items-center gap-1 rounded-2xl border-2 py-2.5 text-[11px] font-medium ' + (on ? 'bg-white' : 'border-transparent bg-slate-50 text-slate-500')} style={on ? { borderColor: c.color, color: c.color } : undefined}>\n            <c.Icon size={18} />\n            {c.label}\n          </motion.button>\n        );\n      })}\n    </div>\n  );\n}\n\nfunction SaveBar({ busy, onSave, onDelete, label }: { busy: boolean; onSave: () => void; onDelete?: () => void; label: string }) {\n  return (\n    <div className='mt-6 flex gap-3'>\n      {onDelete && <motion.button whileTap={{ scale: 0.95 }} onClick={onDelete} aria-label='Delete' className='flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500'><Trash2 size={20} /></motion.button>}\n      <motion.button whileTap={{ scale: 0.97 }} onClick={onSave} disabled={busy} className='flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-[0_12px_26px_-10px_rgba(47,107,255,0.8)] disabled:opacity-60'><Check size={18} /> {busy ? 'Saving' : label}</motion.button>\n    </div>\n  );\n}\n\nfunction ErrBox({ err }: { err: string }) {\n  return (\n    <AnimatePresence>\n      {err && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className='mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600'>{err}</motion.div>}\n    </AnimatePresence>\n  );\n}\n\nfunction BudgetSheet({ app, row, used, onClose, onDone }: { app?: AppHandle; row: R | null; used: string[]; onClose: () => void; onDone: (m: string) => void }) {\n  const free = EXPENSE.filter((k) => !used.includes(k));\n  const [category, setCategory] = useState(row ? String(row.category) : free[0] || 'other');\n  const [limit, setLimit] = useState(row ? String(row.monthly_limit) : '');\n  const [err, setErr] = useState('');\n  const [busy, setBusy] = useState(false);\n  const save = async () => {\n    if (!app || busy) return;\n    setBusy(true);\n    setErr('');\n    const v = parseFloat(limit.replace(/,/g, ''));\n    const values: R = { category, monthly_limit: isFinite(v) ? v : 0 };\n    try {\n      if (row) await app.update('budget', String(row.id), values);\n      else await app.create('budget', { ...values, member_id: app.me('member') });\n      onDone(row ? 'Budget updated' : 'Budget created');\n    } catch (e) { setErr(e instanceof Error ? e.message : 'Could not save'); setBusy(false); }\n  };\n  const del = async () => { if (!app || !row) return; try { await app.remove('budget', String(row.id)); onDone('Budget removed'); } catch (e) { setErr('Could not delete'); } };\n  return (\n    <Sheet title={row ? 'Edit budget' : 'New budget'} onClose={onClose}>\n      {!row && <div className='mb-5'><label className={LBL}>Category</label><CatPicker value={category} onChange={setCategory} options={free} /></div>}\n      {row && <div className='mb-5 flex items-center gap-3'><div className='flex h-12 w-12 items-center justify-center rounded-2xl' style={{ background: cat(category).color + '1F', color: cat(category).color }}>{React.createElement(cat(category).Icon, { size: 22 })}</div><div className='text-lg font-semibold'>{cat(category).label}</div></div>}\n      <label className={LBL}>Monthly limit</label>\n      <div className='mb-3 flex items-center justify-center gap-1 rounded-2xl bg-slate-50 py-4'>\n        <span className='text-3xl font-semibold text-slate-300'>$</span>\n        <input aria-label='Monthly limit' inputMode='decimal' value={limit} onChange={(e) => setLimit(e.target.value)} placeholder='0' className='w-40 bg-transparent text-center text-5xl font-semibold tabular-nums outline-none placeholder:text-slate-200' />\n      </div>\n      <div className='flex gap-2'>{[100, 250, 500, 1000].map((v) => <motion.button whileTap={{ scale: 0.93 }} key={v} onClick={() => setLimit(String(v))} className='flex-1 rounded-xl bg-slate-100 py-2 text-sm font-medium text-slate-600'>${v}</motion.button>)}</div>\n      <ErrBox err={err} />\n      <SaveBar busy={busy} onSave={save} onDelete={row ? del : undefined} label={row ? 'Save budget' : 'Create budget'} />\n    </Sheet>\n  );\n}\n\nfunction BillSheet({ app, row, onClose, onDone }: { app?: AppHandle; row: R | null; onClose: () => void; onDone: (m: string) => void }) {\n  const [name, setName] = useState(row ? String(row.name) : '');\n  const [amount, setAmount] = useState(row ? String(row.amount) : '');\n  const [day, setDay] = useState(row ? String(row.day_of_month) : '1');\n  const [category, setCategory] = useState(row ? String(row.category) : 'bills');\n  const [active, setActive] = useState(row ? row.active !== false : true);\n  const [err, setErr] = useState('');\n  const [busy, setBusy] = useState(false);\n  const save = async () => {\n    if (!app || busy) return;\n    setBusy(true);\n    setErr('');\n    const a = parseFloat(amount.replace(/,/g, ''));\n    const values: R = { name: name.trim() || 'Bill', amount: isFinite(a) ? Math.abs(a) : 0, day_of_month: parseInt(day, 10) || 0, category, active };\n    try {\n      if (row) await app.update('bill', String(row.id), values);\n      else await app.create('bill', { ...values, member_id: app.me('member') });\n      onDone(row ? 'Bill updated' : 'Bill added');\n    } catch (e) { setErr(e instanceof Error ? e.message : 'Could not save'); setBusy(false); }\n  };\n  const del = async () => { if (!app || !row) return; try { await app.remove('bill', String(row.id)); onDone('Bill removed'); } catch (e) { setErr('Could not delete'); } };\n  return (\n    <Sheet title={row ? 'Edit bill' : 'New recurring bill'} onClose={onClose}>\n      <div className='space-y-4'>\n        <div><label className={LBL}>Name</label><input className={FIELD} value={name} onChange={(e) => setName(e.target.value)} placeholder='Rent, Netflix, Gym' /></div>\n        <div className='grid grid-cols-2 gap-3'>\n          <div><label className={LBL}>Amount</label><input inputMode='decimal' className={FIELD} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder='0.00' /></div>\n          <div><label className={LBL}>Day of month</label><input type='number' min={1} max={31} className={FIELD} value={day} onChange={(e) => setDay(e.target.value)} /></div>\n        </div>\n        <div><label className={LBL}>Category</label><CatPicker value={category} onChange={setCategory} options={EXPENSE} /></div>\n        <button onClick={() => setActive(!active)} className='flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-3'>\n          <span className='text-sm font-medium text-slate-700'>Create a transaction automatically each month</span>\n          <span className={'flex h-7 w-12 items-center rounded-full p-1 transition-colors ' + (active ? 'bg-primary' : 'bg-slate-300')}><motion.span layout transition={{ type: 'spring', stiffness: 500, damping: 32 }} className='h-5 w-5 rounded-full bg-white shadow' style={{ marginLeft: active ? 'auto' : 0 }} /></span>\n        </button>\n      </div>\n      <ErrBox err={err} />\n      <SaveBar busy={busy} onSave={save} onDelete={row ? del : undefined} label={row ? 'Save bill' : 'Add bill'} />\n    </Sheet>\n  );\n}\n\nexport default function BudgetsScreen({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [now, setNow] = useState<Date | null>(null);\n  const [tab, setTab] = useState<'budgets' | 'bills'>('budgets');\n  const [sheet, setSheet] = useState<{ kind: 'budget' | 'bill'; row: R | null } | null>(null);\n  const [toast, setToast] = useState('');\n  useEffect(() => { setNow(new Date()); }, []);\n  useEffect(() => { if (!toast) return; const id = window.setTimeout(() => setToast(''), 2600); return () => window.clearTimeout(id); }, [toast]);\n\n  const txs = (app?.rows('transaction') || []) as R[];\n  const budgets = (app?.rows('budget') || []) as R[];\n  const bills = (app?.rows('bill') || []) as R[];\n  const loading = !now || (!!app?.loading('budget') && budgets.length === 0);\n  const ym = now ? ymd(now).slice(0, 7) : '';\n\n  const spend = useMemo(() => {\n    const s: Record<string, number> = {};\n    for (const t of txs) { if (String(t.date).slice(0, 7) === ym && Number(t.amount) < 0) s[String(t.category)] = (s[String(t.category)] || 0) - Number(t.amount); }\n    return s;\n  }, [txs, ym]);\n\n  const rows = budgets.map((b) => { const lim = Number(b.monthly_limit); const sp = spend[String(b.category)] || 0; return { b, k: String(b.category), lim, sp, pct: lim ? sp / lim : 0 }; }).sort((a, b) => b.pct - a.pct);\n  const totalLim = rows.reduce((s, r) => s + r.lim, 0);\n  const totalSp = rows.reduce((s, r) => s + r.sp, 0);\n  const overCount = rows.filter((r) => r.sp > r.lim).length;\n  const used = budgets.map((b) => String(b.category));\n  const free = EXPENSE.filter((k) => !used.includes(k));\n  const activeBills = bills.filter((b) => b.active !== false);\n  const billTotal = activeBills.reduce((s, b) => s + Number(b.amount), 0);\n  const sortedBills = [...bills].sort((a, b) => Number(a.day_of_month) - Number(b.day_of_month));\n  const close = () => setSheet(null);\n  const ordinal = (n: number) => n + (n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th');\n\n  return (\n    <Shell app={app} active='budgets'>\n      <Rise>\n        <div className='mb-5 flex items-end justify-between'>\n          <div>\n            <div className='text-sm font-medium text-slate-400'>Plan your month</div>\n            <div className='text-3xl font-semibold tracking-tight lg:text-4xl'>Budgets</div>\n          </div>\n          <motion.button whileTap={{ scale: 0.95 }} whileHover={{ y: -1 }} onClick={() => setSheet(tab === 'budgets' ? (free.length ? { kind: 'budget', row: null } : null) : { kind: 'bill', row: null })} className='hidden items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_12px_24px_-10px_rgba(47,107,255,0.8)] lg:flex'><Plus size={18} /> {tab === 'budgets' ? 'New budget' : 'New bill'}</motion.button>\n        </div>\n        <div className='relative mb-5 grid max-w-sm grid-cols-2 rounded-2xl bg-slate-200/60 p-1'>\n          {([['budgets', 'Budgets'], ['bills', 'Recurring bills']] as const).map(([k, l]) => (\n            <button key={k} onClick={() => setTab(k)} className={'relative z-10 rounded-xl py-2.5 text-sm font-semibold transition-colors ' + (tab === k ? 'text-slate-900' : 'text-slate-500')}>\n              {tab === k && <motion.span layoutId='bt-pill' className='absolute inset-0 -z-10 rounded-xl bg-white shadow' transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}\n              {l}\n            </button>\n          ))}\n        </div>\n      </Rise>\n\n      {loading ? (\n        <div className='space-y-3'><div className='h-36 animate-pulse rounded-3xl bg-slate-200/70' />{[0, 1, 2].map((i) => <div key={i} className='h-24 animate-pulse rounded-3xl bg-slate-200/70' />)}</div>\n      ) : (\n        <AnimatePresence mode='wait' initial={false}>\n          {tab === 'budgets' ? (\n            <motion.div key='b' initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>\n              <div className='relative mb-5 overflow-hidden rounded-[32px] bg-gradient-to-br from-primary to-[#1A3FB8] p-6 text-white shadow-[0_24px_50px_-18px_rgba(47,107,255,0.75)]'>\n                <div className='pointer-events-none absolute -right-12 -top-16 h-52 w-52 rounded-full bg-white/10' />\n                <div className='relative text-sm font-medium text-white/70'>{totalLim - totalSp >= 0 ? 'Left to spend' : 'Over by'}</div>\n                <div className='relative text-5xl font-semibold tabular-nums tracking-tight'>{money(Math.abs(totalLim - totalSp), 0)}</div>\n                <div className='relative mt-4 h-2.5 overflow-hidden rounded-full bg-white/20'>\n                  <motion.div className='h-full rounded-full bg-white' initial={reduce ? false : { width: 0 }} animate={{ width: Math.min(totalLim ? totalSp / totalLim : 0, 1) * 100 + '%' }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }} />\n                </div>\n                <div className='relative mt-3 flex justify-between text-sm text-white/80'><span>{money(totalSp, 0)} spent of {money(totalLim, 0)}</span><span>{overCount > 0 ? overCount + ' over' : 'On track'}</span></div>\n              </div>\n              <div className='grid gap-3 lg:grid-cols-2'>\n                {rows.map((r, i) => {\n                  const c = cat(r.k);\n                  const over = r.sp > r.lim;\n                  return (\n                    <motion.button key={String(r.b.id)} initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05, type: 'spring', stiffness: 180, damping: 22 }} whileTap={{ scale: 0.97 }} whileHover={{ y: -2 }} onClick={() => setSheet({ kind: 'budget', row: r.b })} className={CARD + ' w-full text-left'}>\n                      <div className='flex items-center gap-3'>\n                        <div className='flex h-11 w-11 items-center justify-center rounded-2xl' style={{ background: c.color + '1F', color: c.color }}><c.Icon size={20} /></div>\n                        <div className='min-w-0 flex-1'><div className='font-semibold'>{c.label}</div><div className={'text-xs ' + (over ? 'font-medium text-red-500' : 'text-slate-400')}>{over ? money(r.sp - r.lim, 0) + ' over' : money(r.lim - r.sp, 0) + ' left'}</div></div>\n                        <div className='text-right'><div className={'text-lg font-semibold tabular-nums ' + (over ? 'text-red-500' : '')}>{money(r.sp, 0)}</div><div className='text-xs text-slate-400'>of {money(r.lim, 0)}</div></div>\n                      </div>\n                      <div className='mt-3.5 h-2.5 overflow-hidden rounded-full bg-slate-100'>\n                        <motion.div className='h-full rounded-full' style={{ background: over ? '#EF4444' : c.color }} initial={reduce ? false : { width: 0 }} animate={{ width: Math.min(r.pct, 1) * 100 + '%' }} transition={{ duration: 0.9, delay: 0.2 + i * 0.05, ease: [0.22, 1, 0.36, 1] }} />\n                      </div>\n                    </motion.button>\n                  );\n                })}\n              </div>\n              {rows.length === 0 && <div className='rounded-3xl bg-white px-6 py-12 text-center text-sm text-slate-400'>No budgets yet. Create one to start tracking a category.</div>}\n              {free.length > 0 && (\n                <motion.button whileTap={{ scale: 0.98 }} onClick={() => setSheet({ kind: 'budget', row: null })} className='mt-4 flex w-full items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 py-5 text-sm font-semibold text-slate-500 hover:border-primary hover:text-primary'><Plus size={18} /> Add a budget ({free.length} categories left)</motion.button>\n              )}\n            </motion.div>\n          ) : (\n            <motion.div key='r' initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>\n              <div className={CARD + ' mb-5 flex items-center justify-between'}>\n                <div><div className='text-sm text-slate-400'>Every month</div><div className='text-3xl font-semibold tabular-nums'>{money(billTotal)}</div></div>\n                <div className='flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary'><CalendarDays size={26} /></div>\n              </div>\n              <div className='grid gap-3 lg:grid-cols-2'>\n                {sortedBills.map((b, i) => {\n                  const c = cat(String(b.category));\n                  const on = b.active !== false;\n                  return (\n                    <motion.button key={String(b.id)} initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: on ? 1 : 0.55, y: 0 }} transition={{ delay: 0.05 + i * 0.05, type: 'spring', stiffness: 180, damping: 22 }} whileTap={{ scale: 0.97 }} whileHover={{ y: -2 }} onClick={() => setSheet({ kind: 'bill', row: b })} className={CARD + ' flex w-full items-center gap-3 text-left'}>\n                      <div className='flex h-12 w-12 flex-col items-center justify-center rounded-2xl leading-none' style={{ background: c.color + '1F', color: c.color }}><span className='text-[9px] font-bold uppercase opacity-70'>Day</span><span className='text-lg font-semibold'>{String(b.day_of_month)}</span></div>\n                      <div className='min-w-0 flex-1'><div className='truncate font-semibold'>{String(b.name)}</div><div className='text-xs text-slate-400'>{ordinal(Number(b.day_of_month))} of every month{on ? '' : ' · paused'}</div></div>\n                      <div className='text-lg font-semibold tabular-nums'>{money(Number(b.amount))}</div>\n                    </motion.button>\n                  );\n                })}\n              </div>\n              {bills.length === 0 && <div className='rounded-3xl bg-white px-6 py-12 text-center text-sm text-slate-400'>No recurring bills yet.</div>}\n              <motion.button whileTap={{ scale: 0.98 }} onClick={() => setSheet({ kind: 'bill', row: null })} className='mt-4 flex w-full items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 py-5 text-sm font-semibold text-slate-500 hover:border-primary hover:text-primary'><Plus size={18} /> Add a recurring bill</motion.button>\n            </motion.div>\n          )}\n        </AnimatePresence>\n      )}\n\n      <AnimatePresence>\n        {sheet && sheet.kind === 'budget' && <BudgetSheet key='bs' app={app} row={sheet.row} used={used} onClose={close} onDone={(m) => { close(); setToast(m); }} />}\n        {sheet && sheet.kind === 'bill' && <BillSheet key='ls' app={app} row={sheet.row} onClose={close} onDone={(m) => { close(); setToast(m); }} />}\n      </AnimatePresence>\n      <div className='pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex justify-center lg:bottom-10'>\n        <AnimatePresence>\n          {toast && <motion.div key={toast} initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }} className='flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-2xl'><Check size={16} className='text-emerald-400' /> {toast}</motion.div>}\n        </AnimatePresence>\n      </div>\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "InsightsScreen",
+      "kind": "code",
+      "purpose": "AI explain-my-month in 3 bullets plus animated spending charts",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useMemo, useState } from 'react';\nimport { motion, AnimatePresence, useReducedMotion } from 'motion/react';\nimport { LayoutDashboard, List, Target, Sparkles, LogOut, ShoppingCart, Utensils, Truck, ShoppingBag, FileText, HeartPulse, Film, TrendingUp, TrendingDown, Circle, RefreshCw } from 'lucide-react';\nimport type { AppHandle } from '@app/kit/primitives';\n\ntype R = Record<string, unknown>;\ntype Icon = typeof Circle;\nconst CATS: Record<string, { label: string; color: string; Icon: Icon }> = {\n  groceries: { label: 'Groceries', color: '#10B981', Icon: ShoppingCart },\n  dining: { label: 'Dining', color: '#F59E0B', Icon: Utensils },\n  transport: { label: 'Transport', color: '#8B5CF6', Icon: Truck },\n  shopping: { label: 'Shopping', color: '#EC4899', Icon: ShoppingBag },\n  bills: { label: 'Bills', color: '#2F6BFF', Icon: FileText },\n  health: { label: 'Health', color: '#06B6D4', Icon: HeartPulse },\n  fun: { label: 'Fun', color: '#F97316', Icon: Film },\n  income: { label: 'Income', color: '#22C55E', Icon: TrendingUp },\n  other: { label: 'Other', color: '#94A3B8', Icon: Circle },\n};\nconst cat = (k: string) => CATS[k] || CATS.other;\nconst money = (n: number, d = 2) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });\nconst ymd = (d: Date) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');\nconst MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\nconst CARD = 'rounded-3xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_14px_34px_-14px_rgba(15,23,42,0.14)]';\nconst TABS = [\n  { k: 'dashboard', label: 'Home', route: '/dashboard', Icon: LayoutDashboard },\n  { k: 'transactions', label: 'Activity', route: '/transactions', Icon: List },\n  { k: 'budgets', label: 'Budgets', route: '/budgets', Icon: Target },\n  { k: 'insights', label: 'Insights', route: '/insights', Icon: Sparkles },\n];\n\nfunction Shell({ app, active, children }: { app?: AppHandle; active: string; children: React.ReactNode }) {\n  const name = String(app?.user.name || 'You');\n  return (\n    <div className='min-h-screen overflow-x-hidden bg-[#F4F6FB] text-slate-900 lg:flex'>\n      <aside className='sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200/70 bg-white p-6 lg:flex'>\n        <div className='flex items-center gap-2.5'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-[0_8px_18px_-6px_rgba(47,107,255,0.7)]'>L</div>\n          <span className='text-xl font-semibold tracking-tight'>Ledgerly</span>\n        </div>\n        <nav className='mt-10 flex flex-col gap-1'>\n          {TABS.map((t) => (\n            <button key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ' + (active === t.k ? 'text-primary' : 'text-slate-500 hover:text-slate-900')}>\n              {active === t.k && <motion.span layoutId='side-pill' className='absolute inset-0 rounded-2xl bg-primary/10' transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}\n              <t.Icon size={19} className='relative' />\n              <span className='relative'>{t.label}</span>\n            </button>\n          ))}\n        </nav>\n        <div className='mt-auto flex items-center gap-3 rounded-2xl bg-slate-50 p-3'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary'>{name[0]}</div>\n          <div className='min-w-0 flex-1'>\n            <div className='truncate text-sm font-semibold'>{name}</div>\n            <div className='text-xs text-slate-400'>Member</div>\n          </div>\n          <button aria-label='Sign out' onClick={() => app?.auth.signOut()} className='rounded-lg p-2 text-slate-400 hover:bg-white hover:text-slate-700'><LogOut size={16} /></button>\n        </div>\n      </aside>\n      <main className='min-w-0 flex-1 pb-28 lg:pb-12'>\n        <div className='mx-auto w-full max-w-5xl px-4 pt-6 lg:px-10 lg:pt-10'>{children}</div>\n      </main>\n      <nav className='fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/70 bg-white/85 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur-xl lg:hidden'>\n        <div className='mx-auto flex max-w-md justify-around'>\n          {TABS.map((t) => (\n            <motion.button whileTap={{ scale: 0.9 }} key={t.k} onClick={() => app?.navigate(t.route)} className={'relative flex w-20 flex-col items-center gap-1 rounded-2xl py-1.5 text-[11px] font-medium ' + (active === t.k ? 'text-primary' : 'text-slate-400')}>\n              <t.Icon size={22} strokeWidth={active === t.k ? 2.4 : 1.9} />\n              {t.label}\n              {active === t.k && <motion.span layoutId='tab-dot' className='absolute -top-2 h-1 w-8 rounded-full bg-primary' />}\n            </motion.button>\n          ))}\n        </div>\n      </nav>\n    </div>\n  );\n}\n\nfunction Rise({ i = 0, className = '', children }: { i?: number; className?: string; children: React.ReactNode }) {\n  const reduce = useReducedMotion();\n  return (\n    <motion.div className={'min-w-0 ' + className} initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 170, damping: 22, delay: reduce ? 0 : i * 0.07 }}>\n      {children}\n    </motion.div>\n  );\n}\n\nexport default function InsightsScreen({ app }: { app?: AppHandle }) {\n  const reduce = useReducedMotion();\n  const [now, setNow] = useState<Date | null>(null);\n  const [bullets, setBullets] = useState<string[]>([]);\n  const [state, setState] = useState<'idle' | 'loading' | 'done'>('idle');\n  const [fallback, setFallback] = useState(false);\n  const [tip, setTip] = useState('');\n  useEffect(() => { setNow(new Date()); }, []);\n\n  const txs = (app?.rows('transaction') || []) as R[];\n  const budgets = (app?.rows('budget') || []) as R[];\n  const loading = !now || (!!app?.loading('transaction') && txs.length === 0);\n  const ym = now ? ymd(now).slice(0, 7) : '';\n\n  const data = useMemo(() => {\n    const months: { key: string; label: string; spent: number; income: number }[] = [];\n    if (now) {\n      for (let i = 2; i >= 0; i--) {\n        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);\n        months.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: MONTHS[d.getMonth()], spent: 0, income: 0 });\n      }\n    }\n    const spend: Record<string, number> = {};\n    for (const t of txs) {\n      const m = months.find((x) => x.key === String(t.date).slice(0, 7));\n      const a = Number(t.amount);\n      if (!m) continue;\n      if (a < 0) { m.spent -= a; if (m.key === ym) spend[String(t.category)] = (spend[String(t.category)] || 0) - a; } else m.income += a;\n    }\n    const cur = months[months.length - 1];\n    const prev = months[months.length - 2];\n    const list = Object.keys(spend).map((k) => { const lim = budgets.find((b) => String(b.category) === k); return { k, v: spend[k], lim: lim ? Number(lim.monthly_limit) : 0 }; }).sort((a, b) => b.v - a.v);\n    const over = list.filter((x) => x.lim > 0 && x.v > x.lim);\n    return { months, cur, prev, list, over };\n  }, [txs, budgets, now, ym]);\n\n  const maxSpent = Math.max(1, ...data.months.map((m) => m.spent));\n  const spent = data.cur ? data.cur.spent : 0;\n  const income = data.cur ? data.cur.income : 0;\n  const prevSpent = data.prev ? data.prev.spent : 0;\n\n  const localTake = (): string[] => {\n    const top = data.list[0];\n    const out: string[] = [];\n    out.push('You have spent ' + money(spent, 0) + ' so far this month' + (top ? ', led by ' + cat(top.k).label.toLowerCase() + ' at ' + money(top.v, 0) + '.' : '.'));\n    out.push(data.over.length ? data.over.map((o) => cat(o.k).label + ' is ' + money(o.v - o.lim, 0) + ' over its ' + money(o.lim, 0) + ' budget').join('; ') + '.' : 'Every category is still inside its budget — nice work.');\n    out.push(income >= spent ? 'You are ' + money(income - spent, 0) + ' ahead of your spending, so there is room to move money into savings.' : 'Spending is ' + money(spent - income, 0) + ' above income this month, so ease off discretionary categories.');\n    return out;\n  };\n\n  const explain = async () => {\n    if (!app || state === 'loading') return;\n    setState('loading');\n    setBullets([]);\n    const summary = {\n      month: ym,\n      spent_so_far: Math.round(spent),\n      income_so_far: Math.round(income),\n      last_month_spent: Math.round(prevSpent),\n      categories: data.list.map((x) => ({ category: x.k, spent: Math.round(x.v), budget: x.lim || null })),\n    };\n    let out: string[] = [];\n    let fb = false;\n    try {\n      const text = await app.ai.ask('Explain my month. Here is my data as JSON: ' + JSON.stringify(summary), { system: 'You are Ledgerly, a friendly personal finance coach. Summarise the member spending versus their budgets in exactly 3 bullet points, then one last line that starts with Tip: and gives one practical tip. Each bullet starts with a dash and a space, is at most 28 words, uses real dollar figures from the data, and is plain text with no markdown formatting, no headings and no intro.', maxTokens: 380 });\n      out = text.split('\\n').map((l) => l.replace(/^[\\s\\-•*]+/, '').replace(/\\*\\*/g, '').trim()).filter((l) => l.length > 8); const tl = out.find((l) => /^tip:/i.test(l)); setTip(tl ? tl.replace(/^tip:\\s*/i, '') : ''); out = out.filter((l) => !/^tip:/i.test(l)).slice(0, 3);\n    } catch (e) { out = []; }\n    if (out.length < 3) { out = localTake(); fb = true; setTip(''); }\n    setFallback(fb);\n    setBullets(out);\n    setState('done');\n  };\n\n  const icons = [TrendingDown, Target, Sparkles];\n  const tints = ['#2F6BFF', '#EF4444', '#10B981'];\n\n  return (\n    <Shell app={app} active='insights'>\n      <Rise>\n        <div className='mb-6'>\n          <div className='text-sm font-medium text-slate-400'>Understand your money</div>\n          <div className='text-3xl font-semibold tracking-tight lg:text-4xl'>Insights</div>\n        </div>\n      </Rise>\n\n      {loading ? (\n        <div className='space-y-4'><div className='h-56 animate-pulse rounded-3xl bg-slate-200/70' /><div className='h-64 animate-pulse rounded-3xl bg-slate-200/70' /></div>\n      ) : (\n        <div className='grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-5'>\n          <Rise i={1} className='lg:col-span-3'>\n            <div className='relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#0F1F4D] via-[#14308A] to-primary p-6 text-white shadow-[0_24px_50px_-18px_rgba(20,48,138,0.8)] lg:p-8'>\n              <div className='pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-primary/40 blur-3xl' />\n              <div className='relative flex items-center gap-2 text-sm font-semibold text-white/80'><Sparkles size={16} /> Explain my month</div>\n              <div className='relative mt-2 text-2xl font-semibold leading-tight tracking-tight lg:text-3xl'>Three bullets on how this month is going.</div>\n\n              <div className='relative mt-5 space-y-3'>\n                {state === 'loading' && [0, 1, 2].map((i) => <motion.div key={i} animate={{ opacity: [0.35, 0.8, 0.35] }} transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }} className='h-[60px] rounded-2xl bg-white/15' />)}\n                <AnimatePresence>\n                  {state === 'done' && bullets.map((b, i) => {\n                    const I = icons[i % 3];\n                    return (\n                      <motion.div key={i} initial={reduce ? false : { opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ delay: i * 0.18, type: 'spring', stiffness: 200, damping: 22 }} className='flex gap-3 rounded-2xl bg-white p-4 text-slate-800 shadow-lg'>\n                        <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-xl' style={{ background: tints[i % 3] + '1A', color: tints[i % 3] }}><I size={18} /></div>\n                        <div className='text-[15px] leading-snug'>{b}</div>\n                      </motion.div>\n                    );\n                  })}\n                </AnimatePresence>\n                {state === 'done' && tip && <motion.div initial={reduce ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className='flex gap-3 rounded-2xl bg-white/15 p-4 text-white ring-1 ring-white/25'><div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20'><Sparkles size={18} /></div><div className='text-[15px] leading-snug'><span className='font-semibold'>Tip: </span>{tip}</div></motion.div>}\n                {state === 'idle' && <div className='rounded-2xl bg-white/10 px-4 py-5 text-sm text-white/75'>Tap the button and Ledgerly will compare your spending with your budgets.</div>}\n              </div>\n\n              <motion.button whileTap={{ scale: 0.96 }} whileHover={{ y: -1 }} onClick={explain} disabled={state === 'loading'} className='relative mt-5 flex items-center gap-2 rounded-2xl bg-white px-5 py-3.5 text-sm font-semibold text-primary shadow-lg disabled:opacity-70'>\n                {state === 'loading' ? <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className='flex'><RefreshCw size={16} /></motion.span> : <Sparkles size={16} />}\n                {state === 'loading' ? 'Reading your month' : state === 'done' ? 'Explain again' : 'Explain my month'}\n              </motion.button>\n              {state === 'done' && fallback && <div className='relative mt-3 text-xs text-white/60'>AI is resting right now, try again soon. Here is a quick take in the meantime.</div>}\n            </div>\n          </Rise>\n\n          <Rise i={2} className='lg:col-span-2'>\n            <div className='grid h-full grid-cols-2 gap-4 lg:grid-cols-1'>\n              <div className={CARD}><div className='flex items-center gap-1.5 text-xs font-medium text-slate-400'><TrendingDown size={14} /> Spent this month</div><div className='mt-1 text-3xl font-semibold tabular-nums'>{money(spent, 0)}</div><div className={'mt-1 text-xs font-medium ' + (spent > prevSpent ? 'text-red-500' : 'text-emerald-600')}>{prevSpent ? (spent > prevSpent ? 'Up ' : 'Down ') + money(Math.abs(spent - prevSpent), 0) + ' vs last month' : 'First month tracked'}</div></div>\n              <div className={CARD}><div className='flex items-center gap-1.5 text-xs font-medium text-slate-400'><TrendingUp size={14} /> Income</div><div className='mt-1 text-3xl font-semibold tabular-nums text-emerald-600'>{money(income, 0)}</div><div className='mt-1 text-xs text-slate-400'>{data.over.length ? data.over.length + (data.over.length === 1 ? ' category over budget' : ' categories over budget') : 'All budgets on track'}</div></div>\n            </div>\n          </Rise>\n\n          <Rise i={3} className='lg:col-span-3'>\n            <div className={CARD}>\n              <div className='mb-1 text-lg font-semibold'>Spending trend</div>\n              <div className='mb-4 text-xs text-slate-400'>Last three months</div>\n              <div className='flex h-48 items-end gap-4'>\n                {data.months.map((m, i) => {\n                  const cur = i === data.months.length - 1;\n                  return (\n                    <div key={m.key} className='flex h-full flex-1 flex-col items-center justify-end gap-2'>\n                      <div className='text-xs font-semibold tabular-nums text-slate-500'>{money(m.spent, 0)}</div>\n                      <motion.div className='w-full rounded-2xl' style={{ background: cur ? 'hsl(var(--primary))' : '#D5DEF5', originY: 1 }} initial={reduce ? false : { height: 0 }} animate={{ height: Math.max((m.spent / maxSpent) * 100, 3) + '%' }} transition={{ duration: 0.9, delay: 0.2 + i * 0.1, ease: [0.22, 1, 0.36, 1] }} />\n                      <div className={'text-xs font-medium ' + (cur ? 'text-primary' : 'text-slate-400')}>{m.label}</div>\n                    </div>\n                  );\n                })}\n              </div>\n            </div>\n          </Rise>\n\n          <Rise i={4} className='lg:col-span-2'>\n            <div className={CARD + ' h-full'}>\n              <div className='mb-4 text-lg font-semibold'>Where it went</div>\n              <div className='space-y-4'>\n                {data.list.slice(0, 6).map((s, i) => {\n                  const c = cat(s.k);\n                  const over = s.lim > 0 && s.v > s.lim;\n                  return (\n                    <div key={s.k}>\n                      <div className='mb-1 flex items-center justify-between text-sm'><span className='flex items-center gap-2 font-medium'><c.Icon size={15} style={{ color: c.color }} /> {c.label}</span><span className={'tabular-nums ' + (over ? 'font-semibold text-red-500' : 'text-slate-500')}>{money(s.v, 0)}</span></div>\n                      <div className='h-2 overflow-hidden rounded-full bg-slate-100'><motion.div className='h-full rounded-full' style={{ background: over ? '#EF4444' : c.color }} initial={reduce ? false : { width: 0 }} animate={{ width: (data.list[0] ? (s.v / data.list[0].v) * 100 : 0) + '%' }} transition={{ duration: 0.8, delay: 0.3 + i * 0.07 }} /></div>\n                    </div>\n                  );\n                })}\n                {data.list.length === 0 && <div className='py-6 text-center text-sm text-slate-400'>No spending recorded this month yet.</div>}\n              </div>\n            </div>\n          </Rise>\n        </div>\n      )}\n    </Shell>\n  );\n}\n"
+    },
+    {
+      "name": "LedgerlyAuth",
+      "kind": "code",
+      "purpose": "Centred cobalt-wash sign-in with live balance + sparkline preview, Google sign-in and demo chips",
+      "props": {},
+      "sample": {},
+      "source": "import React, { useEffect, useState } from 'react';\nimport { motion, AnimatePresence, animate, useReducedMotion } from 'motion/react';\nimport { TrendingUp, Check } from 'lucide-react';\nimport type { AppHandle } from '@app/kit/primitives';\n\nconst DEMOS = [\n  { name: 'Maya', email: 'maya.chen@ledgerly.test', password: 'cobalt-maple-2027' },\n  { name: 'Daniel', email: 'daniel.okafor@ledgerly.test', password: 'cobalt-harbor-2027' },\n];\n\nconst PTS = [34, 38, 31, 42, 40, 52, 47, 58, 55, 66, 62, 74];\nconst W = 220;\nconst H = 56;\nconst xy = PTS.map((v, i) => [(i / (PTS.length - 1)) * W, H - 4 - ((v - 28) / 50) * (H - 10)] as const);\nconst LINE = xy.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');\nconst AREA = LINE + ' L' + W + ' ' + H + ' L0 ' + H + ' Z';\nconst TARGET = 17648.25;\nconst money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });\n\nfunction GoogleMark() {\n  return (\n    <svg width='18' height='18' viewBox='0 0 48 48' aria-hidden='true'>\n      <path fill='#EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z' />\n      <path fill='#4285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z' />\n      <path fill='#FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z' />\n      <path fill='#34A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z' />\n    </svg>\n  );\n}\n\nfunction Preview({ reduce }: { reduce: boolean | null }) {\n  const [v, setV] = useState(reduce ? TARGET : 0);\n  useEffect(() => {\n    if (reduce) { setV(TARGET); return; }\n    const c = animate(0, TARGET, { duration: 1.6, delay: 0.3, ease: [0.22, 1, 0.36, 1], onUpdate: (x) => setV(x) });\n    return () => c.stop();\n  }, [reduce]);\n  return (\n    <div className='relative overflow-hidden rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/70'>\n      <div className='flex items-start justify-between gap-3'>\n        <div className='min-w-0'>\n          <div className='text-xs font-medium text-slate-400'>Total balance</div>\n          <div className='mt-0.5 text-[28px] font-semibold leading-none tracking-tight tabular-nums text-slate-900'>{money(v)}</div>\n          <div className='mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600'><TrendingUp size={12} /> +$1,284 this month</div>\n        </div>\n        <svg viewBox={'0 0 ' + W + ' ' + H} className='mt-1 h-14 w-[42%] max-w-[150px] shrink-0 overflow-visible' aria-hidden='true'>\n          <defs>\n            <linearGradient id='lg-spark' x1='0' y1='0' x2='0' y2='1'>\n              <stop offset='0%' stopColor='hsl(var(--primary))' stopOpacity='0.25' />\n              <stop offset='100%' stopColor='hsl(var(--primary))' stopOpacity='0' />\n            </linearGradient>\n          </defs>\n          <motion.path d={AREA} fill='url(#lg-spark)' initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1, duration: 0.8 }} />\n          <motion.path d={LINE} fill='none' stroke='hsl(var(--primary))' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' initial={reduce ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.3, duration: 1.4, ease: 'easeInOut' }} />\n          <motion.circle cx={xy[xy.length - 1][0]} cy={xy[xy.length - 1][1]} r='4' fill='hsl(var(--primary))' initial={reduce ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.6, type: 'spring', stiffness: 300, damping: 15 }} />\n        </svg>\n      </div>\n    </div>\n  );\n}\n\nexport default function LedgerlyAuth({ app }: { app?: AppHandle }) {\n  const auth = app?.auth;\n  const reduce = useReducedMotion();\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  const [name, setName] = useState('');\n  const [err, setErr] = useState('');\n  const [busy, setBusy] = useState(false);\n  const signup = auth?.mode === 'signup';\n  const providers = auth?.providers || [];\n\n  const go = async () => {\n    if (!auth || busy) return;\n    setErr('');\n    setBusy(true);\n    try {\n      if (signup) await auth.signUp({ name: name || email.split('@')[0], email, password });\n      else await auth.signIn(email, password);\n    } catch (e) {\n      setErr(e instanceof Error ? e.message : 'Something went wrong');\n    }\n    setBusy(false);\n  };\n  const social = async (pname: string) => {\n    if (!auth) return;\n    setErr('');\n    try { await auth.startProvider(pname); } catch (e) { setErr(e instanceof Error ? e.message : 'Could not start that sign-in'); }\n  };\n  const input = 'w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-[15px] text-slate-900 outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15';\n  const lbl = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500';\n  const grid = 'linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px)';\n\n  return (\n    <div className='relative min-h-screen overflow-x-hidden bg-primary'>\n      <div className='pointer-events-none absolute inset-0' style={{ backgroundImage: grid, backgroundSize: '44px 44px', WebkitMaskImage: 'radial-gradient(ellipse at 50% 35%, #000 20%, transparent 75%)', maskImage: 'radial-gradient(ellipse at 50% 35%, #000 20%, transparent 75%)' }} />\n      <div className='pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-white/20 blur-3xl' />\n      <div className='pointer-events-none absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-black/25 blur-3xl' />\n\n      <div className='relative mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 py-8'>\n        <motion.div initial={reduce ? false : { opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className='mb-5 flex items-center gap-2.5 text-white'>\n          <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg font-bold text-primary shadow-lg'>L</div>\n          <span className='text-xl font-semibold tracking-tight'>Ledgerly</span>\n        </motion.div>\n\n        <motion.div initial={reduce ? false : { opacity: 0, y: 28, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 150, damping: 20 }} className='w-full rounded-[28px] bg-white p-5 shadow-[0_30px_70px_-20px_rgba(10,25,90,0.55),0_2px_6px_rgba(15,23,42,0.08)] sm:p-7'>\n          <Preview reduce={reduce} />\n          <div className='mt-5 text-2xl font-semibold tracking-tight text-slate-900'>{signup ? 'Create your account' : 'Welcome back'}</div>\n          <p className='mt-1 text-sm text-slate-500'>{signup ? 'Start tracking in under a minute.' : 'Sign in to see where your money went.'}</p>\n\n          <div className='mt-5 space-y-3.5'>\n            <AnimatePresence initial={false}>\n              {signup && (\n                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className='overflow-hidden'>\n                  <label className={lbl} htmlFor='lg-name'>Name</label>\n                  <input id='lg-name' className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder='Your name' />\n                </motion.div>\n              )}\n            </AnimatePresence>\n            <div>\n              <label className={lbl} htmlFor='lg-email'>Email</label>\n              <input id='lg-email' aria-label='Email' type='email' autoComplete='email' className={input} value={email} onChange={(e) => setEmail(e.target.value)} placeholder='you@example.com' />\n            </div>\n            <div>\n              <label className={lbl} htmlFor='lg-pass'>Password</label>\n              <input id='lg-pass' aria-label='Password' type='password' autoComplete={signup ? 'new-password' : 'current-password'} className={input} value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Your password' onKeyDown={(e) => { if (e.key === 'Enter') go(); }} />\n            </div>\n          </div>\n\n          <AnimatePresence>\n            {err && <motion.div role='alert' initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className='mt-4 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600'>{err}</motion.div>}\n          </AnimatePresence>\n\n          <motion.button whileTap={{ scale: 0.97 }} whileHover={{ y: -1 }} onClick={go} disabled={busy} className='mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_24px_-8px_rgba(47,107,255,0.7)] disabled:opacity-60'>\n            {busy ? 'Please wait' : signup ? 'Create account' : 'Sign in'}\n          </motion.button>\n\n          {providers.length > 0 && (\n            <div className='mt-5'>\n              <div className='mb-4 flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-slate-400'>\n                <span className='h-px flex-1 bg-slate-200' />or<span className='h-px flex-1 bg-slate-200' />\n              </div>\n              <div className='space-y-2.5'>\n                {providers.map((p) => (\n                  <motion.button key={p.name} whileTap={{ scale: 0.97 }} whileHover={{ y: -1 }} onClick={() => social(p.name)} className='flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white py-3.5 text-[15px] font-semibold text-slate-800 shadow-sm hover:border-slate-300'>\n                    {p.name === 'google' && <GoogleMark />}\n                    Continue with {p.label}\n                  </motion.button>\n                ))}\n              </div>\n            </div>\n          )}\n\n          {auth?.canSignUp !== false && (\n            <button className='mt-4 w-full text-center text-sm text-slate-500' onClick={() => { setErr(''); auth?.setMode(signup ? 'login' : 'signup'); }}>\n              {signup ? 'Already have an account? ' : 'New to Ledgerly? '}\n              <span className='font-semibold text-primary'>{signup ? 'Sign in' : 'Create an account'}</span>\n            </button>\n          )}\n\n          {!signup && (\n            <div className='mt-5 border-t border-slate-100 pt-4'>\n              <div className='mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400'>Try a demo member</div>\n              <div className='grid grid-cols-2 gap-3'>\n                {DEMOS.map((d) => (\n                  <motion.button key={d.email} whileTap={{ scale: 0.96 }} onClick={() => { setEmail(d.email); setPassword(d.password); setErr(''); }} className='flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm font-medium text-slate-800 hover:border-primary/40'>\n                    <span className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary'>{d.name[0]}</span>\n                    <span className='flex-1'>{d.name}</span>\n                    {email === d.email && <Check size={14} className='text-primary' />}\n                  </motion.button>\n                ))}\n              </div>\n            </div>\n          )}\n        </motion.div>\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "demo_logins": [
+    {
+      "persona": "member",
+      "row": "11bc231c-2a50-595e-9758-48eba19c00d7",
+      "name": "Maya Chen",
+      "email": "maya.chen@ledgerly.test",
+      "password": "cobalt-maple-2027"
+    },
+    {
+      "persona": "member",
+      "row": "98e47031-0e7a-5e5f-96e0-50378a77f856",
+      "name": "Daniel Okafor",
+      "email": "daniel.okafor@ledgerly.test",
+      "password": "cobalt-harbor-2027"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "daily-recurring-bills",
+      "title": "Create today's recurring bill transactions",
+      "on": {
+        "schedule": "daily 06:00",
+        "entity": "bill"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const now = ctx.now();\nconst y = now.getUTCFullYear();\nconst m = now.getUTCMonth();\nconst d = now.getUTCDate();\nconst last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();\nconst ym = String(y) + '-' + String(m + 1).padStart(2, '0');\nconst date = ym + '-' + String(d).padStart(2, '0');\nconst bills = await ctx.db.list('bill');\nconst txs = await ctx.db.list('transaction');\nlet n = 0;\nfor (const b of bills) {\n  if (b.active === false) continue;\n  const day = Number(b.day_of_month);\n  const due = day === d || (d === last && day > last);\n  if (!due) continue;\n  const exists = txs.some((t) => String(t.bill_id) === String(b.id) && String(t.date).slice(0, 7) === ym);\n  if (exists) continue;\n  await ctx.db.create('transaction', { member_id: b.member_id, bill_id: b.id, title: String(b.name), amount: -Math.abs(Number(b.amount)), category: String(b.category), date: date, note: 'Recurring bill' });\n  n++;\n}\nctx.log('Created ' + String(n) + ' bill transactions for ' + date);",
+          "checked": "00bf411bce60921c"
+        }
+      ]
+    },
+    {
+      "id": "check-budget-on-create",
+      "title": "Flag transactions that push a category over budget",
+      "on": {
+        "entity": "transaction",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const amt = Number(row.amount);\nif (!(amt < 0)) return;\nconst mid = String(row.member_id);\nconst cat = String(row.category);\nconst month = String(row.date).slice(0, 7);\nconst budgets = await ctx.db.list('budget');\nconst b = budgets.find((x) => String(x.member_id) === mid && String(x.category) === cat);\nif (!b) return;\nconst txs = await ctx.db.list('transaction');\nlet spent = 0;\nfor (const t of txs) {\n  if (String(t.member_id) === mid && String(t.category) === cat && String(t.date).slice(0, 7) === month && Number(t.amount) < 0) spent += -Number(t.amount);\n}\nif (spent > Number(b.monthly_limit)) {\n  await ctx.db.update('transaction', String(row.id), { alert: 'over' });\n}",
+          "checked": "83795ea4333ae0d7"
+        }
+      ]
+    },
+    {
+      "id": "notify-over-budget",
+      "title": "Notify the member when a category is over budget",
+      "on": {
+        "entity": "transaction",
+        "event": "updated"
+      },
+      "when": {
+        "field": "alert",
+        "equals": "over"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": {
+            "ref": "member_id",
+            "entity": "member"
+          },
+          "title": "Over budget: {{category}}",
+          "body": "“{{title}}” pushed your {{category}} spending past this month's budget."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1017 @@
+{
+  "app": {
+    "name": "Stillwater",
+    "tagline": "Yoga and pilates in Lisbon, booked in two taps",
+    "brand_icon": "Sun",
+    "theme": "sage-cream",
+    "nav_style": "topbar",
+    "density": "comfortable",
+    "brand_color": "#2F7D6D",
+    "direction": "calm-health"
+  },
+  "auth": {
+    "google": true
+  },
+  "personas": [
+    {
+      "id": "member",
+      "label": "Member",
+      "description": "Books classes and manages their own bookings",
+      "kind": "consumer"
+    },
+    {
+      "id": "instructor",
+      "label": "Instructor",
+      "description": "Runs the schedule, rosters and members",
+      "kind": "staff"
+    }
+  ],
+  "coordinates": {
+    "primaryVerb": "book",
+    "inventoryShape": "shelf",
+    "moneySurface": "per-slot"
+  },
+  "entities": [
+    {
+      "name": "member",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "optional": true
+        },
+        {
+          "name": "goals",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "access": {
+        "member": {
+          "read": "own",
+          "update": "own"
+        }
+      }
+    },
+    {
+      "name": "instructor",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "bio",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "photo",
+          "type": "image",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "session",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "style",
+          "type": "enum",
+          "enum_values": [
+            "vinyasa",
+            "pilates",
+            "yin",
+            "breathwork"
+          ]
+        },
+        {
+          "name": "level",
+          "type": "enum",
+          "enum_values": [
+            "all levels",
+            "beginner",
+            "intermediate"
+          ]
+        },
+        {
+          "name": "instructor_id",
+          "type": "ref",
+          "ref": "instructor"
+        },
+        {
+          "name": "starts_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "duration_min",
+          "type": "number"
+        },
+        {
+          "name": "capacity",
+          "type": "number"
+        },
+        {
+          "name": "booked",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "room",
+          "type": "enum",
+          "enum_values": [
+            "loft",
+            "garden"
+          ]
+        },
+        {
+          "name": "outdoor",
+          "type": "boolean",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "rules": [
+        {
+          "id": "sensible-class",
+          "on": "both",
+          "message": "Classes run 15 to 180 minutes for 1 to 30 people.",
+          "check": "const d = Number(row.duration_min); const c = Number(row.capacity); return d >= 15 && d <= 180 && c >= 1 && c <= 30;"
+        }
+      ]
+    },
+    {
+      "name": "booking",
+      "label_field": "status",
+      "fields": [
+        {
+          "name": "member_id",
+          "type": "ref",
+          "ref": "member"
+        },
+        {
+          "name": "session_id",
+          "type": "ref",
+          "ref": "session"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "booked",
+            "attended",
+            "no_show",
+            "cancelled"
+          ]
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "unique": [
+        [
+          "member_id",
+          "session_id"
+        ]
+      ],
+      "actor_ref": "member_id",
+      "owner_refs": [
+        "member_id"
+      ],
+      "access": {
+        "member": {
+          "read": "own",
+          "create": true,
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "rules": [
+        {
+          "id": "seats-left",
+          "on": "create",
+          "message": "That class is full. Try another time.",
+          "check": "const r = await ctx.db.query('select capacity, booked, starts_at from session where id = $1', [row.session_id]);\nconst rows = Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? [];\nconst s = rows[0];\nif (!s) return 'That class is no longer on the schedule.';\nif (new Date(String(s.starts_at)).getTime() < ctx.now().getTime()) return 'That class has already started.';\nreturn Number(s.booked ?? 0) < Number(s.capacity);"
+        }
+      ]
+    }
+  ],
+  "seeds": {
+    "instructor": [
+      {
+        "id": "i1",
+        "name": "Inês Duarte",
+        "bio": "Vinyasa and sunrise flows. Teaching since 2014.",
+        "photo": "yoga teacher smiling in sunlit studio"
+      },
+      {
+        "id": "i2",
+        "name": "Tomás Reis",
+        "bio": "Pilates and mobility for desk-bound backs.",
+        "photo": "pilates instructor on reformer machine"
+      },
+      {
+        "id": "i3",
+        "name": "Maya Lindqvist",
+        "bio": "Yin, breathwork and slow evenings.",
+        "photo": "woman meditating on wooden floor"
+      }
+    ],
+    "member": [
+      {
+        "id": "m1",
+        "name": "Ana Ribeiro",
+        "email": "ana@example.com",
+        "goals": "Ease lower back stiffness, two classes a week"
+      },
+      {
+        "id": "m2",
+        "name": "Joe Carter",
+        "email": "joe@example.com",
+        "goals": "Build core strength for running"
+      },
+      {
+        "id": "m3",
+        "name": "Sofia Marques",
+        "email": "sofia@example.com",
+        "goals": "Sleep better"
+      },
+      {
+        "id": "m4",
+        "name": "Daniel Okafor",
+        "email": "daniel@example.com",
+        "goals": "First time on a mat"
+      },
+      {
+        "id": "m5",
+        "name": "Leonor Costa",
+        "email": "leonor@example.com",
+        "goals": "Keep a morning routine"
+      },
+      {
+        "id": "m6",
+        "name": "Ravi Menon",
+        "email": "ravi@example.com",
+        "goals": "Flexibility for climbing"
+      }
+    ],
+    "session": [
+      {
+        "id": "s1",
+        "title": "Sunrise Flow",
+        "style": "vinyasa",
+        "level": "all levels",
+        "instructor_id": "i1",
+        "starts_at": "2026-10-13T06:30:00Z",
+        "duration_min": 60,
+        "capacity": 14,
+        "booked": 3,
+        "room": "garden",
+        "outdoor": true,
+        "description": "Breath-led flow that builds heat and strength. Mats and blocks provided."
+      },
+      {
+        "id": "s2",
+        "title": "Desk Reset Pilates",
+        "style": "pilates",
+        "level": "beginner",
+        "instructor_id": "i2",
+        "starts_at": "2026-10-13T17:30:00Z",
+        "duration_min": 45,
+        "capacity": 10,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Slow, precise mat work for core, posture and a happier back."
+      },
+      {
+        "id": "s3",
+        "title": "Lunchtime Pilates",
+        "style": "pilates",
+        "level": "all levels",
+        "instructor_id": "i2",
+        "starts_at": "2026-10-14T11:30:00Z",
+        "duration_min": 45,
+        "capacity": 10,
+        "booked": 0,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Slow, precise mat work for core, posture and a happier back."
+      },
+      {
+        "id": "s4",
+        "title": "Yin and Breath",
+        "style": "yin",
+        "level": "all levels",
+        "instructor_id": "i3",
+        "starts_at": "2026-10-14T18:00:00Z",
+        "duration_min": 75,
+        "capacity": 12,
+        "booked": 2,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Long, quiet holds to release hips, spine and a busy mind."
+      },
+      {
+        "id": "s5",
+        "title": "Sunrise Flow",
+        "style": "vinyasa",
+        "level": "all levels",
+        "instructor_id": "i1",
+        "starts_at": "2026-10-15T06:30:00Z",
+        "duration_min": 60,
+        "capacity": 14,
+        "booked": 1,
+        "room": "garden",
+        "outdoor": true,
+        "description": "Breath-led flow that builds heat and strength. Mats and blocks provided."
+      },
+      {
+        "id": "s6",
+        "title": "Strong Vinyasa",
+        "style": "vinyasa",
+        "level": "intermediate",
+        "instructor_id": "i1",
+        "starts_at": "2026-10-15T17:30:00Z",
+        "duration_min": 60,
+        "capacity": 12,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Breath-led flow that builds heat and strength. Mats and blocks provided."
+      },
+      {
+        "id": "s7",
+        "title": "Core Pilates",
+        "style": "pilates",
+        "level": "intermediate",
+        "instructor_id": "i2",
+        "starts_at": "2026-10-16T11:30:00Z",
+        "duration_min": 45,
+        "capacity": 10,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Slow, precise mat work for core, posture and a happier back."
+      },
+      {
+        "id": "s8",
+        "title": "Breathwork for Sleep",
+        "style": "breathwork",
+        "level": "all levels",
+        "instructor_id": "i3",
+        "starts_at": "2026-10-16T19:00:00Z",
+        "duration_min": 40,
+        "capacity": 12,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Guided breathing to settle the nervous system. No experience needed."
+      },
+      {
+        "id": "s9",
+        "title": "Sunrise Flow",
+        "style": "vinyasa",
+        "level": "all levels",
+        "instructor_id": "i1",
+        "starts_at": "2026-10-17T06:30:00Z",
+        "duration_min": 60,
+        "capacity": 14,
+        "booked": 0,
+        "room": "garden",
+        "outdoor": true,
+        "description": "Breath-led flow that builds heat and strength. Mats and blocks provided."
+      },
+      {
+        "id": "s10",
+        "title": "Slow Flow",
+        "style": "yin",
+        "level": "beginner",
+        "instructor_id": "i3",
+        "starts_at": "2026-10-17T17:00:00Z",
+        "duration_min": 60,
+        "capacity": 12,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Long, quiet holds to release hips, spine and a busy mind."
+      },
+      {
+        "id": "s11",
+        "title": "Garden Vinyasa",
+        "style": "vinyasa",
+        "level": "all levels",
+        "instructor_id": "i1",
+        "starts_at": "2026-10-18T08:30:00Z",
+        "duration_min": 75,
+        "capacity": 16,
+        "booked": 2,
+        "room": "garden",
+        "outdoor": true,
+        "description": "Breath-led flow that builds heat and strength. Mats and blocks provided."
+      },
+      {
+        "id": "s12",
+        "title": "Mat Pilates",
+        "style": "pilates",
+        "level": "beginner",
+        "instructor_id": "i2",
+        "starts_at": "2026-10-18T10:30:00Z",
+        "duration_min": 50,
+        "capacity": 10,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Slow, precise mat work for core, posture and a happier back."
+      },
+      {
+        "id": "s13",
+        "title": "Long Yin",
+        "style": "yin",
+        "level": "all levels",
+        "instructor_id": "i3",
+        "starts_at": "2026-10-19T09:00:00Z",
+        "duration_min": 75,
+        "capacity": 12,
+        "booked": 1,
+        "room": "loft",
+        "outdoor": false,
+        "description": "Long, quiet holds to release hips, spine and a busy mind."
+      },
+      {
+        "id": "s14",
+        "title": "Breathwork Circle",
+        "style": "breathwork",
+        "level": "all levels",
+        "instructor_id": "i3",
+        "starts_at": "2026-10-19T16:30:00Z",
+        "duration_min": 45,
+        "capacity": 14,
+        "booked": 0,
+        "room": "garden",
+        "outdoor": true,
+        "description": "Guided breathing to settle the nervous system. No experience needed."
+      }
+    ],
+    "booking": [
+      {
+        "id": "b1",
+        "member_id": "m1",
+        "session_id": "s1",
+        "status": "booked"
+      },
+      {
+        "id": "b2",
+        "member_id": "m1",
+        "session_id": "s4",
+        "status": "booked"
+      },
+      {
+        "id": "b3",
+        "member_id": "m1",
+        "session_id": "s10",
+        "status": "booked"
+      },
+      {
+        "id": "b4",
+        "member_id": "m2",
+        "session_id": "s1",
+        "status": "booked"
+      },
+      {
+        "id": "b5",
+        "member_id": "m2",
+        "session_id": "s7",
+        "status": "booked"
+      },
+      {
+        "id": "b6",
+        "member_id": "m3",
+        "session_id": "s4",
+        "status": "booked"
+      },
+      {
+        "id": "b7",
+        "member_id": "m3",
+        "session_id": "s8",
+        "status": "booked"
+      },
+      {
+        "id": "b8",
+        "member_id": "m4",
+        "session_id": "s2",
+        "status": "booked"
+      },
+      {
+        "id": "b9",
+        "member_id": "m4",
+        "session_id": "s12",
+        "status": "booked"
+      },
+      {
+        "id": "b10",
+        "member_id": "m5",
+        "session_id": "s1",
+        "status": "booked"
+      },
+      {
+        "id": "b11",
+        "member_id": "m5",
+        "session_id": "s5",
+        "status": "booked"
+      },
+      {
+        "id": "b12",
+        "member_id": "m6",
+        "session_id": "s6",
+        "status": "booked"
+      },
+      {
+        "id": "b13",
+        "member_id": "m6",
+        "session_id": "s11",
+        "status": "booked"
+      },
+      {
+        "id": "b14",
+        "member_id": "m2",
+        "session_id": "s11",
+        "status": "booked"
+      },
+      {
+        "id": "b15",
+        "member_id": "m3",
+        "session_id": "s13",
+        "status": "booked"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "name": "schedule",
+      "route": "/schedule",
+      "title": "Schedule",
+      "icon": "CalendarDays",
+      "personas": [
+        "member"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "ClassSchedule",
+        "props": {
+          "title": "This week at Stillwater"
+        }
+      }
+    },
+    {
+      "name": "my-classes",
+      "route": "/my-classes",
+      "title": "My classes",
+      "icon": "Bookmark",
+      "personas": [
+        "member"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "MyBookings",
+        "props": {
+          "title": "Your classes"
+        }
+      }
+    },
+    {
+      "name": "desk",
+      "route": "/desk",
+      "title": "Desk",
+      "icon": "LayoutDashboard",
+      "personas": [
+        "instructor"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "StudioDesk",
+        "props": {
+          "title": "Studio desk"
+        }
+      }
+    },
+    {
+      "name": "classes",
+      "route": "/classes",
+      "title": "Classes",
+      "icon": "Calendar",
+      "personas": [
+        "instructor"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Classes",
+            "subtitle": "The timetable members book from."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "session",
+              "presentation": "table",
+              "columns": [
+                "title",
+                "starts_at",
+                "instructor_id",
+                "level",
+                "room",
+                "booked",
+                "capacity"
+              ],
+              "searchField": "title",
+              "filters": [
+                {
+                  "field": "style",
+                  "label": "Style"
+                },
+                {
+                  "field": "instructor_id",
+                  "label": "Teacher"
+                }
+              ],
+              "emptyCopy": "No classes yet. Add the first one and members can book it straight away."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "session",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "title",
+            "style",
+            "level",
+            "instructor_id",
+            "starts_at",
+            "duration_min",
+            "capacity",
+            "room",
+            "outdoor",
+            "description"
+          ],
+          "submitLabel": "Save class",
+          "successCopy": "Class saved. It's on the schedule now."
+        }
+      }
+    },
+    {
+      "name": "bookings",
+      "route": "/bookings",
+      "title": "Bookings",
+      "icon": "ListChecks",
+      "personas": [
+        "instructor"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Bookings",
+            "subtitle": "Every booking, by status. Add one for a walk-in."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "booking",
+              "presentation": "grouped",
+              "groupBy": "status",
+              "columns": [
+                "member_id",
+                "session_id",
+                "status",
+                "note"
+              ],
+              "filters": [
+                {
+                  "field": "session_id",
+                  "label": "Class"
+                }
+              ],
+              "emptyCopy": "No bookings yet. They appear here the moment a member books."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "booking",
+          "mode": "create",
+          "layout": "dialog",
+          "fields": [
+            "member_id",
+            "session_id",
+            "note"
+          ],
+          "submitLabel": "Book them in"
+        }
+      }
+    },
+    {
+      "name": "members",
+      "route": "/members",
+      "title": "Members",
+      "icon": "Users",
+      "personas": [
+        "instructor"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Members",
+            "subtitle": "Everyone who has signed up."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "member",
+              "presentation": "rows",
+              "columns": [
+                "name",
+                "email",
+                "goals"
+              ],
+              "searchField": "name",
+              "emptyCopy": "No members yet. Share your link and they will appear here."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "member",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "name",
+            "email",
+            "goals"
+          ],
+          "submitLabel": "Save member"
+        }
+      }
+    },
+    {
+      "name": "teachers",
+      "route": "/teachers",
+      "title": "Teachers",
+      "icon": "Award",
+      "personas": [
+        "instructor"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Teachers",
+            "subtitle": "Who leads each class. Members see these names and photos."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "instructor",
+              "presentation": "cards",
+              "columns": [
+                "photo",
+                "name",
+                "bio"
+              ],
+              "emptyCopy": "Add yourself first, then the people who teach with you."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "instructor",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "name",
+            "bio",
+            "photo"
+          ],
+          "submitLabel": "Save teacher"
+        }
+      }
+    },
+    {
+      "name": "team",
+      "route": "/team",
+      "title": "Team",
+      "icon": "UserPlus",
+      "personas": [
+        "instructor"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Team and access",
+            "subtitle": "Invite another instructor."
+          },
+          {
+            "kind": "block",
+            "block": "TeamAdmin",
+            "props": {
+              "inviteLabel": "Invite an instructor",
+              "emptyCopy": "It's just you for now. Invite the people who teach with you."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "components": [
+    {
+      "name": "ClassSchedule",
+      "kind": "code",
+      "purpose": "Member schedule: pick a day, book a class, AI class finder, garden-class forecast",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "This week at Stillwater"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "The schedule is taking a breather",
+          "description": "Refresh the page in a moment."
+        }
+      },
+      "source": "import { useEffect, useMemo, useState } from \"react\";\nimport { motion } from \"motion/react\";\nimport { Clock, Sun, Sparkles, Users, Check } from \"lucide-react\";\nimport { Markdown } from \"@app/kit/primitives\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype ClassScheduleProps = { title?: string; app?: AppHandle };\ntype Forecast = { tempC: number | null; rainChance: number | null; summary: string };\n\nconst TZ = \"Europe/Lisbon\";\nconst FALLBACK = \"Our class finder is resting right now. **Long Yin** or **Breathwork for Sleep** are good places to start.\";\nconst str = (v: unknown) => (v == null ? \"\" : String(v));\nconst num = (v: unknown) => (typeof v === \"number\" ? v : Number(v) || 0);\nconst dayKey = (iso: string) =>\n  new Intl.DateTimeFormat(\"en-CA\", { timeZone: TZ, year: \"numeric\", month: \"2-digit\", day: \"2-digit\" }).format(new Date(iso));\nconst dayLabel = (iso: string) =>\n  new Intl.DateTimeFormat(\"en-GB\", { timeZone: TZ, weekday: \"short\", day: \"numeric\" }).format(new Date(iso));\nconst timeLabel = (iso: string) =>\n  new Intl.DateTimeFormat(\"en-GB\", { timeZone: TZ, hour: \"2-digit\", minute: \"2-digit\" }).format(new Date(iso));\n\nexport default function ClassSchedule({ title = \"This week at Stillwater\", app }: ClassScheduleProps) {\n  const [now, setNow] = useState(0);\n  const [day, setDay] = useState(\"\");\n  const [busy, setBusy] = useState(\"\");\n  const [error, setError] = useState(\"\");\n  const [forecasts, setForecasts] = useState<Record<string, Forecast | string>>({});\n  const [feeling, setFeeling] = useState(\"\");\n  const [advice, setAdvice] = useState(\"\");\n  const [thinking, setThinking] = useState(false);\n\n  useEffect(() => setNow(Date.now()), []);\n  useEffect(() => (app ? app.live(\"session\") : undefined), [app]);\n\n  const sessions = app?.rows(\"session\") ?? [];\n  const instructors = app?.rows(\"instructor\") ?? [];\n  const bookings = app?.rows(\"booking\") ?? [];\n  const meId = app?.me(\"member\");\n\n  const upcoming = useMemo(\n    () =>\n      sessions\n        .filter((s) => new Date(str(s.starts_at)).getTime() > now)\n        .sort((a, b) => str(a.starts_at).localeCompare(str(b.starts_at))),\n    [sessions, now],\n  );\n  const days = useMemo(() => {\n    const seen = new Map<string, string>();\n    for (const s of upcoming) seen.set(dayKey(str(s.starts_at)), dayLabel(str(s.starts_at)));\n    return [...seen.entries()].slice(0, 7);\n  }, [upcoming]);\n  const activeDay = day || (days[0]?.[0] ?? \"\");\n  const shown = upcoming.filter((s) => dayKey(str(s.starts_at)) === activeDay);\n  const teacher = (id: unknown) => str(instructors.find((i) => str(i.id) === str(id))?.name);\n  const myBooking = (sessionId: unknown) =>\n    bookings.find((b) => str(b.session_id) === str(sessionId) && str(b.status) === \"booked\");\n\n  async function book(sessionId: string) {\n    if (!app) return;\n    setBusy(sessionId);\n    setError(\"\");\n    try {\n      await app.create(\"booking\", { session_id: sessionId, member_id: meId, status: \"booked\" });\n    } catch (e) {\n      setError(e instanceof Error ? e.message : String(e));\n    } finally {\n      setBusy(\"\");\n    }\n  }\n\n  async function forecast(sessionId: string) {\n    if (!app) return;\n    setForecasts((f) => ({ ...f, [sessionId]: \"Checking the sky...\" }));\n    try {\n      const f = await app.call<Forecast>(\"class-forecast\", { session_id: sessionId });\n      setForecasts((all) => ({ ...all, [sessionId]: f }));\n    } catch (e) {\n      setForecasts((all) => ({ ...all, [sessionId]: e instanceof Error ? e.message : String(e) }));\n    }\n  }\n\n  async function suggest() {\n    if (!app || !feeling.trim()) return;\n    setThinking(true);\n    setAdvice(\"\");\n    const list = upcoming\n      .slice(0, 20)\n      .map((s) => `- ${str(s.title)} (${str(s.style)}, ${str(s.level)}, ${num(s.duration_min)} min) on ${dayLabel(str(s.starts_at))} at ${timeLabel(str(s.starts_at))}`)\n      .join(\"\\n\");\n    try {\n      const answer = await app.ai.ask(`How I feel today: ${feeling}\\n\\nClasses this week:\\n${list}`, {\n        system: \"You are the front desk at a small yoga and pilates studio. Recommend ONE class from the list and say why in two short sentences. Use markdown bold for the class name. Never invent classes.\",\n        maxTokens: 600,\n      });\n      setAdvice(answer.trim() || FALLBACK);\n    } catch {\n      setAdvice(FALLBACK);\n    } finally {\n      setThinking(false);\n    }\n  }\n\n  return (\n    <div className=\"mx-auto max-w-3xl space-y-6 px-4 py-6\">\n      <header className=\"space-y-1\">\n        <h1 className=\"text-3xl font-semibold tracking-tight text-foreground\">{title}</h1>\n        <p className=\"text-muted-foreground\">Pick a day, book a mat. Cancel up to the start of class.</p>\n      </header>\n\n      <section className=\"rounded-2xl border border-border bg-card p-4\">\n        <form className=\"space-y-3\" onSubmit={(e) => { e.preventDefault(); void suggest(); }}>\n          <label htmlFor=\"feeling\" className=\"flex items-center gap-2 text-sm font-medium text-foreground\">\n            <Sparkles className=\"h-4 w-4 text-primary\" /> Not sure what to take?\n          </label>\n          <div className=\"flex flex-col gap-2 sm:flex-row\">\n            <input\n              id=\"feeling\"\n              value={feeling}\n              onChange={(e) => setFeeling(e.target.value)}\n              placeholder=\"Stiff back after a long week, 45 minutes free\"\n              className=\"flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground\"\n            />\n            <button type=\"submit\" disabled={thinking || !feeling.trim()} className=\"rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50\">\n              {thinking ? \"Thinking...\" : \"Suggest a class\"}\n            </button>\n          </div>\n          {advice && <div className=\"rounded-xl bg-muted p-3 text-sm\"><Markdown text={advice} size=\"sm\" /></div>}\n        </form>\n      </section>\n\n      <nav aria-label=\"Days\" className=\"flex gap-2 overflow-x-auto pb-1\">\n        {days.map(([key, label]) => (\n          <button\n            key={key}\n            onClick={() => setDay(key)}\n            className={`shrink-0 rounded-full border px-4 py-1.5 text-sm ${key === activeDay ? \"border-primary bg-primary text-primary-foreground\" : \"border-border bg-card text-foreground\"}`}\n          >\n            {label}\n          </button>\n        ))}\n      </nav>\n\n      {error && <p role=\"alert\" className=\"rounded-xl bg-destructive/10 p-3 text-sm text-destructive\">{error}</p>}\n\n      <ul className=\"space-y-3\">\n        {shown.length === 0 && (\n          <li className=\"rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground\">\n            No classes on the schedule yet. New weeks open every Sunday.\n          </li>\n        )}\n        {shown.map((s) => {\n          const id = str(s.id);\n          const left = Math.max(0, num(s.capacity) - num(s.booked));\n          const mine = myBooking(id);\n          const f = forecasts[id];\n          return (\n            <motion.li key={id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className=\"rounded-2xl border border-border bg-card p-4\">\n              <div className=\"flex items-start justify-between gap-4\">\n                <div className=\"space-y-1\">\n                  <p className=\"flex items-center gap-1.5 text-sm text-muted-foreground\">\n                    <Clock className=\"h-3.5 w-3.5\" /> {timeLabel(str(s.starts_at))} · {num(s.duration_min)} min · {str(s.room)}\n                  </p>\n                  <h2 className=\"text-lg font-semibold text-foreground\">{str(s.title)}</h2>\n                  <p className=\"text-sm text-muted-foreground\">\n                    with {teacher(s.instructor_id) || \"a guest teacher\"} · {str(s.level)}\n                  </p>\n                </div>\n                {mine ? (\n                  <span className=\"inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary\">\n                    <Check className=\"h-4 w-4\" /> Booked\n                  </span>\n                ) : (\n                  <button\n                    onClick={() => void book(id)}\n                    disabled={left === 0 || busy === id}\n                    className=\"rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50\"\n                  >\n                    {left === 0 ? \"Full\" : busy === id ? \"Booking...\" : \"Book\"}\n                  </button>\n                )}\n              </div>\n              <div className=\"mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground\">\n                <span className=\"inline-flex items-center gap-1\"><Users className=\"h-3.5 w-3.5\" /> {left} of {num(s.capacity)} mats left</span>\n                {s.outdoor === true && (\n                  <button onClick={() => void forecast(id)} className=\"inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline\">\n                    <Sun className=\"h-3.5 w-3.5\" /> Garden class: check the forecast\n                  </button>\n                )}\n              </div>\n              {f && (\n                <p className=\"mt-2 rounded-xl bg-muted px-3 py-2 text-sm text-foreground\">\n                  {typeof f === \"string\" ? f : `${f.summary}${f.tempC != null ? `, ${Math.round(f.tempC)}°C` : \"\"}${f.rainChance != null ? `, ${f.rainChance}% chance of rain` : \"\"}`}\n                </p>\n              )}\n            </motion.li>\n          );\n        })}\n      </ul>\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "MyBookings",
+      "kind": "code",
+      "purpose": "A member's upcoming classes with cancel, and their history",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Your classes"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Your classes will be back in a moment",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source": "import { useEffect, useState } from \"react\";\nimport { AnimatePresence, motion } from \"motion/react\";\nimport { CalendarDays, X } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype MyBookingsProps = { title?: string; app?: AppHandle };\n\nconst TZ = \"Europe/Lisbon\";\nconst str = (v: unknown) => (v == null ? \"\" : String(v));\nconst when = (iso: string) =>\n  iso\n    ? new Intl.DateTimeFormat(\"en-GB\", { timeZone: TZ, weekday: \"long\", day: \"numeric\", month: \"short\", hour: \"2-digit\", minute: \"2-digit\" }).format(new Date(iso))\n    : \"\";\n\nexport default function MyBookings({ title = \"Your classes\", app }: MyBookingsProps) {\n  const [now, setNow] = useState(0);\n  const [error, setError] = useState(\"\");\n  useEffect(() => setNow(Date.now()), []);\n  useEffect(() => (app ? app.live(\"booking\") : undefined), [app]);\n\n  const sessions = app?.rows(\"session\") ?? [];\n  const bookings = app?.rows(\"booking\") ?? [];\n  const session = (id: unknown) => sessions.find((s) => str(s.id) === str(id));\n\n  const rows = bookings\n    .map((b) => ({ b, s: session(b.session_id) }))\n    .sort((x, y) => str(x.s?.starts_at).localeCompare(str(y.s?.starts_at)));\n  const upcoming = rows.filter((r) => str(r.b.status) === \"booked\" && new Date(str(r.s?.starts_at)).getTime() > now);\n  const past = rows.filter((r) => !upcoming.includes(r)).reverse();\n\n  async function cancel(id: string) {\n    if (!app) return;\n    setError(\"\");\n    try {\n      await app.transition(\"booking\", id, \"status\", \"cancelled\");\n    } catch (e) {\n      setError(e instanceof Error ? e.message : String(e));\n    }\n  }\n\n  return (\n    <div className=\"mx-auto max-w-2xl space-y-6 px-4 py-6\">\n      <h1 className=\"text-3xl font-semibold tracking-tight text-foreground\">{title}</h1>\n      {error && <p role=\"alert\" className=\"rounded-xl bg-destructive/10 p-3 text-sm text-destructive\">{error}</p>}\n\n      <section className=\"space-y-3\">\n        <h2 className=\"text-sm font-medium text-muted-foreground\">Coming up</h2>\n        {upcoming.length === 0 && (\n          <p className=\"rounded-2xl border border-dashed border-border p-6 text-center text-muted-foreground\">\n            Nothing booked yet. Your next class is one tap away on the schedule.\n          </p>\n        )}\n        <AnimatePresence initial={false}>\n          {upcoming.map(({ b, s }) => (\n            <motion.div\n              key={str(b.id)}\n              layout\n              exit={{ opacity: 0, x: 40 }}\n              className=\"flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4\"\n            >\n              <div>\n                <p className=\"font-semibold text-foreground\">{str(s?.title) || \"Class\"}</p>\n                <p className=\"flex items-center gap-1.5 text-sm text-muted-foreground\">\n                  <CalendarDays className=\"h-3.5 w-3.5\" /> {when(str(s?.starts_at))}\n                </p>\n              </div>\n              <button\n                onClick={() => void cancel(str(b.id))}\n                className=\"inline-flex items-center gap-1 rounded-xl border border-border px-3 py-1.5 text-sm text-foreground hover:bg-muted\"\n              >\n                <X className=\"h-4 w-4\" /> Cancel\n              </button>\n            </motion.div>\n          ))}\n        </AnimatePresence>\n      </section>\n\n      {past.length > 0 && (\n        <section className=\"space-y-2\">\n          <h2 className=\"text-sm font-medium text-muted-foreground\">History</h2>\n          <ul className=\"divide-y divide-border rounded-2xl border border-border bg-card\">\n            {past.map(({ b, s }) => (\n              <li key={str(b.id)} className=\"flex items-center justify-between px-4 py-3 text-sm\">\n                <span className=\"text-foreground\">{str(s?.title) || \"Class\"} · {when(str(s?.starts_at))}</span>\n                <span className=\"rounded-full bg-muted px-2 py-0.5 text-muted-foreground\">{str(b.status).replace(\"_\", \" \")}</span>\n              </li>\n            ))}\n          </ul>\n        </section>\n      )}\n    </div>\n  );\n}\n"
+    },
+    {
+      "name": "StudioDesk",
+      "kind": "code",
+      "purpose": "Instructor desk: next day's rosters with check-in, and a chart of mats booked",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Studio desk"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "The desk is reloading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source": "import { useEffect, useMemo, useState } from \"react\";\nimport { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from \"recharts\";\nimport { CheckCircle, UserCheck, XCircle } from \"lucide-react\";\nimport type { AppHandle } from \"@app/kit/primitives\";\n\ntype StudioDeskProps = { title?: string; app?: AppHandle };\n\nconst TZ = \"Europe/Lisbon\";\nconst str = (v: unknown) => (v == null ? \"\" : String(v));\nconst num = (v: unknown) => (typeof v === \"number\" ? v : Number(v) || 0);\nconst dayKey = (iso: string) =>\n  new Intl.DateTimeFormat(\"en-CA\", { timeZone: TZ, year: \"numeric\", month: \"2-digit\", day: \"2-digit\" }).format(new Date(iso));\nconst dayLabel = (iso: string) =>\n  new Intl.DateTimeFormat(\"en-GB\", { timeZone: TZ, weekday: \"short\", day: \"numeric\" }).format(new Date(iso));\nconst timeLabel = (iso: string) =>\n  new Intl.DateTimeFormat(\"en-GB\", { timeZone: TZ, hour: \"2-digit\", minute: \"2-digit\" }).format(new Date(iso));\n\nexport default function StudioDesk({ title = \"Studio desk\", app }: StudioDeskProps) {\n  const [now, setNow] = useState(0);\n  const [error, setError] = useState(\"\");\n  useEffect(() => setNow(Date.now()), []);\n  useEffect(() => (app ? app.live(\"booking\") : undefined), [app]);\n\n  const sessions = app?.rows(\"session\") ?? [];\n  const bookings = app?.rows(\"booking\") ?? [];\n  const members = app?.rows(\"member\") ?? [];\n  const memberName = (id: unknown) => str(members.find((m) => str(m.id) === str(id))?.name) || \"Member\";\n\n  const upcoming = useMemo(\n    () =>\n      sessions\n        .filter((s) => new Date(str(s.starts_at)).getTime() + num(s.duration_min) * 60000 > now)\n        .sort((a, b) => str(a.starts_at).localeCompare(str(b.starts_at))),\n    [sessions, now],\n  );\n  const firstDay = upcoming[0] ? dayKey(str(upcoming[0].starts_at)) : \"\";\n  const today = upcoming.filter((s) => dayKey(str(s.starts_at)) === firstDay);\n\n  const chart = useMemo(() => {\n    const byDay = new Map<string, { day: string; booked: number; capacity: number }>();\n    for (const s of upcoming) {\n      const k = dayKey(str(s.starts_at));\n      const row = byDay.get(k) ?? { day: dayLabel(str(s.starts_at)), booked: 0, capacity: 0 };\n      row.booked += num(s.booked);\n      row.capacity += num(s.capacity);\n      byDay.set(k, row);\n    }\n    return [...byDay.values()].slice(0, 7);\n  }, [upcoming]);\n\n  async function mark(id: string, to: \"attended\" | \"no_show\") {\n    if (!app) return;\n    setError(\"\");\n    try {\n      await app.transition(\"booking\", id, \"status\", to);\n    } catch (e) {\n      setError(e instanceof Error ? e.message : String(e));\n    }\n  }\n\n  return (\n    <div className=\"mx-auto max-w-5xl space-y-6 px-4 py-6\">\n      <header>\n        <h1 className=\"text-3xl font-semibold tracking-tight text-foreground\">{title}</h1>\n        <p className=\"text-muted-foreground\">\n          {firstDay ? `${dayLabel(str(today[0]?.starts_at))}: ${today.length} classes` : \"No classes scheduled.\"}\n        </p>\n      </header>\n\n      <section className=\"rounded-2xl border border-border bg-card p-4\">\n        <h2 className=\"mb-3 text-sm font-medium text-muted-foreground\">Mats booked, next 7 days</h2>\n        <div style={{ height: 220 }}>\n          <ResponsiveContainer width=\"100%\" height=\"100%\">\n            <BarChart data={chart}>\n              <XAxis dataKey=\"day\" tickLine={false} axisLine={false} />\n              <YAxis allowDecimals={false} width={28} tickLine={false} axisLine={false} />\n              <Tooltip />\n              <Bar dataKey=\"capacity\" name=\"Mats\" fill=\"hsl(var(--muted))\" radius={4} />\n              <Bar dataKey=\"booked\" name=\"Booked\" fill=\"hsl(var(--primary))\" radius={4} />\n            </BarChart>\n          </ResponsiveContainer>\n        </div>\n      </section>\n\n      {error && <p role=\"alert\" className=\"rounded-xl bg-destructive/10 p-3 text-sm text-destructive\">{error}</p>}\n\n      <div className=\"grid gap-4 md:grid-cols-2\">\n        {today.length === 0 && (\n          <p className=\"rounded-2xl border border-dashed border-border p-6 text-muted-foreground\">Add classes from the Classes page.</p>\n        )}\n        {today.map((s) => {\n          const roster = bookings.filter((b) => str(b.session_id) === str(s.id) && str(b.status) !== \"cancelled\");\n          return (\n            <section key={str(s.id)} className=\"rounded-2xl border border-border bg-card p-4\">\n              <div className=\"mb-3 flex items-baseline justify-between\">\n                <h3 className=\"font-semibold text-foreground\">{timeLabel(str(s.starts_at))} {str(s.title)}</h3>\n                <span className=\"text-sm text-muted-foreground\">{num(s.booked)}/{num(s.capacity)}</span>\n              </div>\n              {roster.length === 0 && <p className=\"text-sm text-muted-foreground\">No one booked yet.</p>}\n              <ul className=\"space-y-2\">\n                {roster.map((b) => (\n                  <li key={str(b.id)} className=\"flex items-center justify-between gap-2 text-sm\">\n                    <span className=\"min-w-0 truncate text-foreground\">{memberName(b.member_id)}</span>\n                    {str(b.status) === \"booked\" ? (\n                      <span className=\"flex shrink-0 gap-1 whitespace-nowrap\">\n                        <button onClick={() => void mark(str(b.id), \"attended\")} className=\"inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 hover:bg-muted\">\n                          <UserCheck className=\"h-3.5 w-3.5\" /> Here\n                        </button>\n                        <button onClick={() => void mark(str(b.id), \"no_show\")} className=\"inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-muted-foreground hover:bg-muted\">\n                          <XCircle className=\"h-3.5 w-3.5\" /> No-show\n                        </button>\n                      </span>\n                    ) : (\n                      <span className=\"inline-flex items-center gap-1 text-muted-foreground\">\n                        <CheckCircle className=\"h-3.5 w-3.5\" /> {str(b.status).replace(\"_\", \" \")}\n                      </span>\n                    )}\n                  </li>\n                ))}\n              </ul>\n            </section>\n          );\n        })}\n      </div>\n    </div>\n  );\n}\n"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "count-booking",
+      "title": "Count the mat and tell instructors",
+      "on": {
+        "entity": "booking",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const s = await ctx.db.get('session', String(row.session_id));\nif (!s) return;\nconst booked = Number(s.booked ?? 0) + 1;\nawait ctx.db.update('session', String(s.id), { booked });\nctx.notify({ title: 'New booking', body: `${String(s.title)}: ${booked} of ${Number(s.capacity)} mats booked`, role: 'instructor' });"
+        }
+      ]
+    },
+    {
+      "id": "free-mat-on-cancel",
+      "title": "Free the mat when a booking is cancelled",
+      "on": {
+        "entity": "booking",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "cancelled"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const s = await ctx.db.get('session', String(row.session_id));\nif (!s) return;\nawait ctx.db.update('session', String(s.id), { booked: Math.max(0, Number(s.booked ?? 0) - 1) });"
+        }
+      ]
+    },
+    {
+      "id": "morning-digest",
+      "title": "Morning bookings digest",
+      "on": {
+        "schedule": "daily 07:00",
+        "entity": "booking",
+        "tz": "Europe/Lisbon"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "role": "instructor",
+          "title": "Good morning",
+          "body": "{{count}} bookings in the last 24 hours.\n{{by:status}}"
+        }
+      ]
+    },
+    {
+      "id": "class-forecast",
+      "title": "Weather for a garden class",
+      "on": {
+        "call": true,
+        "roles": [
+          "member",
+          "instructor"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const id = String(input.session_id ?? \"\");\nif (!id) throw new Error(\"Which class? Send a session_id.\");\nconst session = await ctx.db.get(\"session\", id);\nif (!session) throw new Error(\"That class isn't on the schedule.\");\nconst starts = new Date(String(session.starts_at));\nconst hour = starts.toISOString().slice(0, 13) + \":00\";\nconst day = hour.slice(0, 10);\nconst url = \"https://api.open-meteo.com/v1/forecast?latitude=38.7223&longitude=-9.1393\"\n  + \"&hourly=temperature_2m,precipitation_probability,weather_code&timezone=UTC\"\n  + `&start_date=${day}&end_date=${day}`;\nconst res = await ctx.http.fetch(url);\nif (!res.ok) throw new Error(`The forecast service answered ${res.status}. Try again later.`);\nconst data = res.json<{ hourly?: { time?: string[]; temperature_2m?: number[]; precipitation_probability?: number[]; weather_code?: number[] } }>();\nconst h = data?.hourly;\nconst i = h?.time ? h.time.indexOf(hour) : -1;\nif (!h || i < 0) return { tempC: null, rainChance: null, summary: \"No forecast yet. Check again closer to the day\" };\nconst code = h.weather_code?.[i] ?? 0;\nconst summary = code === 0 ? \"Clear sky\" : code <= 3 ? \"Some cloud\" : code <= 48 ? \"Foggy\" : code <= 67 ? \"Rain likely\" : code <= 77 ? \"Snow\" : code <= 82 ? \"Showers\" : \"Storms\";\nctx.log(`forecast for ${String(session.title)} at ${hour}: ${summary}`);\nreturn { tempC: h.temperature_2m?.[i] ?? null, rainChance: h.precipitation_probability?.[i] ?? null, summary };"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "appbricx": {
+      "type": "http",
+      "url": "https://appbricx.com/api/mcp"
+    }
+  }
+}

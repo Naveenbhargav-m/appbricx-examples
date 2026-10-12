@@ -1,0 +1,254 @@
+<!doctype html>
+<!--
+  Appbricx "build story" template (HyperFrames composition, 1280x720).
+  Title card -> terminal replay of a REAL coding-agent session (step rail, tool calls,
+  real outputs, the session's own screenshots) -> the resulting live app (recorded
+  footage in a browser frame) -> end card.
+
+  The replay comes from scripts/extract-session.py (real transcript, condensed) and its
+  timing from scripts/build-story.mjs, which writes assets/session/replay.js and fills
+  the timing tokens and the @CLIP_TRACK marker. Copy lives in variables.
+-->
+<html
+  lang="en"
+  data-composition-variables='[
+    {"id":"theme","type":"enum","label":"Theme","options":[{"value":"dark","label":"Dark"},{"value":"light","label":"Light"}],"default":"dark","role":"style"},
+    {"id":"eyebrow","type":"string","label":"Eyebrow","default":"Live building","role":"content"},
+    {"id":"title","type":"string","label":"Title","default":"Watch a coding agent build Learnly","role":"content"},
+    {"id":"subtitle","type":"string","label":"Subtitle","default":"One real Claude Code session driving Appbricx: 104 tool calls in 40 minutes, condensed.","role":"content"},
+    {"id":"badge","type":"string","label":"Honesty badge","default":"Real session · condensed · waits and retries cut","role":"content"},
+    {"id":"agentLabel","type":"string","label":"Agent label","default":"Claude Code · appbricx MCP","role":"content"},
+    {"id":"step1","type":"string","label":"Step 1","default":"Describe","role":"content"},
+    {"id":"step2","type":"string","label":"Step 2","default":"Contract","role":"content"},
+    {"id":"step3","type":"string","label":"Step 3","default":"Screens","role":"content"},
+    {"id":"step4","type":"string","label":"Step 4","default":"Screenshot","role":"content"},
+    {"id":"step5","type":"string","label":"Step 5","default":"Verify","role":"content"},
+    {"id":"step6","type":"string","label":"Step 6","default":"Deploy","role":"content"},
+    {"id":"liveHeading","type":"string","label":"Live scene heading","default":"Live now, with sign-in, roles and real data","role":"content"},
+    {"id":"appUrl","type":"string","label":"App URL","default":"learnly.apps.appbricx.com","role":"content"},
+    {"id":"liveBadge","type":"string","label":"Live footage badge","default":"Real footage · waits trimmed","role":"content"},
+    {"id":"endHeadline","type":"string","label":"End headline","default":"Your coding agent builds it. Appbricx runs it.","role":"content"},
+    {"id":"ctaUrl","type":"string","label":"Call-to-action URL","default":"appbricx.com","role":"content"},
+    {"id":"endNote","type":"string","label":"End note","default":"Works with Claude Code, Cursor, Codex and any MCP client","role":"content"}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, height=720" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/session/replay.js"></script>
+    <link rel="stylesheet" href="assets/brand.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1280px; height: 720px; overflow: hidden; background: var(--bg); }
+      #root { position: relative; width: 1280px; height: 720px; overflow: hidden; background: var(--bg); color: var(--ink);
+        font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif; }
+      .clip { position: absolute; inset: 0; }
+      #backdrop .glow { position: absolute; width: 900px; height: 900px; left: 190px; top: -260px; border-radius: 50%;
+        background: radial-gradient(circle, var(--glow) 0%, transparent 62%); }
+      #backdrop .grid { position: absolute; inset: 0; opacity: .5;
+        background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 64px 64px; mask-image: radial-gradient(ellipse at 50% 40%, #000 0%, transparent 70%); }
+      .brandrow { display: flex; align-items: center; gap: 12px; font-weight: 650; font-size: 26px; letter-spacing: -0.02em; }
+      .brandrow img { width: 40px; height: 40px; }
+      .eyebrow { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 8px 16px; border-radius: 999px;
+        border: 1px solid var(--line); background: var(--surface); font-size: 18px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+      .eyebrow .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px var(--glow); }
+      .badge { display: inline-block; padding: 5px 12px; border-radius: 999px; background: var(--glow); color: var(--accent);
+        font-size: 13px; font-weight: 650; letter-spacing: .02em; }
+
+      #title-card { z-index: 2; display: flex; flex-direction: column; justify-content: center; padding: 0 120px; }
+      #title-card .brandrow { position: absolute; top: 56px; left: 120px; }
+      #title { margin-top: 26px; font-size: 80px; line-height: 1; font-weight: 800; letter-spacing: -0.04em; max-width: 1040px; }
+      #subtitle { margin-top: 24px; max-width: 900px; font-size: 28px; line-height: 1.3; color: var(--ink-2); font-weight: 450; }
+      #title-card .badge { margin-top: 28px; align-self: flex-start; font-size: 16px; padding: 7px 16px; }
+
+      /* Terminal scene */
+      #term-scene { z-index: 1; }
+      #rail { position: absolute; left: 40px; top: 96px; width: 170px; }
+      #rail .step { display: flex; align-items: center; gap: 12px; height: 62px; color: var(--ink-2); font-size: 19px; font-weight: 600; opacity: .45; }
+      #rail .step b { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--line);
+        font-size: 15px; font-weight: 700; color: var(--ink-2); background: var(--surface); }
+      #rail .step.on { opacity: 1; color: var(--ink); }
+      #rail .step.on b { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 0 0 6px var(--glow); }
+      #rail .step.done { opacity: .8; }
+      #rail .step.done b { border-color: var(--accent); color: var(--accent); }
+      #scene-top { position: absolute; left: 240px; right: 40px; top: 30px; height: 40px; display: flex; align-items: center; justify-content: space-between; }
+      #scene-top .brandrow { font-size: 20px; gap: 10px; }
+      #scene-top .brandrow img { width: 28px; height: 28px; }
+      #term { position: absolute; left: 240px; top: 84px; width: 1000px; height: 604px; border-radius: 14px; overflow: hidden;
+        background: #050b08; border: 1px solid rgba(238,246,241,.14); box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+      #term .bar { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 14px; background: #0c1712; border-bottom: 1px solid rgba(238,246,241,.08); }
+      #term .bar i { width: 11px; height: 11px; border-radius: 50%; background: rgba(238,246,241,.18); display: block; }
+      #term .bar .label { margin-left: 12px; font-size: 13px; color: #a9c2b5; font-family: "JetBrains Mono", monospace; }
+      #term .bar .count { margin-left: auto; font-size: 12.5px; color: #5dcb98; font-family: "JetBrains Mono", monospace; }
+      #viewport { position: absolute; left: 0; right: 0; top: 34px; bottom: 0; overflow: hidden; }
+      #lines { position: absolute; left: 22px; right: 22px; top: 14px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 14.5px; }
+      .ln { height: 23px; line-height: 23px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cfe0d6; }
+      .ln.gap { height: 12px; }
+      .ln.user { color: #eef6f1; }
+      .ln.user .tag { color: #04140c; background: #5dcb98; border-radius: 4px; padding: 1px 6px; margin-right: 10px; font-weight: 700; font-size: 12.5px; }
+      .ln.uline { color: #d9e7df; padding-left: 14px; border-left: 2px solid rgba(93,203,152,.45); margin-left: 4px; }
+      .ln.say { color: #a9c2b5; font-style: italic; }
+      .ln.call { color: #eef6f1; font-weight: 700; }
+      .ln.call .dot { color: #5dcb98; margin-right: 8px; }
+      .ln.call .srv { color: #6f8a7c; font-weight: 400; margin-right: 8px; }
+      .ln.out { padding-left: 26px; }
+      .ln.out.ok { color: #7fe0b0; }
+      .ln.out.err { color: #ff8f80; }
+      .ln.out.info { color: #e8d48a; }
+      .ln.out.dim { color: #9bb3a6; }
+      .ln.out::before { content: "\23BF  "; color: #4d6458; }
+      #shots img { position: absolute; border-radius: 12px; box-shadow: 0 24px 60px rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.12); background: #fff; }
+      #shots img.phone { width: 230px; height: auto; right: 64px; top: 112px; }
+      #shots img.desk { width: 560px; height: auto; right: 58px; top: 150px; }
+
+      /* Live scene */
+      #live-scene { z-index: 1; }
+      #live-scene .heading { position: absolute; left: 64px; right: 64px; top: 16px; height: 30px; display: flex; align-items: center; justify-content: space-between; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
+      #live-scene .frame { position: absolute; left: 112px; top: 58px; width: 1056px; height: 626px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+      #live-scene .bar { position: absolute; left: 0; right: 0; top: 0; height: 32px; display: flex; align-items: center; padding: 0 14px; gap: 7px; }
+      #live-scene .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); display: block; }
+      #live-scene .url { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); height: 20px; padding: 0 14px; border-radius: 6px; background: var(--bg-2); color: var(--ink-2); font-size: 12.5px; line-height: 20px; }
+      #live-scene .url b { color: var(--accent); }
+      #live-scene .fbadge { position: absolute; right: 14px; top: 6px; height: 20px; padding: 0 10px; border-radius: 999px; background: var(--glow); color: var(--accent); font-size: 11.5px; line-height: 20px; font-weight: 650; }
+      video.rec { position: absolute; left: 112px; top: 90px; width: 1056px; height: 594px; z-index: 2; border-radius: 0 0 14px 14px; object-fit: cover; }
+      .caption { z-index: 5; inset: auto; left: 0; right: 0; bottom: 52px; display: flex; justify-content: center; }
+      .caption span { padding: 12px 24px; border-radius: 999px; font-size: 25px; font-weight: 650; background: rgba(6,17,12,.88); color: #eef6f1; border: 1px solid rgba(93,203,152,.45); box-shadow: 0 12px 30px rgba(0,0,0,.3); }
+
+      #end-card { z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: var(--bg); }
+      #end-card .brandrow { font-size: 34px; gap: 14px; }
+      #end-card .brandrow img { width: 56px; height: 56px; }
+      #end-headline { margin-top: 34px; font-size: 54px; font-weight: 750; letter-spacing: -0.035em; max-width: 1040px; line-height: 1.05; }
+      #cta { margin-top: 34px; padding: 16px 38px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 44px; font-weight: 750; letter-spacing: -0.02em; }
+      #end-note { margin-top: 26px; font-size: 22px; color: var(--ink-2); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="__TOTAL__" data-width="1280" data-height="720" data-fps="30">
+      <div id="backdrop" class="clip" data-start="0" data-duration="__TOTAL__" data-track-index="0"><div class="glow"></div><div class="grid"></div></div>
+
+      <section id="title-card" class="clip" data-start="0" data-duration="__INTRO__" data-track-index="1">
+        <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+        <div class="eyebrow"><span class="dot"></span><span data-var-text="eyebrow">Live building</span></div>
+        <h1 id="title" data-var-text="title">Watch a coding agent build Learnly</h1>
+        <p id="subtitle" data-var-text="subtitle">One real Claude Code session driving Appbricx.</p>
+        <span class="badge" data-var-text="badge">Real session · condensed</span>
+      </section>
+
+      <section id="term-scene" class="clip" data-start="__TERM_START__" data-duration="__TERM_LEN__" data-track-index="2">
+        <div id="scene-top">
+          <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+          <span class="badge" data-var-text="badge">Real session · condensed</span>
+        </div>
+        <div id="rail">
+          <div class="step" data-ch="1"><b>1</b><span data-var-text="step1">Describe</span></div>
+          <div class="step" data-ch="2"><b>2</b><span data-var-text="step2">Contract</span></div>
+          <div class="step" data-ch="3"><b>3</b><span data-var-text="step3">Screens</span></div>
+          <div class="step" data-ch="4"><b>4</b><span data-var-text="step4">Screenshot</span></div>
+          <div class="step" data-ch="5"><b>5</b><span data-var-text="step5">Verify</span></div>
+          <div class="step" data-ch="6"><b>6</b><span data-var-text="step6">Deploy</span></div>
+        </div>
+        <div id="term">
+          <div class="bar"><i></i><i></i><i></i><span class="label" data-var-text="agentLabel">Claude Code · appbricx MCP</span><span class="count" id="count"></span></div>
+          <div id="viewport"><div id="lines"></div></div>
+        </div>
+        <div id="shots"></div>
+      </section>
+
+      <section id="live-scene" class="clip" data-start="__LIVE_START__" data-duration="__LIVE_LEN__" data-track-index="2">
+        <div class="heading"><span data-var-text="liveHeading">Live now</span></div>
+        <div class="frame"><div class="bar"><i></i><i></i><i></i></div>
+          <div class="url">https://<b data-var-text="appUrl">learnly.apps.appbricx.com</b></div>
+          <div class="fbadge" data-var-text="liveBadge">Real footage · waits trimmed</div></div>
+      </section>
+
+      <!-- @CLIP_TRACK: live-app videos and captions are generated here by scripts/build-story.mjs -->
+
+      <section id="end-card" class="clip" data-start="__END_START__" data-duration="__OUTRO__" data-track-index="4">
+        <div class="brandrow"><img src="assets/logo-mark.svg" alt="" /><span>Appbricx</span></div>
+        <h2 id="end-headline" data-var-text="endHeadline">Your coding agent builds it. Appbricx runs it.</h2>
+        <div id="cta" data-var-text="ctaUrl">appbricx.com</div>
+        <p id="end-note" data-var-text="endNote">Works with any MCP client</p>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        var vars = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+        document.documentElement.setAttribute('data-theme', vars.theme === 'light' ? 'light' : 'dark');
+        var R = window.REPLAY;
+        var T = { intro: __INTRO__, term: __TERM_START__, termLen: __TERM_LEN__, live: __LIVE_START__, liveLen: __LIVE_LEN__, end: __END_START__, total: __TOTAL__ };
+        var tl = gsap.timeline({ paused: true });
+
+        // Title.
+        tl.from('#title-card .brandrow', { opacity: 0, y: -12, duration: 0.5 }, 0.1)
+          .from('#title-card .eyebrow', { opacity: 0, y: 16, duration: 0.5, ease: 'power3.out' }, 0.2)
+          .from('#title', { opacity: 0, y: 40, duration: 0.7, ease: 'power3.out' }, 0.3)
+          .from('#subtitle', { opacity: 0, y: 24, duration: 0.6, ease: 'power3.out' }, 0.6)
+          .from('#title-card .badge', { opacity: 0, scale: 0.9, duration: 0.5, ease: 'back.out(1.6)' }, 0.9)
+          .to('#title-card', { opacity: 0, y: -24, duration: 0.45, ease: 'power2.in' }, T.intro - 0.45);
+
+        // Terminal: lines are laid out once; each fades in at its own time and the
+        // content scrolls so the newest line stays in view.
+        tl.from(['#term', '#rail', '#scene-top'], { opacity: 0, y: 30, duration: 0.6, ease: 'power3.out', stagger: 0.08 }, T.term);
+        var box = document.getElementById('lines'), LH = 23, GAP = 12, VIEW = 604 - 34 - 28;
+        var y = 0, count = document.getElementById('count');
+        function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        R.lines.forEach(function (l) {
+          var d = document.createElement('div');
+          d.className = 'ln ' + l.cls;
+          d.innerHTML = l.html;
+          box.appendChild(d);
+          var h = l.cls === 'gap' ? GAP : LH;
+          y += h;
+          tl.from(d, { opacity: 0, x: l.cls.indexOf('out') >= 0 ? 0 : -8, duration: 0.18, ease: 'power1.out' }, l.t);
+          if (y > VIEW) tl.to(box, { y: VIEW - y, duration: 0.25, ease: 'power2.out' }, l.t);
+        });
+        // Tool-call counter: "tool call 16 of 104" from the real session.
+        R.counters.forEach(function (c) { tl.set(count, { textContent: c.text }, c.t); });
+
+        // Step rail.
+        R.chapters.forEach(function (c, i) {
+          var el = document.querySelector('#rail .step[data-ch="' + c.ch + '"]');
+          tl.set(el, { attr: { class: 'step on' } }, c.t);
+          var next = R.chapters[i + 1];
+          if (next) tl.set(el, { attr: { class: 'step done' } }, next.t);
+        });
+
+        // Session screenshots pop over the terminal while the agent checks them.
+        var shots = document.getElementById('shots');
+        R.shots.forEach(function (s) {
+          var img = document.createElement('img');
+          img.src = 'assets/session/' + s.src; img.className = s.phone ? 'phone' : 'desk';
+          shots.appendChild(img);
+          tl.fromTo(img, { opacity: 0, y: 30, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power3.out' }, s.t)
+            .to(img, { opacity: 0, y: -16, duration: 0.3, ease: 'power1.in' }, s.t + s.dur - 0.3);
+        });
+        tl.to('#term-scene', { opacity: 0, duration: 0.4 }, T.live - 0.4);
+
+        // Live app.
+        tl.from('#live-scene', { opacity: 0, duration: 0.4 }, T.live)
+          .from(['#live-scene .frame', 'video.rec'], { opacity: 0, y: 40, scale: 0.97, transformOrigin: '50% 60%', duration: 0.6, ease: 'power3.out' }, T.live);
+        document.querySelectorAll('video.rec[data-xfade]').forEach(function (v) {
+          tl.fromTo(v, { opacity: 0 }, { opacity: 1, duration: parseFloat(v.dataset.xfade), ease: 'none' }, parseFloat(v.dataset.start));
+        });
+        document.querySelectorAll('.caption').forEach(function (c) {
+          var s = parseFloat(c.dataset.start), d = parseFloat(c.dataset.duration);
+          tl.fromTo(c.firstElementChild, { opacity: 0, y: 14, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(1.6)' }, s)
+            .to(c.firstElementChild, { opacity: 0, y: -6, duration: 0.25 }, s + d - 0.25);
+        });
+
+        tl.from('#end-card', { opacity: 0, duration: 0.45 }, T.end)
+          .from('#end-card .brandrow', { opacity: 0, y: 20, duration: 0.5, ease: 'power3.out' }, T.end + 0.2)
+          .from('#end-headline', { opacity: 0, y: 24, duration: 0.6, ease: 'power3.out' }, T.end + 0.35)
+          .from('#cta', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.8)' }, T.end + 0.6)
+          .from('#end-note', { opacity: 0, duration: 0.5 }, T.end + 0.9)
+          .to({}, { duration: 0.01 }, T.total - 0.01);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines.main = tl;
+      })();
+    </script>
+  </body>
+</html>
