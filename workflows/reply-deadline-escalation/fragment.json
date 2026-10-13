@@ -1,0 +1,53 @@
+{
+  "extend": [
+    {
+      "entity": "{{param.ticket}}",
+      "fields": [
+        {
+          "name": "waiting_since",
+          "type": "timestamp",
+          "optional": true
+        },
+        {
+          "name": "escalated_at",
+          "type": "timestamp",
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "reply-deadline-check",
+      "title": "Escalate {{param.ticket}} rows past the reply deadline",
+      "on": {
+        "schedule": "every 30m",
+        "entity": "{{param.ticket}}"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const now = ctx.now();\nconst limit = Number(\"{{param.hours}}\") * 3600 * 1000;\nconst rows = await ctx.db.list(\"{{param.ticket}}\", { filter: [{ field: \"{{param.status_field}}\", op: \"eq\", value: \"{{param.waiting_value}}\" }], limit: 1000 });\nconst late: string[] = [];\nfor (const t of rows) {\n  if (String(t[\"{{param.status_field}}\"] ?? \"\") !== \"{{param.waiting_value}}\" || t[\"escalated_at\"]) continue;\n  const since = new Date(String(t[\"waiting_since\"] ?? t[\"created_at\"] ?? \"\")).getTime();\n  if (!Number.isFinite(since) || now.getTime() - since < limit) continue;\n  await ctx.db.update(\"{{param.ticket}}\", String(t[\"id\"]), { escalated_at: now.toISOString() });\n  const label = String(t[\"{{param.ticket.label_field}}\"] ?? t[\"id\"]);\n  const hours = Math.floor((now.getTime() - since) / 3600000);\n  late.push(`${label} (waiting ${hours}h)`);\n  const refField = \"{{param.assignee_ref}}\";\n  const who = refField ? String(t[refField] ?? \"\") : \"\";\n  if (who) {\n    const person = await ctx.db.get(\"{{param.assignee_ref.ref}}\", who);\n    if (person && person[\"user_id\"]) await ctx.notify({ title: `Reply overdue: ${label}`, body: `Waiting ${hours} hours. The deadline is {{param.hours}}.`, user: String(person[\"user_id\"]) });\n  }\n}\nif (late.length > 0) await ctx.notify({ title: `${late.length} past the {{param.hours}}h reply deadline`, body: late.slice(0, 15).join(\"\\n\"), role: \"{{param.escalate_role}}\" });\nctx.log(`escalated: ${late.length}`);"
+        }
+      ]
+    },
+    {
+      "id": "reply-deadline-restart",
+      "title": "Restart the reply clock when a {{param.ticket}} waits again",
+      "on": {
+        "entity": "{{param.ticket}}",
+        "event": "updated"
+      },
+      "when": {
+        "field": "{{param.status_field}}",
+        "equals": "{{param.waiting_value}}"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "await ctx.db.update(\"{{param.ticket}}\", String(row[\"id\"]), { waiting_since: ctx.now().toISOString(), escalated_at: null });"
+        }
+      ]
+    }
+  ]
+}

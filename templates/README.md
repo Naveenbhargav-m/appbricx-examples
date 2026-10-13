@@ -17,5 +17,13 @@ contract (`app.json`) you can apply as is, then change.
 | [Relay](./relay) | Support desk with SLA timers and an email-to-ticket webhook. |
 | [Nook](./nook) | Vacation rentals with availability, requests and reviews. |
 
-See [Templates](https://appbricx.com/docs/templates) in the docs for screenshots
-and how to use them.
+Each folder also has a `template.json` (title, summary, screenshots, live
+demo) that lists it in the template gallery at
+[appbricx.com/templates](https://appbricx.com/templates).
+
+To add a feature to an app you already have, see [blocks](../blocks),
+[workflows](../workflows) and [components](../components), and
+[the template format](../TEMPLATE_FORMAT.md).
+
+See [Templates](https://appbricx.com/docs/templates) in the docs for how to
+use them with your coding agent or the CLI.

@@ -15,7 +15,7 @@ import {
   readContractFile,
   writeContractFile,
 } from "./config.mjs";
-import { formatContractReport, formatVerifyReport, formatRows, formatSqlResult, formatRowsResult, formatSchema, formatTail } from "./format.mjs";
+import { formatContractReport, formatVerifyReport, formatRows, formatSqlResult, formatRowsResult, formatSchema, formatTail, formatTemplateList, formatTemplate, formatTemplateUse } from "./format.mjs";
 import { browserLogin, refreshTokens, revokeTokens } from "./oauth.mjs";
 
 export const VERSION = "0.1.0";
@@ -76,6 +76,15 @@ Operate the running app (--env dev|prod, default dev; prod writes snapshot first
   secrets [list | set <name> <value|-> | delete <name>]
                          the app's secrets: names only, never values (- reads stdin)
 
+Templates (apps, blocks, workflows, components: appbricx.com/templates)
+  templates search [words] [--kind app|block|workflow|component] [--category c] [--limit n]
+                         find a template before building a common feature yourself
+  templates show <slug>  what it adds, its params, and how to use it
+  templates use <slug> [--param name=value ...] [--prefix p] [--dry-run] [--name <name>]
+                         app: create a project from it (and link this directory);
+                         block/workflow/component: merge it into the linked project
+                         and apply to dev (--dry-run: show the diff and the check only)
+
 Agents
   mcp-config [--token-header]
                          print the .mcp.json entry for Claude Code / Cursor
@@ -95,7 +104,7 @@ export function parseArgs(argv) {
   const _ = [];
   /** @type {Record<string, string | boolean | string[]>} */
   const flags = {};
-  const REPEAT = new Set(["where"]);
+  const REPEAT = new Set(["where", "param"]);
   const BOOL = new Set(["json", "force", "dry-run", "skip-verify", "preview", "help", "no-browser", "token-header"]);
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] ?? "";
@@ -143,6 +152,22 @@ export async function readJsonFlag(raw, cwd, flag) {
   } catch {
     throw new UsageError(`--${flag} expects JSON (or @file.json)`);
   }
+}
+
+/**
+ * `--param name=value` pairs → a params object.
+ * @param {string[]} pairs
+ * @returns {Record<string, string>}
+ */
+export function parseParams(pairs) {
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const p of pairs) {
+    const i = p.indexOf("=");
+    if (i <= 0) throw new UsageError(`--param expects name=value, got "${p}"`);
+    out[p.slice(0, i).trim()] = p.slice(i + 1).trim();
+  }
+  return out;
 }
 
 /**
@@ -500,6 +525,43 @@ export async function main(argv, io = {}) {
         }
         throw new UsageError("secrets [list | set <name> <value|-> | delete <name>]");
       }
+      case "templates": {
+        const action = _[1] ?? "search";
+        if (action === "search") {
+          const kind = str("kind");
+          if (kind !== undefined && !["app", "block", "workflow", "component"].includes(kind)) throw new UsageError(`--kind is app, block, workflow or component, got "${kind}"`);
+          const r = await api.searchTemplates({ query: _.slice(2).join(" ") || undefined, kind, category: str("category"), limit: str("limit") ? Number(str("limit")) : undefined });
+          print(r, () => formatTemplateList(r.templates));
+          return 0;
+        }
+        if (action === "show") {
+          if (!_[2]) throw new UsageError("templates show needs a template slug (appbricx templates search)");
+          const r = await api.template(_[2]);
+          print(r, () => formatTemplate(r.template));
+          return 0;
+        }
+        if (action === "use") {
+          const slug = _[2];
+          if (!slug) throw new UsageError("templates use needs a template slug (appbricx templates search)");
+          const params = Array.isArray(flags["param"]) ? parseParams(/** @type {string[]} */ (flags["param"])) : undefined;
+          const dryRun = flags["dry-run"] === true;
+          const { template } = await api.template(slug);
+          const isApp = template.kind === "app";
+          // An app starts a new project unless one is named; everything else adds to the linked project.
+          const projectId = isApp ? str("project") : await needProject();
+          const r = await api.useTemplate(slug, {
+            ...(projectId ? { project_id: projectId } : {}),
+            ...(str("name") ? { name: str("name") } : {}),
+            ...(params ? { params } : {}),
+            ...(str("prefix") ? { prefix: str("prefix") } : {}),
+            ...(dryRun ? { dry_run: true } : {}),
+          });
+          if (isApp && r.created && r.project?.id) await saveLink(cwd, { projectId: r.project.id, name: r.project.name });
+          print(r, () => formatTemplateUse(r));
+          return 0;
+        }
+        throw new UsageError("templates [search [words] | show <slug> | use <slug>]");
+      }
       default:
         throw new UsageError(`unknown command "${cmd}" — appbricx help`);
     }
@@ -511,6 +573,8 @@ export async function main(argv, io = {}) {
         err(`✗ ${e.message}${e.body?.code ? ` [${e.body.code}]` : ""}`);
         if (e.body?.report?.stages) err(formatVerifyReport(e.body.report));
         else if (e.body?.report) err(formatContractReport(e.body.report));
+        if (Array.isArray(e.body?.errors)) for (const x of e.body.errors) err(`  ${x}`);
+        if (Array.isArray(e.body?.new_fixes)) for (const x of e.body.new_fixes) err(`  fix: ${x}`);
         if (e.body?.hint) err(`  hint: ${e.body.hint}`);
         if (e.status === 401) err("  hint: run `appbricx login` to sign in again");
       }

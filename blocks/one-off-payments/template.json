@@ -1,0 +1,96 @@
+{
+  "slug": "one-off-payments",
+  "kind": "block",
+  "title": "One-off payments",
+  "summary": "Take a card payment for any record (a booking, an order, an invoice) through Stripe Checkout, confirmed by the server.",
+  "description": "Adds a payment table linked to one of your tables and its price field. People see what they owe on a Pay page and pay on Stripe's secure checkout for exactly that record's price. Stripe tells the app through a signed webhook, and the server marks the payment paid only when Stripe charged the right amount. Payers read only their own payments and rules stop anyone changing an amount or marking a payment paid. Staff see every payment and can record cash by hand.",
+  "category": "payments",
+  "tags": [
+    "stripe",
+    "payments",
+    "checkout",
+    "invoices",
+    "deposits"
+  ],
+  "params": [
+    {
+      "name": "attach_to",
+      "type": "entity",
+      "label": "What is paid for",
+      "description": "The table whose records people pay for (bookings, orders, invoices).",
+      "example": "booking"
+    },
+    {
+      "name": "price_field",
+      "type": "field",
+      "of": "attach_to",
+      "field_types": [
+        "number"
+      ],
+      "label": "Price field",
+      "description": "The number field on that table holding what to charge.",
+      "default": [
+        "price",
+        "total",
+        "amount",
+        "fee"
+      ],
+      "example": "total"
+    },
+    {
+      "name": "payer_role",
+      "type": "role",
+      "label": "Who pays",
+      "description": "The role whose people pay (their own table is the payer).",
+      "default": [
+        "@first_consumer",
+        "@first"
+      ],
+      "example": "customer"
+    },
+    {
+      "name": "payer_ref",
+      "type": "field",
+      "of": "attach_to",
+      "points_to": "payer_role",
+      "label": "Whose record it is",
+      "description": "Optional: the ref on that table naming the person who owes it, so people only see and pay their own.",
+      "required": false,
+      "example": "customer_id"
+    },
+    {
+      "name": "currency",
+      "type": "text",
+      "label": "Currency",
+      "description": "The three-letter currency code, lower case.",
+      "default": "usd",
+      "pattern": "^[a-z]{3}$",
+      "example": "usd"
+    }
+  ],
+  "requires": {
+    "secrets": [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET"
+    ],
+    "notes": [
+      "A table with a number price field.",
+      "A Stripe webhook endpoint at the URL get_contract lists for stripe-payment-events (Backend, API in the builder), with its signing secret in STRIPE_WEBHOOK_SECRET."
+    ]
+  },
+  "fragment": "fragment.json",
+  "includes": [
+    "Table payment linked to your table",
+    "PayableList and MyPayments components with their pages",
+    "A Stripe-signed webhook that marks payments paid or not completed",
+    "Server functions: checkout and a manual check with Stripe",
+    "A staff payments page"
+  ],
+  "highlights": [
+    "The amount is always the record's price, set on the server",
+    "Stripe's signed webhook confirms the payment; the browser never does",
+    "Rules: nobody marks their own payment paid",
+    "The Stripe key never reaches the browser"
+  ],
+  "order": 25
+}

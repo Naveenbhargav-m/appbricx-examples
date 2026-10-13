@@ -1,0 +1,54 @@
+{
+  "slug": "stripe-subscriptions",
+  "kind": "block",
+  "title": "Stripe subscriptions",
+  "summary": "Monthly or yearly plans paid through Stripe Checkout, with a billing page and Stripe's own billing settings.",
+  "description": "Adds plans (each linked to a Stripe price) and subscriptions. A Plans and billing page lets people pick a plan and pay on Stripe's secure checkout. Stripe then tells the app what happened through a signed webhook (checkout completed, invoice paid or failed, subscription changed or cancelled), and only the server marks a subscription active. Manage billing opens Stripe's customer portal to change card, switch plan or cancel. Rules stop anyone marking their own subscription paid. Staff manage plans and see every subscriber.",
+  "category": "payments",
+  "tags": [
+    "stripe",
+    "subscriptions",
+    "billing",
+    "plans",
+    "saas",
+    "payments"
+  ],
+  "params": [
+    {
+      "name": "subscriber_role",
+      "type": "role",
+      "label": "Who subscribes",
+      "description": "The role whose people buy a plan (their own table is the subscriber).",
+      "default": [
+        "@first_consumer",
+        "@first"
+      ],
+      "example": "member"
+    }
+  ],
+  "requires": {
+    "secrets": [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET"
+    ],
+    "notes": [
+      "A Stripe account with a recurring price for each plan (paste each price id into the plan).",
+      "A Stripe webhook endpoint at the URL get_contract lists for stripe-subscription-events (Backend, API in the builder), with its signing secret in STRIPE_WEBHOOK_SECRET."
+    ]
+  },
+  "fragment": "fragment.json",
+  "includes": [
+    "Tables plan and subscription (two starter plans)",
+    "BillingPanel component on a Plans and billing page",
+    "A Stripe-signed webhook that applies checkout, invoice and subscription events",
+    "Server functions: checkout, billing settings and a manual check with Stripe",
+    "A staff page for plans and subscribers"
+  ],
+  "highlights": [
+    "Stripe's signed webhook confirms every payment on the server",
+    "Rules: nobody can mark their own subscription active",
+    "The Stripe key never reaches the browser",
+    "No app address to configure: return links use the app's own URL"
+  ],
+  "order": 22
+}

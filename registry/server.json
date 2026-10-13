@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.appbricx/appbricx",
+  "title": "Appbricx",
+  "description": "Build, verify and deploy full-stack apps: Postgres, sign-in, workflows, realtime, AI, rollback.",
+  "version": "1.0.0",
+  "websiteUrl": "https://www.appbricx.com",
+  "repository": {
+    "url": "https://github.com/Naveenbhargav-m/appbricx-examples",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://www.appbricx.com/api/mcp"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "slug": "stride",
+  "kind": "app",
+  "title": "Stride",
+  "summary": "Fitness coaching: plans, workout logs, daily check-ins and coach feedback.",
+  "description": "A training app where athletes log workouts and daily check-ins and their coach follows along. Athletes see a streak ring and weekly volume; coaches get a roster, each athlete's history and a feedback thread. Rules allow one check-in a day and no workouts in the future.",
+  "category": "health",
+  "tags": [
+    "fitness",
+    "coaching",
+    "workouts",
+    "health",
+    "tracking"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/stride-desktop.webp",
+      "alt": "Stride on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/stride-phone.webp",
+      "alt": "Stride on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/stride-signin.webp",
+      "alt": "Stride sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://stride.apps.appbricx.com",
+  "roles_summary": "Athletes sign up. Coaches follow their athletes.",
+  "includes": [
+    "Athlete home with streak ring and weekly volume chart",
+    "Workout logging and daily check-in",
+    "Coach roster and feedback"
+  ],
+  "highlights": [
+    "Rules: one check-in a day, no future workouts",
+    "Weekly digest on a schedule",
+    "AI coach's tip",
+    "Coaches see only their athletes"
+  ],
+  "order": 3
+}

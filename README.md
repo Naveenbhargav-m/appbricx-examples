@@ -8,9 +8,14 @@ Your coding agent builds the app; Appbricx runs it: Postgres per project with se
 |---|---|
 | [`studio-bookings/`](studio-bookings) | The app from the [end-to-end tutorial](https://www.appbricx.com/docs/tutorials/booking-app): contract, custom screens, a server function and a workflow. Live at [example-bookings.apps.appbricx.com](https://example-bookings.apps.appbricx.com). |
 | [`templates/`](templates) | The ten [showcase apps](https://www.appbricx.com/showcase) as contracts you can apply: Tablefor, Kanbo, Atelier, Clinicly, Eventra, Learnly, Relay, Nook, Ledgerly and Stride. |
+| [`blocks/`](blocks) | Features to drop into any app: organisations and teams, Stripe subscriptions, one-off payments, booking calendar, comments, notifications. |
+| [`workflows/`](workflows) | Automations: welcome email, Slack on signup, booking confirmation and reminder, daily digest, overdue alerts, reply-deadline escalation, Stripe payment received. |
+| [`components/`](components) | Reusable screen parts: trend chart, CSV export. |
 | [`plugins/claude-code/`](plugins/claude-code) | The Claude Code plugin and skill. |
 | [`cli/`](cli) | `appbricx`, the command-line tool: log in, check, apply, verify, deploy, run SQL, edit rows, take snapshots. |
 | [`cursor/`](cursor) | MCP config for Cursor (browser sign-in or a token header). |
+| [`gemini-extension.json`](gemini-extension.json) | Gemini CLI extension: `gemini extensions install https://github.com/Naveenbhargav-m/appbricx-examples` |
+| [`registry/server.json`](registry/server.json) | The Appbricx entry for the official MCP Registry. |
 | [`video/hyperframes/`](video/hyperframes) | HyperFrames compositions and scripts to record and render walkthroughs, reels, terminal replays and slides of your own app. |
 
 ## Connect your coding agent
@@ -24,7 +29,7 @@ claude mcp add --transport http appbricx https://www.appbricx.com/api/mcp
 /plugin install appbricx@appbricx
 ```
 
-Then ask your agent to build something, or to apply one of the templates.
+Then ask your agent to build something. Agents can also find these templates themselves with the `search_templates`, `get_template` and `use_template` tools, or browse them at https://www.appbricx.com/templates. The format is in [`TEMPLATE_FORMAT.md`](TEMPLATE_FORMAT.md).
 
 ## Use the CLI
 

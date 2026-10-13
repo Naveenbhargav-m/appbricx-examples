@@ -1,0 +1,53 @@
+{
+  "slug": "relay",
+  "kind": "app",
+  "title": "Relay",
+  "summary": "Support desk with SLA timers, an email-to-ticket webhook and a lead dashboard.",
+  "description": "Customers open tickets and rate the help they got; agents work an inbox with SLA chips and internal notes; a lead watches the numbers. An inbound webhook turns email into tickets and an escalation runs every 15 minutes.",
+  "category": "support",
+  "tags": [
+    "support",
+    "helpdesk",
+    "tickets",
+    "sla",
+    "webhook"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/relay-desktop.webp",
+      "alt": "Relay on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/relay-phone.webp",
+      "alt": "Relay on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/relay-signin.webp",
+      "alt": "Relay sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://relay.apps.appbricx.com",
+  "roles_summary": "Customers sign up. Agents work the queue. A lead watches the numbers.",
+  "includes": [
+    "Customer portal with ticket threads and ratings",
+    "Agent inbox with SLA chips",
+    "Lead dashboard"
+  ],
+  "highlights": [
+    "Inbound webhook creates tickets",
+    "SLA escalation every 15 minutes",
+    "Internal notes customers never see",
+    "AI triage and suggested replies"
+  ],
+  "order": 10
+}

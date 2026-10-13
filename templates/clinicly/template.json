@@ -1,0 +1,52 @@
+{
+  "slug": "clinicly",
+  "kind": "app",
+  "title": "Clinicly",
+  "summary": "Clinic appointments with doctors, a front desk and visit notes.",
+  "description": "Patients find a doctor and book a slot; doctors work a day timeline and write visit notes; the front desk checks people in. A rule refuses overlapping appointments and bookings outside clinic hours, reminders go out hourly, and the desk can never read visit notes.",
+  "category": "health",
+  "tags": [
+    "clinic",
+    "appointments",
+    "health",
+    "bookings",
+    "doctors"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/clinicly-desktop.webp",
+      "alt": "Clinicly on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/clinicly-phone.webp",
+      "alt": "Clinicly on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/clinicly-signin.webp",
+      "alt": "Clinicly sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://clinicly.apps.appbricx.com",
+  "roles_summary": "Patients sign up. Doctors and the front desk work the schedule.",
+  "includes": [
+    "Find a doctor and book a slot",
+    "Doctor day timeline and visit notes",
+    "Front desk check-in"
+  ],
+  "highlights": [
+    "Rule: no overlapping appointments, clinic hours only",
+    "Hourly reminders",
+    "Desk can't read visit notes"
+  ],
+  "order": 7
+}

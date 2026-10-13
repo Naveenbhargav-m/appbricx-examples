@@ -1,0 +1,53 @@
+{
+  "slug": "nook",
+  "kind": "app",
+  "title": "Nook",
+  "summary": "Vacation rentals with availability, booking requests and reviews.",
+  "description": "Guests browse stays with photo carousels and request dates; hosts list stays, accept requests and track earnings. Rules refuse overlapping stays and reviews before a stay, and a daily workflow completes past bookings.",
+  "category": "hospitality",
+  "tags": [
+    "rentals",
+    "travel",
+    "bookings",
+    "reviews",
+    "hosts"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/nook-desktop.webp",
+      "alt": "Nook on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/nook-phone.webp",
+      "alt": "Nook on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/nook-signin.webp",
+      "alt": "Nook sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://nook.apps.appbricx.com",
+  "roles_summary": "Guests sign up. Hosts list stays and accept requests.",
+  "includes": [
+    "Stays grid with photo carousels",
+    "Booking panel with price breakdown",
+    "Host listings, requests and earnings"
+  ],
+  "highlights": [
+    "Rules: no overlapping stays, reviews only after a stay",
+    "Booking lifecycle",
+    "Daily completion workflow",
+    "AI plan my stay"
+  ],
+  "order": 11
+}

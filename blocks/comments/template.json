@@ -1,0 +1,65 @@
+{
+  "slug": "comments",
+  "kind": "block",
+  "title": "Comments",
+  "summary": "Threaded comments on any record, with replies, @mentions, edits and live updates.",
+  "description": "Adds a comment table attached to one of your tables (tasks, posts, lessons, listings) and a CommentThread component: replies nest under the comment they answer, typing @ suggests people to mention, authors can edit and delete their own comments, and new comments appear for everyone without a refresh. People are told in-app when they are mentioned or someone replies to them. Staff get a moderation list.",
+  "category": "collaboration",
+  "tags": [
+    "comments",
+    "threads",
+    "mentions",
+    "realtime",
+    "discussion"
+  ],
+  "params": [
+    {
+      "name": "attach_to",
+      "type": "entity",
+      "label": "Comment on",
+      "description": "The table whose records people comment on.",
+      "example": "task"
+    },
+    {
+      "name": "author_role",
+      "type": "role",
+      "label": "Who comments",
+      "description": "The role whose people write comments (their own table is the author).",
+      "default": [
+        "@first"
+      ],
+      "example": "member"
+    },
+    {
+      "name": "org_field",
+      "type": "field",
+      "of": "attach_to",
+      "field_types": [
+        "ref"
+      ],
+      "label": "Organisation (optional)",
+      "description": "Optional: the ref on that table naming its organisation (from organisations-and-teams). Comments then belong to that organisation and only its members read them.",
+      "required": false,
+      "example": "organisation_id"
+    }
+  ],
+  "screenshots": [],
+  "requires": {
+    "notes": [
+      "The commenting role needs its own table (an entity named like the role)."
+    ]
+  },
+  "fragment": "fragment.json",
+  "includes": [
+    "Table comment: subject, parent, author, body, mentions",
+    "CommentThread component (threads, @mentions, edit, delete, live)",
+    "A Discussion page and a staff moderation list",
+    "One workflow: notify mentions and replies"
+  ],
+  "highlights": [
+    "Server-stamped author: nobody comments as someone else",
+    "Rules: no empty comments, replies stay in their thread",
+    "Live updates with app.live"
+  ],
+  "order": 23
+}

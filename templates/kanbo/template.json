@@ -1,0 +1,53 @@
+{
+  "slug": "kanbo",
+  "kind": "app",
+  "title": "Kanbo",
+  "summary": "Team project board with drag-and-drop cards, checklists, comments and my work.",
+  "description": "A project board for a small team: columns with draggable cards, a card sheet with checklist and comments, and a My work view per person. A rule enforces a work-in-progress limit, the board updates live, assignees are notified and a daily job flags overdue cards.",
+  "category": "productivity",
+  "tags": [
+    "kanban",
+    "projects",
+    "tasks",
+    "team",
+    "realtime"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/kanbo-desktop.webp",
+      "alt": "Kanbo on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/kanbo-phone.webp",
+      "alt": "Kanbo on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/kanbo-signin.webp",
+      "alt": "Kanbo sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://kanbo.apps.appbricx.com",
+  "roles_summary": "Managers and members, invited by the team.",
+  "includes": [
+    "Board with columns and draggable cards",
+    "Card sheet with checklist and comments",
+    "My work and project progress"
+  ],
+  "highlights": [
+    "Rule: work-in-progress limit per person",
+    "Realtime board",
+    "Notify the assignee",
+    "Daily overdue flag"
+  ],
+  "order": 5
+}

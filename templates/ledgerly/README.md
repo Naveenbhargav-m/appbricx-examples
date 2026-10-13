@@ -8,9 +8,10 @@ start your own app from it. Seed rows come from the showcase's preview data
 
 ## What you get
 
-- Dashboard with balances and a spending donut
-- Transactions grouped by day
-- Monthly budgets and recurring bills
+- Home with total balance, an account card stack and an "Explain my month" card
+- Activity grouped by day with an add/edit sheet
+- Budgets with a daily allowance, and recurring bills with a monthly total
+- Insights: up to six months of spending and the AI explanation
 
 Platform features it uses:
 
@@ -22,7 +23,7 @@ Platform features it uses:
 | | |
 |---|---|
 | Tables | `admin`, `member`, `account`, `budget`, `bill`, `transaction` |
-| Custom screens | `DashboardScreen`, `TransactionsScreen`, `BudgetsScreen`, `InsightsScreen`, `LedgerlyAuth` |
+| Custom screens | `DashboardScreen`, `TransactionsScreen`, `BudgetsScreen`, `InsightsScreen`, `LedgerlyAuth`, `TeamHeader` |
 | Roles | `member` (consumer), `admin` (staff) |
 
 Workflows:
@@ -30,6 +31,26 @@ Workflows:
 - `daily-recurring-bills`: Create today's recurring bill transactions
 - `check-budget-on-create`: Flag transactions that push a category over budget
 - `notify-over-budget`: Notify the member when a category is over budget
+
+## Screens
+
+| Route | Page | Who |
+|---|---|---|
+| `/dashboard` | Home | `member` |
+| `/transactions` | Activity | `member` |
+| `/budgets` | Budgets | `member` |
+| `/insights` | Insights | `member` |
+| `/team` | Team & access | `admin` |
+
+## What changed in this version
+
+The showcase app was polished on design, phones and data, and this template follows it:
+
+- New `TeamHeader` component for the Team & access page, with a privacy note.
+- Direction `calm-health` (was `editorial`); greys, links and money colours pass contrast; headings in Manrope; no glows or bounce easing.
+- Phone fixes: sign-out reachable from the header, 44px tap targets, transactions grouped one card per day.
+- Insights shows up to six months; budgets show a daily allowance and bills a monthly total.
+- Seeds rebuilt: 91 transactions so trends, Today and Yesterday all have data.
 
 ## Use this template
 

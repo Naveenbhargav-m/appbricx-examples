@@ -1,0 +1,22 @@
+{
+  "slug": "overdue-alerts",
+  "kind": "workflow",
+  "title": "Overdue alerts",
+  "summary": "Each morning, flags rows past their due date, tells the person assigned and sends the team a list.",
+  "description": "A daily check over any table with a due date and a status: tasks, jobs, invoices, orders. A row whose due date has passed and isn't done gets an overdue_since stamp, the assigned person gets a notification (when you name an assignee field), and the role you choose gets one notification listing everything overdue. Marking a row done clears the stamp.",
+  "category": "productivity",
+  "tags": ["due dates", "tasks", "reminders", "schedule", "notifications"],
+  "params": [
+    { "name": "entity", "type": "entity", "label": "Table with due dates", "description": "The table of things that can be late (tasks, jobs, invoices).", "default": ["task", "job", "card", "invoice"], "example": "task" },
+    { "name": "due_field", "type": "field", "of": "entity", "field_types": ["date", "timestamp"], "label": "Due date field", "description": "The date or timestamp field holding when it is due.", "default": ["due_on", "due", "due_date", "due_at"], "example": "due_on" },
+    { "name": "status_field", "type": "field", "of": "entity", "field_types": ["enum"], "label": "Status field", "description": "The enum field that says whether it is finished.", "default": ["status", "stage", "state"], "example": "status" },
+    { "name": "done_value", "type": "value", "of": "status_field", "label": "Done value", "description": "The status value that means finished (never overdue).", "default": ["done", "completed", "closed", "resolved", "paid", "shipped"], "example": "done" },
+    { "name": "assignee_ref", "type": "field", "of": "entity", "field_types": ["ref"], "label": "Assigned person", "description": "Optional: the ref field naming the person responsible, so they are told directly. Leave it out to tell only the team.", "required": false, "example": "assignee_id" },
+    { "name": "notify_role", "type": "role", "kind": "staff", "label": "Team to tell", "description": "The role that gets the daily list of overdue rows.", "default": ["@first_staff"], "example": "staff" }
+  ],
+  "requires": { "notes": ["A table with a due date and a status enum."] },
+  "fragment": "fragment.json",
+  "includes": ["Field overdue_since on your table", "A daily 09:00 check that stamps and announces overdue rows", "A workflow that clears the stamp when a row is done"],
+  "highlights": ["Tells the assigned person directly", "One list for the team, not a flood"],
+  "order": 34
+}

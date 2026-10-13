@@ -1,0 +1,51 @@
+{
+  "slug": "stripe-payment-received",
+  "kind": "workflow",
+  "title": "Stripe payment received",
+  "summary": "Records every paid Stripe Checkout session the moment Stripe reports it, once, and tells your team.",
+  "description": "A Stripe-signed webhook records each paid Checkout session in a stripe_payment table, once (Stripe's event id and the session id both guard against repeats). Every new payment notifies your staff and emails the payer a short receipt. A Payments page for staff lists them, with a Check Stripe now button as a fallback that pulls recent sessions with your secret key (it never reaches the browser).",
+  "category": "payments",
+  "tags": [
+    "stripe",
+    "payments",
+    "receipts",
+    "webhook"
+  ],
+  "params": [
+    {
+      "name": "staff_role",
+      "type": "role",
+      "kind": "staff",
+      "label": "Who manages payments",
+      "description": "The staff role that sees the Payments page, can check Stripe and is told about new payments.",
+      "default": [
+        "@first_staff"
+      ],
+      "example": "admin"
+    }
+  ],
+  "requires": {
+    "secrets": [
+      "STRIPE_WEBHOOK_SECRET",
+      "STRIPE_SECRET_KEY"
+    ],
+    "notes": [
+      "A Stripe webhook endpoint at the URL get_contract lists for stripe-checkout-events (Backend, API in the builder), sending checkout.session.completed, with its signing secret in STRIPE_WEBHOOK_SECRET.",
+      "STRIPE_SECRET_KEY only for the Check Stripe now fallback (a restricted key with read access to Checkout Sessions is enough)."
+    ]
+  },
+  "fragment": "fragment.json",
+  "includes": [
+    "Table stripe_payment (one row per paid Checkout session)",
+    "A Stripe-signed webhook that records each paid session",
+    "Server function stripe-sync-payments (the manual fallback)",
+    "Workflow: notify staff and email a receipt on each new payment",
+    "A Payments page for staff"
+  ],
+  "highlights": [
+    "Verified with Stripe's own signature, on the raw request",
+    "Each payment is recorded once",
+    "The Stripe key stays server-side"
+  ],
+  "order": 36
+}

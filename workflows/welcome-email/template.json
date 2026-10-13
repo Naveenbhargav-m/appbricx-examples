@@ -1,0 +1,18 @@
+{
+  "slug": "welcome-email",
+  "kind": "workflow",
+  "title": "Welcome email",
+  "summary": "Emails every new person a short, friendly welcome the moment they sign up.",
+  "description": "Fires when a row is added to the table your people sign up into (the persona's own table). The email goes to that person's email field, uses their name, and is sent from your app with its branded wrapper. Edit the subject and body to sound like you.",
+  "category": "notifications",
+  "tags": ["email", "onboarding", "signup", "welcome"],
+  "params": [
+    { "name": "person", "type": "entity", "label": "Who signs up", "description": "The table a new person lands in when they sign up (usually named after the role, like customer or member).", "default": ["@first_consumer", "@first"], "example": "customer" },
+    { "name": "email_field", "type": "field", "of": "person", "field_types": ["email"], "label": "Their email field", "description": "The email field on that table the welcome goes to.", "default": ["email"], "example": "email" }
+  ],
+  "requires": { "notes": ["A table for the people who sign up, with an email field."] },
+  "fragment": "fragment.json",
+  "includes": ["One workflow: on signup, email the new person"],
+  "highlights": ["Branded email wrapper", "Personalised with the person's name"],
+  "order": 30
+}

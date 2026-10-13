@@ -1,0 +1,20 @@
+{
+  "slug": "daily-digest",
+  "kind": "workflow",
+  "title": "Daily digest",
+  "summary": "Every morning, sends your team a digest of yesterday's new rows in one table, in-app and by email.",
+  "description": "A scheduled workflow that counts the rows added to one table in the last 24 hours, lists up to ten of them and, when the table has an enum such as status, breaks the count down by value. It goes to everyone with the role you choose, as an in-app notification and an email, at the time and time zone you set.",
+  "category": "reporting",
+  "tags": ["digest", "schedule", "email", "summary", "daily"],
+  "params": [
+    { "name": "entity", "type": "entity", "label": "Table to summarise", "description": "The table whose new rows the digest counts and lists.", "example": "order" },
+    { "name": "role", "type": "role", "label": "Who gets it", "description": "The role that receives the digest (every user with it).", "kind": "staff", "default": ["@first_staff"], "example": "staff" },
+    { "name": "time", "type": "text", "label": "Time of day", "description": "When it goes out, 24-hour HH:MM.", "default": "08:00", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$", "example": "08:00" },
+    { "name": "tz", "type": "text", "label": "Time zone", "description": "The IANA time zone the time and the 24-hour window are read in (empty means UTC).", "required": false, "pattern": "^[A-Za-z_]+(?:/[A-Za-z0-9_+-]+)*$", "example": "Europe/London" }
+  ],
+  "requires": { "notes": ["A staff role to receive it."] },
+  "fragment": "fragment.json",
+  "includes": ["A daily schedule over one table", "An in-app notification and an email to a role"],
+  "highlights": ["Counts, the newest rows and a per-status breakdown", "Runs in your time zone"],
+  "order": 33
+}

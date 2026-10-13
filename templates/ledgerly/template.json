@@ -1,0 +1,53 @@
+{
+  "slug": "ledgerly",
+  "kind": "app",
+  "title": "Ledgerly",
+  "summary": "Personal finance that explains your month: accounts, budgets, bills and insights.",
+  "description": "A personal finance app for balances, budgets and bills, private to each member: sign in as a second member and none of the first one's money is visible. Recurring bills post themselves daily and an over-budget check flags spending as it happens.",
+  "category": "finance",
+  "tags": [
+    "finance",
+    "budgets",
+    "bills",
+    "personal",
+    "private"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/ledgerly-desktop.webp",
+      "alt": "Ledgerly on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/ledgerly-phone.webp",
+      "alt": "Ledgerly on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/ledgerly-signin.webp",
+      "alt": "Ledgerly sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://ledgerly.apps.appbricx.com",
+  "roles_summary": "Members sign up and manage only their own money.",
+  "includes": [
+    "Dashboard with balances and a spending donut",
+    "Transactions grouped by day",
+    "Monthly budgets and recurring bills"
+  ],
+  "highlights": [
+    "Strictly private rows",
+    "Rules on amount and date",
+    "Daily recurring bills workflow",
+    "AI explains your month"
+  ],
+  "order": 4
+}

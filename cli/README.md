@@ -30,6 +30,17 @@ echo '[{"op":"add_field","entity":"job","field":{"name":"due","type":"date"}}]' 
 appbricx patch ops.json --dry-run && appbricx patch ops.json
 ```
 
+Start from a template instead of a blank contract (apps, blocks, workflows
+and components, all checked; browse them at appbricx.com/templates):
+
+```sh
+appbricx templates search "stripe subscription"          # find one
+appbricx templates show booking-calendar                  # what it adds, its params
+appbricx templates use relay --name "Help desk"           # an app: a new project, linked here
+appbricx templates use booking-calendar --param attach_to=room --dry-run   # the diff + check
+appbricx templates use booking-calendar --param attach_to=room             # apply to dev
+```
+
 ## Signing in
 
 `appbricx login` signs in with your browser (OAuth 2.1 with PKCE). The CLI

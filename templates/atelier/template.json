@@ -1,0 +1,52 @@
+{
+  "slug": "atelier",
+  "kind": "app",
+  "title": "Atelier",
+  "summary": "Marketplace for handmade goods with seller studios, orders and payments.",
+  "description": "A marketplace where makers sell handmade pieces. Buyers shop and follow their orders; sellers run a studio with stock and earnings; an admin approves products. Rules stop overselling stock and buying your own piece, and a payment webhook marks orders paid.",
+  "category": "commerce",
+  "tags": [
+    "marketplace",
+    "shop",
+    "orders",
+    "sellers",
+    "payments"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/atelier-desktop.webp",
+      "alt": "Atelier on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/atelier-phone.webp",
+      "alt": "Atelier on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/atelier-signin.webp",
+      "alt": "Atelier sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://atelier.apps.appbricx.com",
+  "roles_summary": "Buyers sign up. Sellers run a studio. An admin approves products.",
+  "includes": [
+    "Shop with product pages and a cart",
+    "Orders with a status timeline",
+    "Seller studio with stock and earnings"
+  ],
+  "highlights": [
+    "Rules: stock limits, no buying your own product",
+    "Payment webhook marks orders paid",
+    "Buyers and sellers see only their own orders"
+  ],
+  "order": 6
+}

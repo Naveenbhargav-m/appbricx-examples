@@ -1,0 +1,204 @@
+{
+  "entities": [
+    {
+      "name": "comment",
+      "label_field": "body",
+      "fields": [
+        {
+          "name": "subject_id",
+          "type": "ref",
+          "ref": "{{param.attach_to}}"
+        },
+        {
+          "name": "parent_id",
+          "type": "ref",
+          "ref": "comment",
+          "optional": true
+        },
+        {
+          "name": "author_id",
+          "type": "ref",
+          "ref": "{{param.author_role}}"
+        },
+        {
+          "name": "body",
+          "type": "text"
+        },
+        {
+          "name": "mentions",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "edited_at",
+          "type": "timestamp",
+          "optional": true
+        },
+        {
+          "$if": "org_field",
+          "name": "organisation_id",
+          "type": "ref",
+          "ref": "{{param.org_field.ref}}",
+          "optional": true
+        }
+      ],
+      "org_field": "{{param.org_field?organisation_id:}}",
+      "actor_ref": "author_id",
+      "owner_refs": [
+        "author_id"
+      ],
+      "access": {
+        "{{param.author_role}}": {
+          "read": "{{param.org_field?org:all}}",
+          "create": true,
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "rules": [
+        {
+          "id": "comment-not-empty",
+          "on": "both",
+          "message": "Write something before you post.",
+          "check": "const text = String(row.body ?? \"\").trim();\nif (!text) return \"Write something before you post.\";\nif (text.length > 4000) return \"Keep comments under 4,000 characters.\";\nreturn true;"
+        },
+        {
+          "id": "reply-same-thread",
+          "on": "create",
+          "message": "A reply belongs to the same thread as the comment it answers.",
+          "check": "if (!row.parent_id) return true;\nconst r = await ctx.db.query(\"select subject_id from comment where id = $1\", [row.parent_id]);\nconst rows = Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? [];\nif (!rows[0]) return \"That comment no longer exists.\";\nreturn String(rows[0].subject_id) === String(row.subject_id) || \"A reply belongs to the same thread as the comment it answers.\";"
+        },
+        {
+          "id": "comment-keeps-author",
+          "on": "update",
+          "message": "A comment keeps its author.",
+          "check": "if (ctx.old && String(ctx.old.author_id) !== String(row.author_id)) return \"A comment keeps its author.\";\nreturn true;"
+        },
+        {
+          "$if": "org_field",
+          "id": "comment-same-organisation",
+          "on": "both",
+          "message": "A comment belongs to the organisation of what it's about.",
+          "check": "const r = await ctx.db.query('select \"{{param.org_field}}\" as org from \"{{param.attach_to}}\" where id = $1', [row.subject_id]);\nconst rows = Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? [];\nif (!rows[0]) return \"You can't comment on that.\";\nreturn String(rows[0].org ?? \"\") === String(row.organisation_id ?? \"\") || \"A comment belongs to the organisation of what it's about.\";"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "comment-notify",
+      "title": "Tell people they were mentioned or replied to",
+      "on": {
+        "entity": "comment",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const author = await ctx.db.get(\"{{param.author_role}}\", String(row[\"author_id\"] ?? \"\"));\nconst name = author ? String(author[\"{{param.author_role.label_field}}\"] ?? \"Someone\") : \"Someone\";\nconst text = String(row[\"body\"] ?? \"\");\nconst snippet = text.length > 140 ? `${text.slice(0, 137)}...` : text;\nconst told = new Set<string>([String(row[\"author_id\"] ?? \"\")]);\nfor (const id of String(row[\"mentions\"] ?? \"\").split(\",\").map((s) => s.trim()).filter(Boolean)) {\n  if (told.has(id)) continue;\n  told.add(id);\n  const person = await ctx.db.get(\"{{param.author_role}}\", id);\n  if (person && person[\"user_id\"]) await ctx.notify({ title: `${name} mentioned you`, body: snippet, user: String(person[\"user_id\"]) });\n}\nif (row[\"parent_id\"]) {\n  const parent = await ctx.db.get(\"comment\", String(row[\"parent_id\"]));\n  const to = parent ? String(parent[\"author_id\"] ?? \"\") : \"\";\n  if (to && !told.has(to)) {\n    const person = await ctx.db.get(\"{{param.author_role}}\", to);\n    if (person && person[\"user_id\"]) await ctx.notify({ title: `${name} replied to your comment`, body: snippet, user: String(person[\"user_id\"]) });\n  }\n}"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "CommentThread",
+      "kind": "code",
+      "purpose": "Threaded comments on one {{param.attach_to}} with replies, @mentions, edit and delete, updating live",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Discussion"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Comments are taking a moment",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "CommentThread.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "discussion",
+      "route": "/discussion",
+      "title": "Discussion",
+      "icon": "MessageCircle",
+      "personas": [
+        "{{param.author_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "CommentThread",
+        "props": {
+          "title": "Discussion"
+        }
+      }
+    },
+    {
+      "name": "comments-admin",
+      "route": "/comments-admin",
+      "title": "Comments",
+      "icon": "MessageSquare",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Comments",
+            "subtitle": "Every comment across the app. Remove anything that breaks your rules."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "comment",
+              "presentation": "table",
+              "columns": [
+                "body",
+                "author_id",
+                "subject_id",
+                "created_at"
+              ],
+              "searchField": "body",
+              "filters": [
+                {
+                  "field": "subject_id",
+                  "label": "On"
+                }
+              ],
+              "emptyCopy": "No comments yet. They show up here the moment someone posts."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "comment",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "subject_id",
+            "author_id",
+            "body"
+          ],
+          "submitLabel": "Save comment"
+        }
+      }
+    }
+  ]
+}

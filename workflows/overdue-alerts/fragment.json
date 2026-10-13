@@ -1,0 +1,48 @@
+{
+  "extend": [
+    {
+      "entity": "{{param.entity}}",
+      "fields": [
+        {
+          "name": "overdue_since",
+          "type": "timestamp",
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "overdue-check",
+      "title": "Flag and announce overdue {{param.entity}} rows",
+      "on": {
+        "schedule": "daily 09:00",
+        "entity": "{{param.entity}}"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const now = ctx.now();\nconst rows = await ctx.db.list(\"{{param.entity}}\", { filter: [{ field: \"{{param.status_field}}\", op: \"neq\", value: \"{{param.done_value}}\" }], limit: 1000 });\nconst late: string[] = [];\nfor (const r of rows) {\n  if (String(r[\"{{param.status_field}}\"] ?? \"\") === \"{{param.done_value}}\") continue;\n  const raw = String(r[\"{{param.due_field}}\"] ?? \"\");\n  if (!raw) continue;\n  const due = new Date(raw).getTime() + (raw.length <= 10 ? 24 * 3600 * 1000 : 0);\n  if (!Number.isFinite(due) || due > now.getTime()) continue;\n  const label = String(r[\"{{param.entity.label_field}}\"] ?? r[\"id\"]);\n  late.push(`${label} (due ${raw.slice(0, 10)})`);\n  if (r[\"overdue_since\"]) continue;\n  await ctx.db.update(\"{{param.entity}}\", String(r[\"id\"]), { overdue_since: now.toISOString() });\n  const refField = \"{{param.assignee_ref}}\";\n  const who = refField ? String(r[refField] ?? \"\") : \"\";\n  if (who) {\n    const person = await ctx.db.get(\"{{param.assignee_ref.ref}}\", who);\n    if (person && person[\"user_id\"]) await ctx.notify({ title: `Overdue: ${label}`, body: `It was due ${raw.slice(0, 10)}. Finish it or move the date.`, user: String(person[\"user_id\"]) });\n  }\n}\nif (late.length > 0) await ctx.notify({ title: `${late.length} overdue {{param.entity|title}} ${late.length === 1 ? \"row\" : \"rows\"}`, body: late.slice(0, 15).join(\"\\n\"), role: \"{{param.notify_role}}\" });\nctx.log(`overdue: ${late.length}`);"
+        }
+      ]
+    },
+    {
+      "id": "overdue-clear",
+      "title": "Clear the overdue flag when a {{param.entity}} is done",
+      "on": {
+        "entity": "{{param.entity}}",
+        "event": "updated"
+      },
+      "when": {
+        "field": "{{param.status_field}}",
+        "equals": "{{param.done_value}}"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "if (row[\"overdue_since\"]) await ctx.db.update(\"{{param.entity}}\", String(row[\"id\"]), { overdue_since: null });"
+        }
+      ]
+    }
+  ]
+}

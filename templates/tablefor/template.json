@@ -1,0 +1,54 @@
+{
+  "slug": "tablefor",
+  "kind": "app",
+  "title": "Tablefor",
+  "summary": "Restaurant reservations with a host floor plan and a live kitchen board.",
+  "description": "A booking site for a restaurant. Guests pick a slot and get a QR pass for the door; the host seats tonight's parties on a floor timeline and adds walk-ins; the kitchen gets full-screen tickets in real time. A rule stops a slot being overbooked and an hourly sweep marks no-shows.",
+  "category": "hospitality",
+  "tags": [
+    "restaurant",
+    "reservations",
+    "bookings",
+    "kitchen",
+    "realtime"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/tablefor-desktop.webp",
+      "alt": "Tablefor on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/tablefor-phone.webp",
+      "alt": "Tablefor on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/tablefor-signin.webp",
+      "alt": "Tablefor sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://tablefor.apps.appbricx.com",
+  "roles_summary": "Guests sign up and book. Hosts run the floor. Chefs work the kitchen display.",
+  "includes": [
+    "Menu, opening hours and a slot picker",
+    "Bookings with a QR code for the door",
+    "Host floor timeline and walk-ins",
+    "Full-screen kitchen tickets"
+  ],
+  "highlights": [
+    "Business rule: no overbooking a slot",
+    "Realtime kitchen tickets",
+    "Hourly no-show sweep",
+    "Guests see only their own bookings"
+  ],
+  "order": 2
+}

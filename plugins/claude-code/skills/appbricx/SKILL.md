@@ -51,6 +51,20 @@ on. In CI, a personal access token in `APPBRICX_TOKEN` is the alternative
    Both take minutes: when `verify` or `deploy` answers `status: "running"`,
    call it again — that waits on the same run and returns its result.
 
+## Templates first
+
+Before writing a whole app or a common feature yourself, call
+`search_templates` (`query`, `kind`: app, block, workflow, component). There
+are checked templates for organisations and teams, Stripe subscriptions and
+one-off payments, a booking calendar, comments with mentions, notifications,
+a welcome email, booking reminders, digests, overdue alerts, reply-deadline
+escalation, a trend chart, a CSV export, and ten complete showcase apps.
+`get_template({ slug })` shows what it adds and its `params` (where it
+attaches to the user's tables and roles). `use_template` with
+`dry_run: true` returns the merged diff and the check report; without it, it
+applies to dev. An app template creates a new project. Names that clash are
+refused: pass `prefix`. See `get_guide({ section: "templates" })`.
+
 For small edits after the first apply, prefer `patch_contract` with typed ops
 (`add_field`, `add_entity`, `adopt_table`, `set_workflow`, …) over resending the whole
 contract — it can't accidentally drop anything.

@@ -8,9 +8,11 @@ start your own app from it. Seed rows come from the showcase's preview data
 
 ## What you get
 
-- Event discovery and ticket tiers
-- Tickets as QR passes
-- Live organizer dashboard and a check-in screen
+- Discover with search, availability bars and relative dates
+- Event page with an accessible pass picker, lineup, venue map and sold-out state
+- My tickets split into coming up and past, each with a QR pass
+- Backstage: events table, sales-by-day chart, guest list and an editor with "Draft with AI"
+- Door check-in per show with "Still to arrive", recent check-ins and wrong-night refusals
 
 Platform features it uses:
 
@@ -32,6 +34,26 @@ Workflows:
 - `ticket-count-checkin`: Count check-ins
 - `remind-tomorrow`: Remind attendees of tomorrow's events
 - `reminder-notify`: Push reminder to attendee
+
+## Screens
+
+| Route | Page | Who |
+|---|---|---|
+| `/discover` | Discover | `attendee` |
+| `/event/:id` | Event | `attendee` |
+| `/tickets` | My tickets | `attendee` |
+| `/backstage` | Backstage | `organizer` |
+| `/gate` | Check-in | `door` |
+| `/team` | Team | `organizer` |
+
+## What changed in this version
+
+The showcase app was polished on design, phones and data, and this template follows it:
+
+- Theme `electric-slate` (was `cosmic-night`); one hot-pink accent, no gradient text or glow, nothing smaller than 12px.
+- Discover gained search and availability; the event page, My tickets, Backstage and door screens were rebuilt (see above). The Team page matches the dark theme.
+- Editor fix: opening it before data loaded could save duplicate pass types.
+- Seeds rebuilt: 24 attendees and 170 tickets spread over the last two weeks, with check-ins for tonight's shows.
 
 ## Use this template
 

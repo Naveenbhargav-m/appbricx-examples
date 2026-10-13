@@ -9,8 +9,9 @@ start your own app from it. Seed rows come from the showcase's preview data
 ## What you get
 
 - Stays grid with photo carousels
-- Booking panel with price breakdown
-- Host listings, requests and earnings
+- A stay page of its own (`/stay/:id`) with gallery, AI "Ask about this stay", calendar, reviews and booking panel
+- Trips with a featured next trip and a review sheet
+- Host listings, requests (decline asks to confirm) and earnings with a chart
 
 Platform features it uses:
 
@@ -22,7 +23,7 @@ Platform features it uses:
 | | |
 |---|---|
 | Tables | `guest`, `host`, `stay`, `booking`, `booked_range`, `review` |
-| Custom screens | `NookLogin`, `NookExplore`, `NookTrips`, `NookHost` |
+| Custom screens | `NookLogin`, `NookExplore`, `NookTrips`, `NookHost`, `NookStay` |
 | Roles | `guest` (consumer), `host` (staff) |
 
 Workflows:
@@ -31,6 +32,27 @@ Workflows:
 - `confirmed-notify-guest`: Booking confirmed: notify guest
 - `declined-notify-guest`: Booking declined: notify guest, free the dates
 - `complete-past-stays`: Daily: complete bookings whose check-out has passed
+
+## Screens
+
+| Route | Page | Who |
+|---|---|---|
+| `/explore` | Explore | `guest` |
+| `/trips` | Trips | `guest` |
+| `/hosting` | Listings | `host` |
+| `/hosting/requests` | Requests | `host` |
+| `/hosting/earnings` | Earnings | `host` |
+| `/team` | Team & access | `host` |
+| `/stay/:id` | Stay | `guest` |
+
+## What changed in this version
+
+The showcase app was polished on design, phones and data, and this template follows it:
+
+- New stay page at `/stay/:id` (new `NookStay` screen) with the AI "Ask about this stay" feature.
+- Contrast and type fixed: deeper coral for buttons and links, DM Sans and Bricolage Grotesque, no bouncy springs; auth decor is now `none`.
+- Loading, empty and error states on every list; readable dates and statuses; earnings chart for hosts.
+- Seeds rebuilt: photos matched to their stays, duplicate reviews removed, 34 bookings from May 2026 to January 2027.
 
 ## Use this template
 

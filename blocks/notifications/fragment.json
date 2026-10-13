@@ -1,0 +1,355 @@
+{
+  "entities": [
+    {
+      "name": "notification",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "recipient_id",
+          "type": "ref",
+          "ref": "{{param.recipient_role}}"
+        },
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "link",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "enum_values": [
+            "general",
+            "account",
+            "activity",
+            "reminder"
+          ]
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "enum_values": [
+            "normal",
+            "high"
+          ]
+        },
+        {
+          "name": "read_at",
+          "type": "timestamp",
+          "optional": true
+        },
+        {
+          "name": "emailed_at",
+          "type": "timestamp",
+          "optional": true
+        },
+        {
+          "name": "sms_to",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "text_message",
+          "type": "enum",
+          "enum_values": [
+            "none",
+            "queued"
+          ],
+          "optional": true
+        }
+      ],
+      "owner_refs": [
+        "recipient_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.recipient_role}}": {
+          "read": "own",
+          "create": false,
+          "update": "own",
+          "delete": "own"
+        }
+      },
+      "rules": [
+        {
+          "id": "notification-read-only",
+          "on": "update",
+          "message": "You can mark a notification read, not change it.",
+          "check": "if (ctx.user && ctx.user.role === \"{{param.recipient_role}}\" && ctx.old) {\n  for (const f of [\"recipient_id\", \"title\", \"body\", \"link\", \"category\", \"priority\"]) {\n    if (String(ctx.old[f] ?? \"\") !== String(row[f] ?? \"\")) return \"You can mark a notification read, not change it.\";\n  }\n}\nreturn true;"
+        }
+      ]
+    },
+    {
+      "name": "notification_preference",
+      "label_field": "phone",
+      "fields": [
+        {
+          "name": "person_id",
+          "type": "ref",
+          "ref": "{{param.recipient_role}}"
+        },
+        {
+          "name": "email",
+          "type": "boolean"
+        },
+        {
+          "name": "sms",
+          "type": "boolean"
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "unique": [
+        [
+          "person_id"
+        ]
+      ],
+      "actor_ref": "person_id",
+      "owner_refs": [
+        "person_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.recipient_role}}": {
+          "read": "own",
+          "create": true,
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "rules": [
+        {
+          "id": "sms-needs-phone",
+          "on": "both",
+          "message": "Add a mobile number (with country code) to get text messages.",
+          "check": "if (row.sms === true) {\n  const phone = String(row.phone ?? \"\").replace(/[\\s().-]/g, \"\");\n  if (!/^\\+?[0-9]{7,15}$/.test(phone)) return \"Add a mobile number (with country code) to get text messages.\";\n}\nreturn true;"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "notification-deliver",
+      "title": "Email or text each new notification, as the person prefers",
+      "on": {
+        "entity": "notification",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const prefs = await ctx.db.list(\"notification_preference\", { filter: { person_id: String(row[\"recipient_id\"] ?? \"\") }, limit: 1 });\nconst pref = prefs[0];\nconst person = await ctx.db.get(\"{{param.recipient_role}}\", String(row[\"recipient_id\"] ?? \"\"));\nif (!person) return;\nconst emailField = \"{{param.email_field}}\";\nconst to = emailField ? String(person[emailField] ?? \"\") : \"\";\nconst title = String(row[\"title\"] ?? \"\");\nconst body = String(row[\"body\"] ?? \"\");\nconst patch: Record<string, unknown> = {};\nif (to && (!pref || pref[\"email\"] !== false)) {\n  await ctx.email({ to, subject: title, body: body || title });\n  patch[\"emailed_at\"] = ctx.now().toISOString();\n}\nconst phone = pref ? String(pref[\"phone\"] ?? \"\").trim() : \"\";\nif (pref && pref[\"sms\"] === true && phone) {\n  patch[\"sms_to\"] = phone;\n  patch[\"text_message\"] = \"queued\";\n}\nif (Object.keys(patch).length > 0) await ctx.db.update(\"notification\", String(row[\"id\"]), patch);"
+        }
+      ]
+    },
+    {
+      "$if": "sms_from",
+      "id": "notification-sms",
+      "title": "Send queued text messages through Twilio",
+      "on": {
+        "entity": "notification",
+        "event": "updated"
+      },
+      "when": {
+        "field": "text_message",
+        "equals": "queued"
+      },
+      "do": [
+        {
+          "action": "integration",
+          "integration": "twilio",
+          "call": "send_sms",
+          "props": {
+            "from": "{{param.sms_from}}",
+            "to": "{{sms_to}}",
+            "body": "{{title}}. {{body}}"
+          }
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "NotificationInbox",
+      "kind": "code",
+      "purpose": "A person's notification inbox: unread first, mark read, mark all read, opens links, updates live",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Inbox"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Your inbox is loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "NotificationInbox.tsx"
+    },
+    {
+      "name": "NotificationSettings",
+      "kind": "code",
+      "purpose": "Email and text message preferences for the signed-in person",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Notifications"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Settings are loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "NotificationSettings.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "inbox",
+      "route": "/inbox",
+      "title": "Inbox",
+      "icon": "Inbox",
+      "personas": [
+        "{{param.recipient_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "NotificationInbox",
+        "props": {
+          "title": "Inbox"
+        }
+      }
+    },
+    {
+      "name": "notification-settings",
+      "route": "/notification-settings",
+      "title": "Notification settings",
+      "icon": "Bell",
+      "personas": [
+        "{{param.recipient_role}}"
+      ],
+      "layout": {
+        "kind": "custom",
+        "custom": "NotificationSettings",
+        "props": {
+          "title": "Notifications"
+        }
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "notification_preference",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "email",
+            "sms",
+            "phone"
+          ],
+          "submitLabel": "Save preferences"
+        }
+      }
+    },
+    {
+      "name": "notifications-admin",
+      "route": "/notifications-admin",
+      "title": "Notifications",
+      "icon": "Send",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Notifications",
+            "subtitle": "Everything sent to people, and whether it went out by email or text."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "notification",
+              "presentation": "table",
+              "columns": [
+                "title",
+                "recipient_id",
+                "category",
+                "priority",
+                "read_at",
+                "emailed_at",
+                "created_at"
+              ],
+              "searchField": "title",
+              "filters": [
+                {
+                  "field": "category",
+                  "label": "Category"
+                },
+                {
+                  "field": "priority",
+                  "label": "Priority"
+                }
+              ],
+              "emptyCopy": "Nothing sent yet. Send the first update with New notification."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "notification",
+          "mode": "create",
+          "layout": "dialog",
+          "fields": [
+            "recipient_id",
+            "title",
+            "body",
+            "link",
+            "category",
+            "priority"
+          ],
+          "submitLabel": "Send notification",
+          "successCopy": "Sent. It is in their inbox now."
+        }
+      }
+    }
+  ]
+}

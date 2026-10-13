@@ -1,0 +1,44 @@
+{
+  "extend": [
+    {
+      "entity": "{{param.booking}}",
+      "fields": [
+        {
+          "name": "reminder_sent_at",
+          "type": "timestamp",
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "booking-confirmation",
+      "title": "Email a confirmation for each new {{param.booking}}",
+      "on": {
+        "entity": "{{param.booking}}",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const person = await ctx.db.get(\"{{param.customer_ref.ref}}\", String(row[\"{{param.customer_ref}}\"] ?? \"\"));\nconst to = person ? String(person[\"{{param.email_field}}\"] ?? \"\") : \"\";\nif (!to) { ctx.log(\"no email on file for this booking: confirmation not sent\"); return; }\nconst raw = String(row[\"{{param.starts_field}}\"] ?? \"\");\nconst when = raw ? new Date(raw).toLocaleString(\"en-US\", { timeZone: \"{{param.tz}}\", weekday: \"long\", month: \"long\", day: \"numeric\", hour: \"numeric\", minute: \"2-digit\" }) : \"soon\";\nconst first = String(person?.[\"name\"] ?? \"\").split(\" \")[0] || \"there\";\nawait ctx.email({ to, subject: `You're booked for ${when}`, body: `Hi ${first},\\n\\nYou're all set for ${when}. We'll send a reminder the day before.\\n\\nNeed to change it? Sign in and open your bookings.` });\nctx.log(`confirmation sent for ${String(row[\"id\"])}`);"
+        }
+      ]
+    },
+    {
+      "id": "booking-reminder",
+      "title": "Remind people the day before their {{param.booking}}",
+      "on": {
+        "schedule": "hourly",
+        "entity": "{{param.booking}}"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const now = ctx.now().getTime();\nconst rows = await ctx.db.list(\"{{param.booking}}\", { filter: [{ field: \"{{param.starts_field}}\", op: \"gte\", value: new Date(now).toISOString() }], sort: { field: \"{{param.starts_field}}\", dir: \"asc\" }, limit: 500 });\nlet sent = 0;\nfor (const b of rows) {\n  if (b[\"reminder_sent_at\"]) continue;\n  if (/cancel|declin|no_show|reject/i.test(String(b[\"status\"] ?? \"\"))) continue;\n  const at = new Date(String(b[\"{{param.starts_field}}\"] ?? \"\")).getTime();\n  if (!Number.isFinite(at) || at < now || at - now > 24 * 3600 * 1000) continue;\n  if (now - new Date(String(b[\"created_at\"] ?? \"\")).getTime() < 3600 * 1000) continue;\n  const person = await ctx.db.get(\"{{param.customer_ref.ref}}\", String(b[\"{{param.customer_ref}}\"] ?? \"\"));\n  const to = person ? String(person[\"{{param.email_field}}\"] ?? \"\") : \"\";\n  if (to) {\n    const when = new Date(at).toLocaleString(\"en-US\", { timeZone: \"{{param.tz}}\", weekday: \"long\", hour: \"numeric\", minute: \"2-digit\" });\n    await ctx.email({ to, subject: `See you ${when}`, body: `A quick reminder: your booking is ${when}.\\n\\nCan't make it? Sign in and cancel so someone else can take the spot.` });\n    sent++;\n  }\n  await ctx.db.update(\"{{param.booking}}\", String(b[\"id\"]), { reminder_sent_at: ctx.now().toISOString() });\n}\nctx.log(`reminders sent: ${sent}`);"
+        }
+      ]
+    }
+  ]
+}

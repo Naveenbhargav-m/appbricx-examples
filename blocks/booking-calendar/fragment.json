@@ -1,0 +1,425 @@
+{
+  "entities": [
+    {
+      "name": "slot",
+      "label_field": "title",
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "resource_id",
+          "type": "ref",
+          "ref": "{{param.attach_to}}"
+        },
+        {
+          "name": "starts_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "ends_at",
+          "type": "timestamp"
+        },
+        {
+          "name": "capacity",
+          "type": "number"
+        },
+        {
+          "name": "booked",
+          "type": "number",
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "open",
+            "closed"
+          ]
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "$if": "org_field",
+          "name": "organisation_id",
+          "type": "ref",
+          "ref": "{{param.org_field.ref}}",
+          "optional": true
+        }
+      ],
+      "org_field": "{{param.org_field?organisation_id:}}",
+      "rules": [
+        {
+          "id": "slot-sensible",
+          "on": "both",
+          "message": "A time slot ends after it starts and holds 1 to 500 people.",
+          "check": "const start = new Date(String(row.starts_at)).getTime();\nconst end = new Date(String(row.ends_at)).getTime();\nif (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return \"A time slot ends after it starts.\";\nif (end - start > 24 * 3600 * 1000) return \"A time slot is at most 24 hours long.\";\nconst cap = Number(row.capacity);\nreturn (Number.isInteger(cap) && cap >= 1 && cap <= 500) || \"Capacity is a whole number from 1 to 500.\";"
+        },
+        {
+          "id": "slot-no-overlap",
+          "on": "both",
+          "message": "That overlaps another time for the same resource.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nconst hit = rows(await ctx.db.query(\"select id from slot where resource_id = $1 and id::text <> coalesce($2::text, '') and status <> 'closed' and starts_at < $3 and ends_at > $4 limit 1\", [row.resource_id, row.id ?? null, row.ends_at, row.starts_at]));\nreturn hit.length === 0 || \"That overlaps another time for the same {{param.attach_to|title}}. Pick a different time.\";"
+        },
+        {
+          "$if": "org_field",
+          "id": "slot-same-organisation",
+          "on": "both",
+          "message": "A time slot belongs to the organisation of what is booked.",
+          "check": "if (!row.organisation_id) return true;\nconst r = await ctx.db.query('select \"{{param.org_field}}\" as org from \"{{param.attach_to}}\" where id = $1', [row.resource_id]);\nconst rows = Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? [];\nreturn String(rows[0]?.org ?? \"\") === String(row.organisation_id) || \"A time slot belongs to the organisation of what is booked.\";"
+        }
+      ],
+      "access": {
+        "{{param.booker_role}}": {
+          "read": "{{param.org_field?org:all}}"
+        }
+      }
+    },
+    {
+      "name": "reservation",
+      "label_field": "note",
+      "fields": [
+        {
+          "name": "slot_id",
+          "type": "ref",
+          "ref": "slot"
+        },
+        {
+          "name": "booker_id",
+          "type": "ref",
+          "ref": "{{param.booker_role}}"
+        },
+        {
+          "name": "seats",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "booked",
+            "attended",
+            "cancelled"
+          ]
+        },
+        {
+          "name": "cancel_request",
+          "type": "enum",
+          "enum_values": [
+            "none",
+            "requested"
+          ],
+          "optional": true
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "actor_ref": "booker_id",
+      "owner_refs": [
+        "booker_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.booker_role}}": {
+          "read": "own",
+          "create": true,
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "rules": [
+        {
+          "id": "reservation-capacity",
+          "on": "create",
+          "message": "That time is full.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nconst s = rows(await ctx.db.query(\"select capacity, booked, starts_at, ends_at, status from slot where id = $1\", [row.slot_id]))[0];\nif (!s) return \"That time is no longer available.\";\nif (String(s.status) === \"closed\") return \"That time is closed for booking.\";\nif (new Date(String(s.starts_at)).getTime() <= ctx.now().getTime()) return \"That time has already started.\";\nconst seats = Number(row.seats ?? 1);\nif (!Number.isInteger(seats) || seats < 1 || seats > 20) return \"Book between 1 and 20 places.\";\nconst left = Number(s.capacity ?? 0) - Number(s.booked ?? 0);\nreturn seats <= left || (left <= 0 ? \"That time is full. Try another one.\" : `Only ${left} ${left === 1 ? \"place is\" : \"places are\"} left.`);"
+        },
+        {
+          "id": "reservation-no-double-booking",
+          "on": "create",
+          "message": "You already have a booking at that time.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nconst s = rows(await ctx.db.query(\"select starts_at, ends_at from slot where id = $1\", [row.slot_id]))[0];\nif (!s) return true;\nconst who = row.booker_id ?? (await ctx.me(\"{{param.booker_role}}\"));\nif (!who) return true;\nconst clash = rows(await ctx.db.query(\"select r.id from reservation r join slot s on s.id = r.slot_id where r.booker_id = $1 and r.status <> 'cancelled' and s.starts_at < $2 and s.ends_at > $3 limit 1\", [who, s.ends_at, s.starts_at]));\nreturn clash.length === 0 || \"You already have a booking at that time.\";"
+        },
+        {
+          "id": "reservation-cancel-only",
+          "on": "update",
+          "message": "You can cancel a booking, not change it.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nif (!ctx.old || !ctx.user || ctx.user.role !== \"{{param.booker_role}}\") return true;\nfor (const f of [\"slot_id\", \"booker_id\", \"seats\", \"status\", \"note\"]) {\n  if (String(ctx.old[f] ?? \"\") !== String(row[f] ?? \"\")) return \"You can cancel a booking, not change it.\";\n}\nif (String(row.cancel_request ?? \"none\") !== \"requested\") return \"You can cancel a booking, not change it.\";\nconst s = rows(await ctx.db.query(\"select starts_at from slot where id = $1\", [row.slot_id]))[0];\nreturn !s || new Date(String(s.starts_at)).getTime() > ctx.now().getTime() || \"That time has already started.\";"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "reservation-count",
+      "title": "Count booked places on the time slot",
+      "on": {
+        "entity": "reservation",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const s = await ctx.db.get(\"slot\", String(row[\"slot_id\"] ?? \"\"));\nif (!s) return;\nawait ctx.db.update(\"slot\", String(s[\"id\"]), { booked: Number(s[\"booked\"] ?? 0) + Number(row[\"seats\"] ?? 1) });"
+        }
+      ]
+    },
+    {
+      "id": "reservation-cancel-request",
+      "title": "Cancel a booking when its person asks",
+      "on": {
+        "entity": "reservation",
+        "event": "updated"
+      },
+      "when": {
+        "field": "cancel_request",
+        "equals": "requested"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "await ctx.db.update(\"reservation\", String(row[\"id\"]), { status: \"cancelled\", cancel_request: \"none\" });"
+        }
+      ]
+    },
+    {
+      "id": "reservation-free-places",
+      "title": "Free the places when a booking is cancelled",
+      "on": {
+        "entity": "reservation",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "cancelled"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const s = await ctx.db.get(\"slot\", String(row[\"slot_id\"] ?? \"\"));\nif (!s) return;\nawait ctx.db.update(\"slot\", String(s[\"id\"]), { booked: Math.max(0, Number(s[\"booked\"] ?? 0) - Number(row[\"seats\"] ?? 1)) });"
+        }
+      ]
+    },
+    {
+      "$if": "org_field",
+      "id": "slot-organisation",
+      "title": "Give each time slot the organisation of what is booked",
+      "on": {
+        "entity": "slot",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "if (row[\"organisation_id\"]) return;\nconst resource = await ctx.db.get(\"{{param.attach_to}}\", String(row[\"resource_id\"] ?? \"\"));\nconst org = resource ? resource[\"{{param.org_field}}\"] : null;\nif (org) await ctx.db.update(\"slot\", String(row[\"id\"]), { organisation_id: String(org) });"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "SlotPicker",
+      "kind": "code",
+      "purpose": "Pick a day and book an open time slot, with places left and a seat count",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Book a time"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Times are loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "SlotPicker.tsx"
+    },
+    {
+      "name": "MyReservations",
+      "kind": "code",
+      "purpose": "The signed-in person's upcoming bookings with cancel, and their history",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "My bookings"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Your bookings are loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "MyReservations.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "book",
+      "route": "/book",
+      "title": "Book",
+      "icon": "CalendarDays",
+      "personas": [
+        "{{param.booker_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "SlotPicker",
+        "props": {
+          "title": "Book a time"
+        }
+      }
+    },
+    {
+      "name": "my-bookings",
+      "route": "/my-bookings",
+      "title": "My bookings",
+      "icon": "Bookmark",
+      "personas": [
+        "{{param.booker_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "MyReservations",
+        "props": {
+          "title": "My bookings"
+        }
+      }
+    },
+    {
+      "name": "time-slots",
+      "route": "/time-slots",
+      "title": "Time slots",
+      "icon": "Calendar",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Time slots",
+            "subtitle": "Open times people can book. Two times for the same {{param.attach_to|title}} can't overlap."
+          },
+          {
+            "kind": "block",
+            "block": "CalendarView",
+            "props": {
+              "entity": "slot",
+              "granularity": "week",
+              "startField": "starts_at",
+              "endField": "ends_at",
+              "titleField": "title",
+              "emptyCopy": "No times this week. Add one and people can book it straight away."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "slot",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "title",
+            "resource_id",
+            "starts_at",
+            "ends_at",
+            "capacity",
+            "note"
+          ],
+          "submitLabel": "Save time slot",
+          "successCopy": "Saved. It's bookable now."
+        }
+      }
+    },
+    {
+      "name": "reservations",
+      "route": "/reservations",
+      "title": "Reservations",
+      "icon": "ListChecks",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Reservations",
+            "subtitle": "Every booking by status. Book someone in by hand for a phone call or a walk-in."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "reservation",
+              "presentation": "grouped",
+              "groupBy": "status",
+              "columns": [
+                "booker_id",
+                "slot_id",
+                "seats",
+                "status",
+                "note"
+              ],
+              "filters": [
+                {
+                  "field": "slot_id",
+                  "label": "Time"
+                }
+              ],
+              "emptyCopy": "No bookings yet. They appear here the moment someone books."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "reservation",
+          "mode": "create",
+          "layout": "dialog",
+          "fields": [
+            "slot_id",
+            "booker_id",
+            "seats",
+            "note"
+          ],
+          "submitLabel": "Book them in"
+        }
+      }
+    }
+  ]
+}

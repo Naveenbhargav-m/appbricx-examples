@@ -1,0 +1,17 @@
+{
+  "slug": "trend-chart",
+  "kind": "component",
+  "title": "Trend chart",
+  "summary": "A daily bar chart of new rows in any table, with the change against the period before.",
+  "description": "A custom component you can drop on any page: it counts the rows of one table per day over the last 7 to 90 days and draws them as bars in your app's colours, with the percentage change between the first and second half of the window. The template adds it with a Trends page for the role you choose; place it on other pages with a custom node.",
+  "category": "ui",
+  "tags": ["chart", "dashboard", "analytics", "component", "recharts"],
+  "params": [
+    { "name": "entity", "type": "entity", "label": "Table to chart", "description": "The table whose new rows the chart counts.", "example": "order" },
+    { "name": "page_role", "type": "role", "label": "Who sees the Trends page", "description": "The role the Trends page is for.", "default": ["@first_staff", "@first"], "example": "staff" }
+  ],
+  "fragment": "fragment.json",
+  "includes": ["Component TrendChart (props: title, entity, dateField, days)", "A Trends page"],
+  "highlights": ["Theme colours, light and dark", "Reads only rows the viewer may see"],
+  "order": 40
+}

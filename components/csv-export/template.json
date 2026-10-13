@@ -1,0 +1,17 @@
+{
+  "slug": "csv-export",
+  "kind": "component",
+  "title": "CSV export",
+  "summary": "A Download CSV button for any table, with a preview of the first rows.",
+  "description": "A custom component that gathers the rows of one table the viewer is allowed to see (up to 5,000, newest first) and offers them as a CSV file that opens in any spreadsheet. Pick the columns or let it use every field. The template adds it with an Export page for the role you choose.",
+  "category": "ui",
+  "tags": ["csv", "export", "spreadsheet", "download", "component"],
+  "params": [
+    { "name": "entity", "type": "entity", "label": "Table to export", "description": "The table the Export page offers as CSV.", "example": "order" },
+    { "name": "page_role", "type": "role", "label": "Who sees the Export page", "description": "The role the Export page is for.", "default": ["@first_staff", "@first"], "example": "staff" }
+  ],
+  "fragment": "fragment.json",
+  "includes": ["Component CsvExport (props: title, entity, columns)", "An Export page"],
+  "highlights": ["Exports only rows the viewer may see", "No server code: built in the browser"],
+  "order": 41
+}

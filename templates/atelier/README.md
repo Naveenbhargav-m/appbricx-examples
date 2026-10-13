@@ -8,9 +8,10 @@ start your own app from it. Seed rows come from the showcase's preview data
 
 ## What you get
 
-- Shop with product pages and a cart
-- Orders with a status timeline
-- Seller studio with stock and earnings
+- Storefront with makers, collection, product page and bag drawer
+- My orders on its own page (`/orders`)
+- Maker studio: overview with a six-month earnings chart, products with an AI "Write it for me" description writer, and orders (`/studio/products`, `/studio/orders`)
+- Curator console with approvals (with undo) and marketplace sales (`/console/sales`)
 
 Platform features it uses:
 
@@ -21,7 +22,7 @@ Platform features it uses:
 | | |
 |---|---|
 | Tables | `buyer`, `seller`, `admin`, `product`, `cart_item`, `order`, `payment` |
-| Custom screens | `AtelierLogin`, `Storefront`, `Studio`, `AdminConsole` |
+| Custom screens | `AtelierLogin`, `Storefront`, `Studio`, `AdminConsole`, `MyOrders`, `TeamIntro` |
 | Roles | `buyer` (consumer), `seller` (staff), `admin` (staff) |
 
 Workflows:
@@ -31,6 +32,28 @@ Workflows:
 - `payment-marks-paid`: A successful payment marks the order paid
 - `order-paid`: Tell the maker an order is paid
 - `order-shipped`: Tell the buyer their order shipped
+
+## Screens
+
+| Route | Page | Who |
+|---|---|---|
+| `/team` | Team & access | `admin` |
+| `/shop` | Shop | `buyer`, `seller` |
+| `/studio` | Studio | `seller` |
+| `/console` | Console | `admin` |
+| `/orders` | My orders | `buyer` |
+| `/studio/products` | Studio products | `seller` |
+| `/studio/orders` | Studio orders | `seller` |
+| `/console/sales` | Sales | `admin` |
+
+## What changed in this version
+
+The showcase app was polished on design, phones and data, and this template follows it:
+
+- New pages: `/orders` (new `MyOrders` screen), `/studio/products`, `/studio/orders` and `/console/sales`; the Team page has a new `TeamIntro` heading.
+- Calmer type and colour: no text under 12px, muted text and buttons pass contrast, one ease-out curve instead of bouncy springs.
+- Product photos re-matched to their products; studio earnings chart and a "Needs your attention" panel; undo in the curator console.
+- Seeds rebuilt: 15 products and 35 orders from May to October.
 
 ## Use this template
 

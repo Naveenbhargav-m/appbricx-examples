@@ -1,0 +1,18 @@
+{
+  "slug": "slack-on-signup",
+  "kind": "workflow",
+  "title": "Slack message on signup",
+  "summary": "Posts to a Slack channel whenever someone new signs up, with their name and email.",
+  "description": "Fires when a row is added to your signup table and posts a short message to the Slack channel you choose, through your connected Slack integration. Until Slack is connected in the builder the step is skipped, so it is safe to add before you connect.",
+  "category": "notifications",
+  "tags": ["slack", "signup", "team alerts", "integration"],
+  "params": [
+    { "name": "person", "type": "entity", "label": "Who signs up", "description": "The table a new person lands in when they sign up (usually named after the role).", "default": ["@first_consumer", "@first"], "example": "customer" },
+    { "name": "channel", "type": "text", "label": "Slack channel id", "description": "The id of the Slack channel to post in (in Slack: channel details, at the bottom, like C0123ABCD).", "pattern": "^[A-Z0-9]{6,20}$", "example": "C0123ABCD" }
+  ],
+  "requires": { "integrations": ["slack"], "notes": ["Connect Slack in the builder's Integrations panel; until then the step is skipped."] },
+  "fragment": "fragment.json",
+  "includes": ["One workflow: on signup, post to your Slack channel"],
+  "highlights": ["Uses your connected Slack integration", "Skips quietly until Slack is connected"],
+  "order": 31
+}

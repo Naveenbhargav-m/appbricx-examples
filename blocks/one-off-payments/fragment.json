@@ -1,0 +1,329 @@
+{
+  "entities": [
+    {
+      "name": "payment",
+      "label_field": "currency",
+      "fields": [
+        {
+          "name": "record_id",
+          "type": "ref",
+          "ref": "{{param.attach_to}}"
+        },
+        {
+          "name": "payer_id",
+          "type": "ref",
+          "ref": "{{param.payer_role}}"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "currency",
+          "type": "text"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "pending",
+            "paid",
+            "failed"
+          ]
+        },
+        {
+          "name": "check",
+          "type": "enum",
+          "enum_values": [
+            "idle",
+            "requested"
+          ],
+          "optional": true
+        },
+        {
+          "name": "stripe_session_id",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp",
+          "optional": true
+        }
+      ],
+      "actor_ref": "payer_id",
+      "owner_refs": [
+        "payer_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.payer_role}}": {
+          "read": "own",
+          "create": true,
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "rules": [
+        {
+          "id": "payment-starts-pending",
+          "on": "create",
+          "message": "A payment starts as pending and matches the price.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nif (!ctx.user || ctx.user.role !== \"{{param.payer_role}}\") return true;\nif (String(row.status ?? \"pending\") !== \"pending\" || row.paid_at) return \"A payment starts as pending until Stripe confirms it.\";\nconst rec = rows(await ctx.db.query('select \"{{param.price_field}}\" as price from \"{{param.attach_to}}\" where id = $1', [row.record_id]))[0];\nif (!rec) return \"You can't pay for that.\";\nreturn Math.abs(Number(rec.price) - Number(row.amount)) < 0.005 || \"The amount must match the price.\";"
+        },
+        {
+          "id": "payment-stripe-only",
+          "on": "update",
+          "message": "Only Stripe can change a payment.",
+          "check": "if (!ctx.old || !ctx.user || ctx.user.role !== \"{{param.payer_role}}\") return true;\nfor (const f of [\"record_id\", \"payer_id\", \"amount\", \"currency\", \"status\", \"stripe_session_id\", \"paid_at\"]) {\n  if (String(ctx.old[f] ?? \"\") !== String(row[f] ?? \"\")) return \"Only Stripe can change a payment.\";\n}\nreturn String(row.check ?? \"idle\") === \"requested\" || String(row.check ?? \"\") === String(ctx.old.check ?? \"\") || \"Only Stripe can change a payment.\";"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "payment-checkout",
+      "title": "Start a Stripe Checkout for one {{param.attach_to}}",
+      "on": {
+        "call": true,
+        "roles": [
+          "{{param.payer_role}}"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = await ctx.secrets.get(\"STRIPE_SECRET_KEY\");\nif (!key) throw new Error(\"Payments aren't set up yet: connect Stripe or add STRIPE_SECRET_KEY in the project settings.\");\nif (!ctx.app.url.startsWith(\"http\")) throw new Error(\"This app's address isn't known yet. Open it from the preview or publish it, then try again.\");\nconst done = ctx.app.url + \"/my-payments?checkout=done\";\nconst back = ctx.app.url + \"/my-payments\";\nconst form = (pairs: Array<[string, string]>) => pairs.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join(\"&\");\nif (!user) throw new Error(\"Sign in to pay.\");\nconst id = String(input[\"record_id\"] ?? \"\");\nconst record = await ctx.db.get(\"{{param.attach_to}}\", id);\nif (!record) throw new Error(\"You can't pay for that.\");\nconst me = (await ctx.db.list(\"{{param.payer_role}}\", { filter: { user_id: user.id }, limit: 1 }))[0];\nif (!me) throw new Error(\"Your account isn't set up yet. Try again in a moment.\");\nconst payerRef = \"{{param.payer_ref}}\";\nif (payerRef && String(record[payerRef] ?? \"\") !== String(me[\"id\"])) throw new Error(\"That isn't yours to pay for.\");\nconst cents = Math.round(Number(record[\"{{param.price_field}}\"] ?? 0) * 100);\nif (!Number.isFinite(cents) || cents < 50) throw new Error(\"There's nothing to pay for this one (the minimum is 0.50).\");\nconst prior = await ctx.db.list(\"payment\", { filter: { record_id: id }, limit: 50 });\nif (prior.some((p) => String(p[\"status\"]) === \"paid\")) throw new Error(\"This is already paid.\");\nconst label = String(record[\"{{param.attach_to.label_field}}\"] ?? \"\") || \"Payment\";\nconst res = await ctx.http.fetch(\"https://api.stripe.com/v1/checkout/sessions\", {\n  method: \"POST\",\n  headers: { authorization: `Bearer ${key}`, \"content-type\": \"application/x-www-form-urlencoded\" },\n  body: form([[\"mode\", \"payment\"], [\"line_items[0][quantity]\", \"1\"], [\"line_items[0][price_data][currency]\", \"{{param.currency}}\"], [\"line_items[0][price_data][unit_amount]\", String(cents)], [\"line_items[0][price_data][product_data][name]\", label], [\"success_url\", done], [\"cancel_url\", back], [\"client_reference_id\", id], [\"customer_email\", user.email], [\"metadata[record_id]\", id]]),\n});\nconst session = res.json<{ id?: string; url?: string; error?: { message?: string } }>();\nif (!res.ok || !session?.id || !session.url) throw new Error(`Stripe couldn't start checkout: ${session?.error?.message ?? res.status}`);\nconst pay = await ctx.db.create(\"payment\", { record_id: id, payer_id: String(me[\"id\"]), amount: cents / 100, currency: \"{{param.currency}}\", status: \"pending\", check: \"idle\", stripe_session_id: session.id });\nreturn { url: session.url, payment_id: String(pay[\"id\"]) };"
+        }
+      ]
+    },
+    {
+      "id": "stripe-payment-events",
+      "title": "Apply Stripe's checkout events to payments",
+      "on": {
+        "webhook": "stripe-payment-events",
+        "verify": {
+          "provider": "stripe",
+          "secret": "STRIPE_WEBHOOK_SECRET",
+          "events": [
+            "checkout.session.completed",
+            "checkout.session.async_payment_succeeded",
+            "checkout.session.async_payment_failed",
+            "checkout.session.expired"
+          ]
+        }
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "type Obj = Record<string, unknown>;\nconst type = String(row[\"type\"] ?? \"\");\nconst obj = ((row[\"data\"] as { object?: Obj } | undefined)?.object ?? {}) as Obj;\nif (obj[\"mode\"] !== \"payment\") return;\nconst sessionId = typeof obj[\"id\"] === \"string\" ? obj[\"id\"] : \"\";\nconst pay = sessionId ? (await ctx.db.list(\"payment\", { filter: { stripe_session_id: sessionId }, limit: 1 }))[0] : undefined;\nif (!pay) { ctx.log(`stripe: no payment for checkout ${sessionId}`); return; }\nif (String(pay[\"status\"]) === \"paid\") return;\nconst id = String(pay[\"id\"]);\nif (type === \"checkout.session.completed\" || type === \"checkout.session.async_payment_succeeded\") {\n  if (obj[\"payment_status\"] !== \"paid\") { ctx.log(`stripe: checkout ${sessionId} completed, payment still ${String(obj[\"payment_status\"] ?? \"pending\")}`); return; }\n  // The amount Stripe charged must be the amount the server set.\n  const expected = Math.round(Number(pay[\"amount\"] ?? 0) * 100);\n  if (obj[\"amount_total\"] !== expected) { ctx.log(`stripe: checkout ${sessionId} charged ${String(obj[\"amount_total\"])}, expected ${expected} — not marked paid`); return; }\n  await ctx.db.update(\"payment\", id, { status: \"paid\", paid_at: ctx.now().toISOString() });\n  ctx.log(`stripe: payment ${id} paid`);\n} else if (type === \"checkout.session.expired\" || type === \"checkout.session.async_payment_failed\") {\n  await ctx.db.update(\"payment\", id, { status: \"failed\" });\n  ctx.log(`stripe: payment ${id} not completed (${type})`);\n}"
+        }
+      ]
+    },
+    {
+      "id": "payment-confirm",
+      "title": "Check a payment with Stripe (fallback)",
+      "on": {
+        "call": true,
+        "roles": [
+          "{{param.payer_role}}",
+          "@staff"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = await ctx.secrets.get(\"STRIPE_SECRET_KEY\");\nif (!key) throw new Error(\"Payments aren't set up yet.\");\nconst id = String(input[\"payment_id\"] ?? \"\");\nconst pay = await ctx.db.get(\"payment\", id);\nif (!pay) throw new Error(\"That payment isn't yours or doesn't exist.\");\nif (String(pay[\"status\"]) !== \"pending\") return { status: String(pay[\"status\"]) };\nconst res = await ctx.http.fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(String(pay[\"stripe_session_id\"] ?? \"\"))}`, { headers: { authorization: `Bearer ${key}` } });\nconst s = res.ok ? res.json<{ status?: string; payment_status?: string; amount_total?: number | null }>() : null;\nif (!s) return { status: \"pending\" };\nconst expected = Math.round(Number(pay[\"amount\"] ?? 0) * 100);\nconst status = s.payment_status === \"paid\" && s.amount_total === expected ? \"paid\" : s.status === \"expired\" ? \"failed\" : \"pending\";\nif (status === \"pending\") return { status };\nawait ctx.vars.set(`stripe-payment:${id}`, { status, at: new Date().toISOString() });\nawait ctx.db.update(\"payment\", id, { check: \"requested\" });\nreturn { status };"
+        }
+      ]
+    },
+    {
+      "id": "payment-apply-check",
+      "title": "Apply what Stripe said about a payment",
+      "on": {
+        "entity": "payment",
+        "event": "updated"
+      },
+      "when": {
+        "field": "check",
+        "equals": "requested"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = `stripe-payment:${String(row[\"id\"])}`;\nconst v = await ctx.vars.get(key);\nconst s = (v && typeof v === \"object\" ? v : {}) as Record<string, unknown>;\nconst patch: Record<string, unknown> = { check: \"idle\" };\nif (s[\"status\"] === \"paid\" || s[\"status\"] === \"failed\") {\n  patch[\"status\"] = s[\"status\"];\n  if (s[\"status\"] === \"paid\") patch[\"paid_at\"] = String(s[\"at\"] ?? ctx.now().toISOString());\n}\nawait ctx.db.update(\"payment\", String(row[\"id\"]), patch);\nawait ctx.vars.set(key, null);"
+        }
+      ]
+    },
+    {
+      "id": "payment-paid-notify",
+      "title": "Thank the payer when a payment goes through",
+      "on": {
+        "entity": "payment",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "paid"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": "payer_id",
+          "title": "Payment received",
+          "body": "Thanks. We've received {{amount}} {{currency}}."
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "PayableList",
+      "kind": "code",
+      "purpose": "What the signed-in person can pay for, with a Pay button that opens Stripe Checkout",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Pay"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Loading what's due",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "PayableList.tsx"
+    },
+    {
+      "name": "MyPayments",
+      "kind": "code",
+      "purpose": "The signed-in person's payments; checks pending ones with Stripe on the way back",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "My payments"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Your payments are loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "MyPayments.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "pay",
+      "route": "/pay",
+      "title": "Pay",
+      "icon": "CreditCard",
+      "personas": [
+        "{{param.payer_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "PayableList",
+        "props": {
+          "title": "Pay"
+        }
+      }
+    },
+    {
+      "name": "my-payments",
+      "route": "/my-payments",
+      "title": "My payments",
+      "icon": "Wallet",
+      "personas": [
+        "{{param.payer_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "MyPayments",
+        "props": {
+          "title": "My payments"
+        }
+      }
+    },
+    {
+      "name": "payments-admin",
+      "route": "/payments-admin",
+      "title": "Payments",
+      "icon": "DollarSign",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Payments",
+            "subtitle": "Every payment and where it stands. Record a cash or bank payment by hand."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "payment",
+              "presentation": "grouped",
+              "groupBy": "status",
+              "columns": [
+                "record_id",
+                "payer_id",
+                "amount",
+                "currency",
+                "paid_at"
+              ],
+              "filters": [
+                {
+                  "field": "status",
+                  "label": "Status"
+                }
+              ],
+              "emptyCopy": "No payments yet. They show up here when someone pays."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "payment",
+          "mode": "create",
+          "layout": "dialog",
+          "fields": [
+            "record_id",
+            "payer_id",
+            "amount",
+            "currency",
+            "paid_at"
+          ],
+          "submitLabel": "Record payment"
+        }
+      }
+    }
+  ]
+}

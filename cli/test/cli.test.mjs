@@ -302,3 +302,47 @@ test("operate: each command maps to its developer API route", async () => {
     await f.close();
   }
 });
+
+test("templates: search, show, and use (block into the linked project, app into a new one)", async () => {
+  const pid = "33333333-3333-4333-8333-333333333333";
+  const newPid = "44444444-4444-4444-8444-444444444444";
+  const block = { slug: "comments", kind: "block", title: "Comments", summary: "Threaded comments", category_label: "Collaboration", params: [{ name: "attach_to", type: "entity", description: "The table." }], adds: { tables: [{ name: "comment" }], workflows: [{ id: "comment-notify" }] }, requires: {}, use: { cli: "appbricx templates use comments --param attach_to=task --dry-run" } };
+  const f = await fakeApi({
+    "GET /dev/v1/templates?query=comments&kind=block": { status: 200, body: { templates: [block], total: 1 } },
+    "GET /dev/v1/templates/comments": { status: 200, body: { template: block } },
+    "POST /dev/v1/templates/comments/use": { status: 200, body: { dry_run: true, template: "comments", project_id: pid, params: { attach_to: "task" }, diff: ["+ table comment (subject_id, body)"], report: { ok: true, errors: [], fixes: [], warnings: [], summary: null } } },
+    "GET /dev/v1/templates/kanbo": { status: 200, body: { template: { slug: "kanbo", kind: "app", title: "Kanbo" } } },
+    "POST /dev/v1/templates/kanbo/use": { status: 201, body: { applied: true, created: true, template: "kanbo", project: { id: newPid, name: "Fig Board" }, project_id: newPid, summary: "built" } },
+  });
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "apx-cli-"));
+  process.env.APPBRICX_CONFIG = path.join(dir, "cfg.json");
+  process.env.APPBRICX_API = f.api;
+  process.env.APPBRICX_TOKEN = "apx_pat_test";
+  process.env.APPBRICX_PROJECT = pid;
+  const out = [];
+  const io = { cwd: dir, out: (s) => out.push(s), err: (s) => out.push(s) };
+  try {
+    assert.equal(await main(["templates", "search", "comments", "--kind", "block"], io), 0);
+    assert.ok(out.some((l) => /comments\s+block\s+Threaded comments/.test(l)));
+    assert.equal(await main(["templates", "show", "comments"], io), 0);
+    assert.ok(out.some((l) => l.includes("tables:     comment") && l.includes("attach_to (entity)")));
+    assert.equal(await main(["templates", "use", "comments", "--param", "attach_to=task", "--dry-run"], io), 0);
+    const use = f.calls.find((c) => c.url === "/dev/v1/templates/comments/use");
+    assert.deepEqual(use.body, { project_id: pid, params: { attach_to: "task" }, dry_run: true });
+    assert.ok(out.some((l) => l.includes("+ table comment")));
+
+    delete process.env.APPBRICX_PROJECT;
+    assert.equal(await main(["templates", "use", "kanbo", "--name", "Fig Board"], io), 0);
+    const app = f.calls.find((c) => c.url === "/dev/v1/templates/kanbo/use");
+    assert.deepEqual(app.body, { name: "Fig Board" }, "an app template starts a new project");
+    const link = JSON.parse(await fs.readFile(path.join(dir, ".appbricx", "project.json"), "utf-8"));
+    assert.equal(link.projectId, newPid, "and links the directory to it");
+
+    assert.equal(await main(["templates", "use"], io), 2);
+    assert.equal(await main(["templates", "search", "--kind", "page"], io), 2);
+    assert.equal(await main(["templates", "use", "comments", "--param", "oops"], io), 2);
+  } finally {
+    delete process.env.APPBRICX_PROJECT;
+    await f.close();
+  }
+});

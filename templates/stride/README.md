@@ -8,9 +8,9 @@ start your own app from it. Seed rows come from the showcase's preview data
 
 ## What you get
 
-- Athlete home with streak ring and weekly volume chart
-- Workout logging and daily check-in
-- Coach roster and feedback
+- Athlete home with a live streak, check-in and workout log
+- Activity heatmap with a 12-week summary
+- Coach roster with a review queue, and an athlete detail page for replies and notes
 
 Platform features it uses:
 
@@ -22,7 +22,7 @@ Platform features it uses:
 | | |
 |---|---|
 | Tables | `coach`, `athlete`, `plan_day`, `workout`, `checkin`, `feedback`, `digest` |
-| Custom screens | `AthleteHome`, `StrideLogin`, `CheckIn`, `LogWorkout`, `Activity`, `CoachRoster`, `CoachAthlete` |
+| Custom screens | `AthleteHome`, `StrideLogin`, `CheckIn`, `LogWorkout`, `Activity`, `CoachRoster`, `CoachAthlete`, `CoachNav` |
 | Roles | `athlete` (consumer), `coach` (staff) |
 
 Workflows:
@@ -30,6 +30,27 @@ Workflows:
 - `workout-logged-notify-coach`: Workout logged: notify the coach
 - `feedback-notify-athlete`: Coach feedback: notify the athlete
 - `weekly-digest`: Monday 07:00 weekly digest
+
+## Screens
+
+| Route | Page | Who |
+|---|---|---|
+| `/` | Home | `athlete` |
+| `/checkin` | Check-in | `athlete` |
+| `/log` | Log | `athlete` |
+| `/activity` | Activity | `athlete` |
+| `/coach` | Roster | `coach` |
+| `/coach/athlete/:id` | Athlete | `coach` |
+| `/team` | Team & access | `coach` |
+
+## What changed in this version
+
+The showcase app was polished on design, phones and data, and this template follows it:
+
+- New `CoachNav` component gives the coach's Team & access page the coach navigation.
+- Theme `electric-slate` with direction `editorial`; text glow removed and contrast fixed.
+- Activity heatmap gets a 12-week summary; the coach roster and athlete pages use initials avatars and clearer review-queue rows.
+- Seeds rebuilt from the refreshed showcase: the 200 most recent workouts (the per-table limit), 94 check-ins, 135 coach replies and 32 weekly digests.
 
 ## Use this template
 

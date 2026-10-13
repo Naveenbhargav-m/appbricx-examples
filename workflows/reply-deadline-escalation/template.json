@@ -1,0 +1,22 @@
+{
+  "slug": "reply-deadline-escalation",
+  "kind": "workflow",
+  "title": "Reply deadline escalation",
+  "summary": "Escalates tickets or requests nobody has answered within your deadline, to a lead and the assignee.",
+  "description": "Every 30 minutes, finds rows that have sat in a waiting status (new, open, waiting on us) for longer than your deadline, stamps them escalated_at and notifies the role you choose, plus the assigned person when you name one. When a row moves back into the waiting status its clock restarts, so a second wait can escalate again.",
+  "category": "support",
+  "tags": ["sla", "support", "tickets", "escalation", "schedule"],
+  "params": [
+    { "name": "ticket", "type": "entity", "label": "Tickets table", "description": "The table of tickets, requests or enquiries that need a reply.", "default": ["ticket", "request", "enquiry", "inquiry"], "example": "ticket" },
+    { "name": "status_field", "type": "field", "of": "ticket", "field_types": ["enum"], "label": "Status field", "description": "The status enum.", "default": ["status", "state", "stage"], "example": "status" },
+    { "name": "waiting_value", "type": "value", "of": "status_field", "label": "Waiting status", "description": "The status value that means a reply is owed.", "default": ["new", "open", "waiting", "waiting_on_agent", "pending"], "example": "new" },
+    { "name": "hours", "type": "text", "label": "Deadline in hours", "description": "How many hours a row may wait before it escalates.", "default": "4", "pattern": "^[1-9][0-9]{0,2}$", "example": "4" },
+    { "name": "escalate_role", "type": "role", "kind": "staff", "label": "Escalate to", "description": "The role told about late rows.", "default": ["@first_staff"], "example": "lead" },
+    { "name": "assignee_ref", "type": "field", "of": "ticket", "field_types": ["ref"], "label": "Assigned person", "description": "Optional: the ref naming who should reply, so they are told too.", "required": false, "example": "assignee_id" }
+  ],
+  "requires": { "notes": ["A table with a status enum that has a waiting value."] },
+  "fragment": "fragment.json",
+  "includes": ["Fields waiting_since and escalated_at", "A check every 30 minutes", "A workflow that restarts the clock when a row waits again"],
+  "highlights": ["Escalates once per wait, never repeatedly", "Tells the assignee and the lead"],
+  "order": 35
+}

@@ -1,0 +1,30 @@
+{
+  "components": [
+    {
+      "name": "CsvExport",
+      "kind": "code",
+      "purpose": "Download the rows of a table the viewer may see as a CSV file, with a preview of the first rows",
+      "props": { "title": { "type": "text" }, "entity": { "type": "text" }, "columns": { "type": "text" } },
+      "sample": { "title": "Export", "entity": "", "columns": "" },
+      "fallback": { "EmptyState": { "title": "The export is loading", "description": "Refresh the page to try again." } },
+      "source_file": "CsvExport.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "export",
+      "route": "/export",
+      "title": "Export",
+      "icon": "Download",
+      "personas": ["{{param.page_role}}"],
+      "capabilities": { "create": false, "edit": false, "delete": false },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          { "kind": "header", "title": "Export", "subtitle": "Take your data with you as a spreadsheet." },
+          { "kind": "custom", "custom": "CsvExport", "props": { "title": "{{param.entity|title}} rows", "entity": "{{param.entity}}", "columns": "" } }
+        ]
+      }
+    }
+  ]
+}

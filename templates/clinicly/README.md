@@ -8,9 +8,10 @@ start your own app from it. Seed rows come from the showcase's preview data
 
 ## What you get
 
-- Find a doctor and book a slot
-- Doctor day timeline and visit notes
-- Front desk check-in
+- Find a doctor, book a visit from free times only, then a confirmation
+- My visits and visit history for patients
+- Doctor's day timeline with an appointment panel, visit notes and AI patient summaries
+- Front desk list with filters, check-in and a reschedule sheet
 
 Platform features it uses:
 
@@ -31,6 +32,29 @@ Workflows:
 - `hourly-reminders`: Hourly: remind patients of appointments in the next 24 hours
 - `notify-reminder`: Deliver the reminder to the patient
 - `notes-ready`: Tell the patient their visit notes are ready
+
+## Screens
+
+| Route | Page | Who |
+|---|---|---|
+| `/day` | My day | `doctor` |
+| `/book` | Find a doctor | `patient` |
+| `/visits` | My visits | `patient` |
+| `/history` | History | `patient` |
+| `/book/:id` | Book a visit | `patient` |
+| `/front-desk` | Front desk | `desk` |
+| `/team` | Team & access | `doctor` |
+
+## What changed in this version
+
+The showcase app was polished on design, phones and data, and this template follows it:
+
+- Direction `crisp-saas` (was `editorial`); sign-in contrast fixed, no gradients or blobs, one font across sign-in and app.
+- Booking shows only free times with "N free / Full" per day and an explicit Confirm booking step.
+- Doctor's day: one progress summary, allergy flag, AI summaries with loading, retry and a "Watch:" callout. Front desk: per-doctor counts and a Now marker.
+- Reminder messages now read like "Tue 13 Oct at 15:00" plus the preparation note.
+- Seeds rebuilt: 16 patients, 74 appointments across all 8 doctors and 28 visit notes.
+- The showcase's daily "roll demo calendar" workflow is left out: it moves every appointment forward each day and is only there to keep the public demo fresh.
 
 ## Use this template
 

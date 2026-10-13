@@ -1,0 +1,596 @@
+{
+  "entities": [
+    {
+      "name": "organisation",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "about",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "website",
+          "type": "url",
+          "optional": true
+        },
+        {
+          "name": "owner_id",
+          "type": "ref",
+          "ref": "{{param.member_role}}"
+        }
+      ],
+      "actor_ref": "owner_id",
+      "owner_refs": [
+        "owner_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.member_role}}": {
+          "read": "org",
+          "create": true,
+          "update": "org_admin",
+          "delete": "org_admin"
+        }
+      },
+      "rules": [
+        {
+          "id": "organisation-name",
+          "on": "both",
+          "message": "Give the organisation a name of 2 to 80 characters.",
+          "check": "const name = String(row.name ?? \"\").trim();\nreturn (name.length >= 2 && name.length <= 80) || \"Give the organisation a name of 2 to 80 characters.\";"
+        }
+      ]
+    },
+    {
+      "name": "team",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "organisation_id",
+          "type": "ref",
+          "ref": "organisation"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "optional": true
+        }
+      ],
+      "org_field": "organisation_id",
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.member_role}}": {
+          "read": "org",
+          "create": true,
+          "update": "org_admin",
+          "delete": "org_admin"
+        }
+      },
+      "rules": [
+        {
+          "id": "team-org-admin",
+          "on": "both",
+          "message": "Only the organisation's owner or admins can do that.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nif (!ctx.user || ctx.user.role !== \"{{param.member_role}}\") return true;\nconst me = await ctx.me(\"{{param.member_role}}\");\nconst org = rows(await ctx.db.query(\"select owner_id from organisation where id = $1\", [row.organisation_id]))[0];\nif (!org) return \"That organisation doesn't exist.\";\nif (String(org.owner_id) === String(me)) return true;\nconst mine = rows(await ctx.db.query(\"select role from membership where organisation_id = $1 and member_id = $2\", [row.organisation_id, me]));\nreturn mine.some((m) => m.role === \"owner\" || m.role === \"admin\") || \"Only the organisation's owner or admins can do that.\";"
+        }
+      ]
+    },
+    {
+      "name": "membership",
+      "label_field": "role",
+      "fields": [
+        {
+          "name": "organisation_id",
+          "type": "ref",
+          "ref": "organisation"
+        },
+        {
+          "name": "member_id",
+          "type": "ref",
+          "ref": "{{param.member_role}}"
+        },
+        {
+          "name": "team_id",
+          "type": "ref",
+          "ref": "team",
+          "optional": true
+        },
+        {
+          "name": "role",
+          "type": "enum",
+          "enum_values": [
+            "owner",
+            "admin",
+            "member"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "active",
+            "paused"
+          ]
+        }
+      ],
+      "unique": [
+        [
+          "organisation_id",
+          "member_id"
+        ]
+      ],
+      "org_membership": {
+        "org_ref": "organisation_id",
+        "member_ref": "member_id",
+        "role_field": "role",
+        "admin_values": [
+          "owner",
+          "admin"
+        ],
+        "status_field": "status",
+        "active_values": [
+          "active"
+        ]
+      },
+      "owner_refs": [
+        "member_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.member_role}}": {
+          "read": "org",
+          "create": true,
+          "update": "org_admin",
+          "delete": "org_admin"
+        }
+      },
+      "rules": [
+        {
+          "id": "membership-org-admin",
+          "on": "both",
+          "message": "Only the organisation's owner or admins can do that.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nif (!ctx.user || ctx.user.role !== \"{{param.member_role}}\") return true;\nconst me = await ctx.me(\"{{param.member_role}}\");\nconst org = rows(await ctx.db.query(\"select owner_id from organisation where id = $1\", [row.organisation_id]))[0];\nif (!org) return \"That organisation doesn't exist.\";\nif (String(org.owner_id) === String(me)) return true;\nconst mine = rows(await ctx.db.query(\"select role from membership where organisation_id = $1 and member_id = $2\", [row.organisation_id, me]));\nreturn mine.some((m) => m.role === \"owner\" || m.role === \"admin\") || \"Only the organisation's owner or admins can do that.\";"
+        },
+        {
+          "id": "membership-fixed",
+          "on": "both",
+          "message": "A membership stays with its person and organisation.",
+          "check": "if (ctx.old && (String(ctx.old.organisation_id) !== String(row.organisation_id) || String(ctx.old.member_id) !== String(row.member_id))) return \"A membership stays with its person and organisation.\";\nif (ctx.old && String(ctx.old.role) === \"owner\" && String(row.role) !== \"owner\") return \"The owner stays the owner. Hand over ownership on the organisation first.\";\nif (!ctx.old && String(row.role) === \"owner\" && ctx.user && ctx.user.role === \"{{param.member_role}}\") return \"An organisation has one owner: the person who created it.\";\nreturn true;"
+        }
+      ]
+    },
+    {
+      "name": "invitation",
+      "label_field": "email",
+      "fields": [
+        {
+          "name": "organisation_id",
+          "type": "ref",
+          "ref": "organisation"
+        },
+        {
+          "name": "email",
+          "type": "email"
+        },
+        {
+          "name": "role",
+          "type": "enum",
+          "enum_values": [
+            "member",
+            "admin"
+          ]
+        },
+        {
+          "name": "team_id",
+          "type": "ref",
+          "ref": "team",
+          "optional": true
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "pending",
+            "accepted",
+            "revoked"
+          ]
+        },
+        {
+          "name": "invited_by",
+          "type": "ref",
+          "ref": "{{param.member_role}}",
+          "optional": true
+        }
+      ],
+      "org_field": "organisation_id",
+      "actor_ref": "invited_by",
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.member_role}}": {
+          "read": "org_admin",
+          "create": true,
+          "update": "org_admin",
+          "delete": "org_admin"
+        }
+      },
+      "rules": [
+        {
+          "id": "invitation-org-admin",
+          "on": "create",
+          "message": "Only the organisation's owner or admins can do that.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nif (!ctx.user || ctx.user.role !== \"{{param.member_role}}\") return true;\nconst me = await ctx.me(\"{{param.member_role}}\");\nconst org = rows(await ctx.db.query(\"select owner_id from organisation where id = $1\", [row.organisation_id]))[0];\nif (!org) return \"That organisation doesn't exist.\";\nif (String(org.owner_id) === String(me)) return true;\nconst mine = rows(await ctx.db.query(\"select role from membership where organisation_id = $1 and member_id = $2\", [row.organisation_id, me]));\nreturn mine.some((m) => m.role === \"owner\" || m.role === \"admin\") || \"Only the organisation's owner or admins can do that.\";"
+        }
+      ]
+    }
+  ],
+  "extend": [
+    {
+      "$if": "attach_to",
+      "entity": "{{param.attach_to}}",
+      "fields": [
+        {
+          "name": "organisation_id",
+          "type": "ref",
+          "ref": "organisation",
+          "optional": true
+        }
+      ],
+      "org_field": "organisation_id",
+      "access": {
+        "{{param.member_role}}": {
+          "read": "org",
+          "create": true,
+          "update": "org",
+          "delete": "org_admin"
+        }
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "organisation-owner",
+      "title": "Make the creator the organisation's owner",
+      "on": {
+        "entity": "organisation",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "await ctx.db.create(\"membership\", { organisation_id: String(row[\"id\"]), member_id: String(row[\"owner_id\"] ?? \"\"), role: \"owner\", status: \"active\" });"
+        }
+      ]
+    },
+    {
+      "id": "invitation-send",
+      "title": "Add or email the person invited",
+      "on": {
+        "entity": "invitation",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const org = await ctx.db.get(\"organisation\", String(row[\"organisation_id\"] ?? \"\"));\nconst orgName = org ? String(org[\"name\"] ?? \"an organisation\") : \"an organisation\";\nconst email = String(row[\"email\"] ?? \"\").trim().toLowerCase();\nif (!email) return;\nconst emailField = \"{{param.email_field}}\";\nif (emailField) {\n  const people = await ctx.db.list(\"{{param.member_role}}\", { limit: 1000 });\n  const person = people.find((p) => String(p[emailField] ?? \"\").trim().toLowerCase() === email);\n  if (person) {\n    await ctx.db.create(\"membership\", { organisation_id: String(row[\"organisation_id\"]), member_id: String(person[\"id\"]), team_id: row[\"team_id\"] ?? null, role: String(row[\"role\"] ?? \"member\"), status: \"active\" });\n    await ctx.db.update(\"invitation\", String(row[\"id\"]), { status: \"accepted\" });\n    if (person[\"user_id\"]) await ctx.notify({ title: `You joined ${orgName}`, body: `You were added as ${String(row[\"role\"] ?? \"member\")}.`, user: String(person[\"user_id\"]) });\n    return;\n  }\n}\nawait ctx.email({ to: email, subject: `You're invited to join ${orgName}`, body: `You've been invited to join ${orgName} as ${String(row[\"role\"] ?? \"member\")}.\\n\\nSign up with this email address (${email}) and you'll be added automatically.` });"
+        }
+      ]
+    },
+    {
+      "$if": "email_field",
+      "id": "invitation-join",
+      "title": "Add new signups to the organisations that invited them",
+      "on": {
+        "entity": "{{param.member_role}}",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const email = String(row[\"{{param.email_field}}\"] ?? \"\").trim().toLowerCase();\nif (!email) return;\nconst pending = await ctx.db.list(\"invitation\", { filter: { status: \"pending\" }, limit: 1000 });\nfor (const inv of pending) {\n  if (String(inv[\"email\"] ?? \"\").trim().toLowerCase() !== email || String(inv[\"status\"]) !== \"pending\") continue;\n  await ctx.db.create(\"membership\", { organisation_id: String(inv[\"organisation_id\"]), member_id: String(row[\"id\"]), team_id: inv[\"team_id\"] ?? null, role: String(inv[\"role\"] ?? \"member\"), status: \"active\" });\n  await ctx.db.update(\"invitation\", String(inv[\"id\"]), { status: \"accepted\" });\n}"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "OrganisationConsole",
+      "kind": "code",
+      "purpose": "One organisation: members with roles, teams, and invitations, managed by its owner and admins",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Organisation"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "The organisation is loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "OrganisationConsole.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "organisations",
+      "route": "/organisations",
+      "title": "Organisations",
+      "icon": "Building2",
+      "personas": [
+        "{{param.member_role}}"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Organisations",
+            "subtitle": "Start one for your company or club, then invite the people you work with."
+          },
+          {
+            "kind": "block",
+            "block": "EntityList",
+            "props": {
+              "entity": "organisation",
+              "presentation": "cards",
+              "columns": [
+                "name",
+                "about",
+                "website"
+              ],
+              "searchField": "name",
+              "emptyCopy": "No organisations yet. Create the first one and invite your team."
+            }
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "organisation",
+          "mode": "create",
+          "layout": "dialog",
+          "fields": [
+            "name",
+            "about",
+            "website"
+          ],
+          "submitLabel": "Create organisation",
+          "successCopy": "Created. You're its owner."
+        }
+      }
+    },
+    {
+      "name": "organisation-detail",
+      "route": "/organisations/:id",
+      "title": "Organisation",
+      "icon": "Building2",
+      "detailOf": "organisation",
+      "personas": [
+        "{{param.member_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "OrganisationConsole",
+        "props": {
+          "title": "Organisation"
+        }
+      }
+    },
+    {
+      "name": "organisations-admin",
+      "route": "/organisations-admin",
+      "title": "All organisations",
+      "icon": "Building2",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "All organisations",
+            "subtitle": "Every organisation, its teams, members and open invitations."
+          },
+          {
+            "kind": "tabs",
+            "tabs": [
+              {
+                "label": "Organisations",
+                "child": {
+                  "kind": "block",
+                  "block": "EntityList",
+                  "props": {
+                    "entity": "organisation",
+                    "presentation": "table",
+                    "columns": [
+                      "name",
+                      "owner_id",
+                      "website",
+                      "created_at"
+                    ],
+                    "searchField": "name",
+                    "emptyCopy": "No organisations yet."
+                  }
+                }
+              },
+              {
+                "label": "Teams",
+                "child": {
+                  "kind": "stack",
+                  "children": [
+                    {
+                      "kind": "block",
+                      "block": "EntityList",
+                      "props": {
+                        "entity": "team",
+                        "presentation": "table",
+                        "columns": [
+                          "name",
+                          "organisation_id",
+                          "description"
+                        ],
+                        "emptyCopy": "No teams yet."
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": "EntityForm",
+                      "props": {
+                        "entity": "team",
+                        "mode": "create",
+                        "layout": "page",
+                        "fields": [
+                          "organisation_id",
+                          "name",
+                          "description"
+                        ],
+                        "submitLabel": "Add team"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Members",
+                "child": {
+                  "kind": "stack",
+                  "children": [
+                    {
+                      "kind": "block",
+                      "block": "EntityList",
+                      "props": {
+                        "entity": "membership",
+                        "presentation": "grouped",
+                        "groupBy": "organisation_id",
+                        "columns": [
+                          "member_id",
+                          "role",
+                          "team_id",
+                          "status"
+                        ],
+                        "emptyCopy": "No members yet."
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": "EntityForm",
+                      "props": {
+                        "entity": "membership",
+                        "mode": "create",
+                        "layout": "page",
+                        "fields": [
+                          "organisation_id",
+                          "member_id",
+                          "team_id",
+                          "role"
+                        ],
+                        "submitLabel": "Add member"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "label": "Invitations",
+                "child": {
+                  "kind": "stack",
+                  "children": [
+                    {
+                      "kind": "block",
+                      "block": "EntityList",
+                      "props": {
+                        "entity": "invitation",
+                        "presentation": "table",
+                        "columns": [
+                          "email",
+                          "organisation_id",
+                          "role",
+                          "status",
+                          "created_at"
+                        ],
+                        "searchField": "email",
+                        "emptyCopy": "No invitations yet."
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": "EntityForm",
+                      "props": {
+                        "entity": "invitation",
+                        "mode": "create",
+                        "layout": "page",
+                        "fields": [
+                          "organisation_id",
+                          "email",
+                          "role",
+                          "team_id"
+                        ],
+                        "submitLabel": "Send invitation"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "organisation",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "name",
+            "about",
+            "website",
+            "owner_id"
+          ],
+          "submitLabel": "Save organisation"
+        }
+      }
+    }
+  ]
+}

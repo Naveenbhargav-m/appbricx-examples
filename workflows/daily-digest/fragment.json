@@ -1,0 +1,23 @@
+{
+  "workflows": [
+    {
+      "id": "daily-digest",
+      "title": "Daily {{param.entity}} digest",
+      "on": { "schedule": "daily {{param.time}}", "entity": "{{param.entity}}", "tz": "{{param.tz}}" },
+      "do": [
+        {
+          "action": "notify",
+          "role": "{{param.role}}",
+          "title": "{{count}} new {{param.entity|title}} rows",
+          "body": "In {{period}}:\n{{items}}"
+        },
+        {
+          "action": "email",
+          "to": "{{param.role}}",
+          "subject": "Your daily digest: {{count}} new {{param.entity|title}} rows",
+          "body": "Here is what came in over {{period}} ({{date}}).\n\n{{count}} new {{param.entity|title}} rows. The latest:\n{{items}}\n\nOpen the app for the full list."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "slug": "notifications",
+  "kind": "block",
+  "title": "Notifications",
+  "summary": "An in-app inbox for each person, with email and text message preferences they control.",
+  "description": "Adds a notification table, an Inbox page with unread counts, mark read and live updates, and a settings page where each person chooses email and text messages. Every new notification lands in the inbox and is emailed (unless the person turned email off); people who opt in to texts get an SMS through your connected Twilio. Staff can send a notification by hand, and any workflow can create one with ctx.db.create(\"notification\", ...).",
+  "category": "notifications",
+  "tags": ["notifications", "inbox", "email", "sms", "preferences"],
+  "params": [
+    { "name": "recipient_role", "type": "role", "label": "Who receives them", "description": "The role whose people get notifications (their own table is the recipient).", "default": ["@first"], "example": "member" },
+    { "name": "email_field", "type": "field", "of": "recipient_role", "field_types": ["email"], "label": "Their email field", "description": "Optional: the email field on that role's table, for the email copy.", "required": false, "default": ["email"], "example": "email" },
+    { "name": "sms_from", "type": "text", "label": "Twilio number", "description": "Optional: your Twilio phone number (E.164, like +15550100). Leave it out and texts stay off.", "required": false, "pattern": "^\\+[1-9][0-9]{6,14}$", "example": "+15550100" }
+  ],
+  "requires": { "integrations": ["twilio"], "notes": ["Text messages need Twilio connected and sms_from set; email and the inbox work without them."] },
+  "fragment": "fragment.json",
+  "includes": ["Tables notification and notification_preference", "Inbox and settings components with their pages", "A staff page to send a notification by hand", "Workflows that email and text each notification as the person prefers"],
+  "highlights": ["Private: people read only their own notifications", "Rule: a notification can be marked read, not edited", "Live inbox with unread count"],
+  "order": 24
+}

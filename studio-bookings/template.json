@@ -1,0 +1,54 @@
+{
+  "slug": "studio-bookings",
+  "kind": "app",
+  "title": "Studio Bookings",
+  "summary": "Class booking for a yoga and pilates studio: members book in two taps, instructors run the schedule.",
+  "description": "The app from the Appbricx tutorial. Members sign up, pick a day and book a class; a rule refuses a full class. Instructors get a desk with tomorrow's rosters, check-in and a chart of mats booked, plus a morning digest. It also shows a server function calling a weather API and an AI class finder.",
+  "category": "bookings",
+  "tags": [
+    "bookings",
+    "classes",
+    "fitness",
+    "schedule",
+    "studio"
+  ],
+  "screenshots": [
+    {
+      "src": "/docs/tutorial/schedule-ai.webp",
+      "alt": "Studio Bookings schedule with the AI class finder",
+      "kind": "desktop",
+      "width": 1280,
+      "height": 910
+    },
+    {
+      "src": "/docs/tutorial/schedule-phone.webp",
+      "alt": "Studio Bookings schedule on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1697
+    },
+    {
+      "src": "/docs/tutorial/desk.webp",
+      "alt": "The instructor desk with rosters and check-in",
+      "kind": "detail",
+      "width": 1280,
+      "height": 910
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://example-bookings.apps.appbricx.com",
+  "roles_summary": "Members sign up and book. Instructors run the schedule.",
+  "includes": [
+    "Weekly schedule with one-tap booking",
+    "My classes with cancel",
+    "Instructor desk with rosters, check-in and a bookings chart"
+  ],
+  "highlights": [
+    "Business rule: no booking a full class",
+    "Server function calling a weather API",
+    "AI class finder",
+    "Sign in with Google",
+    "Workflows and a morning digest"
+  ],
+  "order": 1
+}

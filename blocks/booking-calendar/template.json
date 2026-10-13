@@ -1,0 +1,66 @@
+{
+  "slug": "booking-calendar",
+  "kind": "block",
+  "title": "Booking calendar",
+  "summary": "Bookable time slots with capacity, a day picker, my bookings with cancel, and rules that stop double-booking.",
+  "description": "Adds time slots attached to whatever people book (a room, a coach, a class type, a court) and reservations against them. People pick a day, see places left and book; they can cancel their own upcoming bookings. Staff manage times on a week calendar and book people in by hand. Rules refuse a full slot, a slot that has started, two overlapping bookings for the same person, and two overlapping slots for the same resource.",
+  "category": "bookings",
+  "tags": [
+    "bookings",
+    "calendar",
+    "slots",
+    "capacity",
+    "reservations",
+    "scheduling"
+  ],
+  "params": [
+    {
+      "name": "attach_to",
+      "type": "entity",
+      "label": "What is booked",
+      "description": "The table of things people book time with (rooms, coaches, courts, services).",
+      "example": "room"
+    },
+    {
+      "name": "booker_role",
+      "type": "role",
+      "label": "Who books",
+      "description": "The role whose people make bookings (their own table is the booker).",
+      "default": [
+        "@first_consumer",
+        "@first"
+      ],
+      "example": "member"
+    },
+    {
+      "name": "org_field",
+      "type": "field",
+      "of": "attach_to",
+      "field_types": [
+        "ref"
+      ],
+      "label": "Organisation (optional)",
+      "description": "Optional: the ref on that table naming its organisation (from organisations-and-teams). Time slots then belong to that organisation and only its members see and book them.",
+      "required": false,
+      "example": "organisation_id"
+    }
+  ],
+  "requires": {
+    "notes": [
+      "A table of things to book and a role with its own table for the people booking."
+    ]
+  },
+  "fragment": "fragment.json",
+  "includes": [
+    "Tables slot and reservation",
+    "SlotPicker and MyReservations components with their pages",
+    "Staff week calendar and reservations list",
+    "Workflows that keep places left up to date"
+  ],
+  "highlights": [
+    "Rule: no double-booking, for people and for resources",
+    "Rule: no booking a full or started slot",
+    "Cancel is a request the server applies: nobody edits a booking by hand"
+  ],
+  "order": 21
+}

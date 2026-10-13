@@ -1,0 +1,20 @@
+{
+  "workflows": [
+    {
+      "id": "slack-on-signup",
+      "title": "Tell Slack about new {{param.person}} signups",
+      "on": { "entity": "{{param.person}}", "event": "created" },
+      "do": [
+        {
+          "action": "integration",
+          "integration": "slack",
+          "call": "send_channel_message",
+          "props": {
+            "channel": "{{param.channel}}",
+            "text": "New {{param.person|title}} signed up: {{{{param.person.label_field}}}}"
+          }
+        }
+      ]
+    }
+  ]
+}

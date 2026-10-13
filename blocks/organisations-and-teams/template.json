@@ -1,0 +1,70 @@
+{
+  "slug": "organisations-and-teams",
+  "kind": "block",
+  "title": "Organisations and teams",
+  "summary": "Let people create organisations, form teams, invite colleagues by email and give them owner, admin or member roles.",
+  "description": "Adds organisations, teams, memberships with roles and email invitations, private to the members of each organisation: Postgres row-level security shows a person only the organisations they belong to and everything in them. Whoever creates an organisation becomes its owner; owners and admins invite people by email, create teams and change roles. An invited person who already has an account joins straight away; anyone else gets an email and joins when they sign up with that address. Optionally makes one of your tables (projects, accounts) belong to an organisation, private to its members too.",
+  "category": "teams",
+  "tags": [
+    "organisations",
+    "teams",
+    "members",
+    "roles",
+    "invitations",
+    "b2b"
+  ],
+  "params": [
+    {
+      "name": "member_role",
+      "type": "role",
+      "label": "Who joins organisations",
+      "description": "The role whose people create and join organisations (their own table holds the members).",
+      "default": [
+        "@first"
+      ],
+      "example": "member"
+    },
+    {
+      "name": "email_field",
+      "type": "field",
+      "of": "member_role",
+      "field_types": [
+        "email"
+      ],
+      "label": "Their email field",
+      "description": "Optional: the email field on that role's table, used to match invitations to people.",
+      "required": false,
+      "default": [
+        "email"
+      ],
+      "example": "email"
+    },
+    {
+      "name": "attach_to",
+      "type": "entity",
+      "label": "Records that belong to an organisation",
+      "description": "Optional: a table of yours (projects, accounts) whose rows then belong to an organisation: it gets organisation_id, and that role sees and changes only its organisations' rows.",
+      "required": false,
+      "example": "project"
+    }
+  ],
+  "requires": {
+    "notes": [
+      "The joining role needs its own table (an entity named like the role)."
+    ]
+  },
+  "fragment": "fragment.json",
+  "includes": [
+    "Tables organisation, team, membership and invitation",
+    "Organisations list and an organisation console (members, roles, teams, invites)",
+    "A staff overview of every organisation",
+    "Workflows: owner membership, invite or add by email, join on signup"
+  ],
+  "highlights": [
+    "Organisation scope enforced by Postgres: members never see another organisation's rows",
+    "Only owners and admins manage an organisation (org_admin access plus rules)",
+    "One owner per organisation, kept by a rule",
+    "Invitations by email that join on signup"
+  ],
+  "order": 20
+}

@@ -1,0 +1,9 @@
+{
+  "name": "appbricx",
+  "version": "1.0.0",
+  "description": "Build, verify and deploy full-stack apps on Appbricx: Postgres, sign-in, workflows, realtime, AI, rollback.",
+  "mcpServers": {
+    "appbricx": { "httpUrl": "https://www.appbricx.com/api/mcp" }
+  },
+  "contextFileName": "GEMINI.md"
+}

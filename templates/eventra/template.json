@@ -1,0 +1,52 @@
+{
+  "slug": "eventra",
+  "kind": "app",
+  "title": "Eventra",
+  "summary": "Event ticketing with ticket tiers, QR passes and a door check-in screen.",
+  "description": "Attendees discover events and buy tickets that become QR passes; organizers watch a live dashboard; door staff scan people in. Rules stop selling past capacity and checking a ticket in twice, and attendees get a reminder the day before.",
+  "category": "events",
+  "tags": [
+    "events",
+    "tickets",
+    "qr",
+    "check-in",
+    "realtime"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/eventra-desktop.webp",
+      "alt": "Eventra on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/eventra-phone.webp",
+      "alt": "Eventra on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/eventra-signin.webp",
+      "alt": "Eventra sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://eventra.apps.appbricx.com",
+  "roles_summary": "Attendees sign up. Organizers run events. Door staff check people in.",
+  "includes": [
+    "Event discovery and ticket tiers",
+    "Tickets as QR passes",
+    "Live organizer dashboard and a check-in screen"
+  ],
+  "highlights": [
+    "Rules: no selling past capacity, no double check-in",
+    "Live counters",
+    "Reminder the day before"
+  ],
+  "order": 8
+}

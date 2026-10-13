@@ -1,0 +1,52 @@
+{
+  "slug": "learnly",
+  "kind": "app",
+  "title": "Learnly",
+  "summary": "Online courses with lessons, quizzes, progress and certificates.",
+  "description": "Students enrol, read lessons, take quizzes and earn a certificate; instructors build courses and see scores. A rule allows three quiz attempts, completing a course fires a workflow, and an AI hint helps without giving the answer away.",
+  "category": "learning",
+  "tags": [
+    "courses",
+    "learning",
+    "quizzes",
+    "education",
+    "certificates"
+  ],
+  "screenshots": [
+    {
+      "src": "/showcase/learnly-desktop.webp",
+      "alt": "Learnly on desktop",
+      "kind": "desktop",
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "src": "/showcase/learnly-phone.webp",
+      "alt": "Learnly on a phone",
+      "kind": "phone",
+      "width": 600,
+      "height": 1298
+    },
+    {
+      "src": "/showcase/learnly-signin.webp",
+      "alt": "Learnly sign-in screen",
+      "kind": "signin",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "contract": "app.json",
+  "demo_url": "https://learnly.apps.appbricx.com",
+  "roles_summary": "Students sign up. Instructors build courses.",
+  "includes": [
+    "My courses with progress rings",
+    "Lesson reader and quizzes",
+    "Instructor course builder and scores"
+  ],
+  "highlights": [
+    "Rule: three quiz attempts at most",
+    "Course completion workflow",
+    "AI hint that doesn't give away the answer"
+  ],
+  "order": 9
+}

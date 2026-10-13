@@ -1,0 +1,21 @@
+{
+  "slug": "booking-confirmation-and-reminder",
+  "kind": "workflow",
+  "title": "Booking confirmation and reminder",
+  "summary": "Emails a confirmation when a booking is made and a reminder the day before it starts.",
+  "description": "Two workflows for any table of bookings, appointments or reservations. The confirmation goes out the moment the row is created; the reminder runs every hour and emails everyone whose booking starts within the next 24 hours, once. Cancelled and declined bookings are skipped. It adds one field, reminder_sent_at, so nobody is reminded twice.",
+  "category": "bookings",
+  "tags": ["bookings", "appointments", "email", "reminders", "schedule"],
+  "params": [
+    { "name": "booking", "type": "entity", "label": "Bookings table", "description": "The table of bookings, appointments or reservations.", "default": ["booking", "appointment", "reservation"], "example": "booking" },
+    { "name": "starts_field", "type": "field", "of": "booking", "field_types": ["timestamp", "date"], "label": "When it starts", "description": "The date or timestamp field holding when the booking starts.", "default": ["starts_at", "start_time", "date"], "example": "starts_at" },
+    { "name": "customer_ref", "type": "field", "of": "booking", "field_types": ["ref"], "label": "Who booked", "description": "The ref field on the booking that points at the person who made it.", "default": ["customer_id", "member_id", "guest_id", "patient_id"], "example": "customer_id" },
+    { "name": "email_field", "type": "field", "of": "customer_ref", "field_types": ["email"], "label": "Their email field", "description": "The email field on the person's table.", "default": ["email"], "example": "email" },
+    { "name": "tz", "type": "text", "label": "Time zone", "description": "The IANA time zone booking times are shown in, like Europe/London or America/New_York.", "default": "UTC", "pattern": "^[A-Za-z_]+(?:/[A-Za-z0-9_+-]+)*$", "example": "Europe/London" }
+  ],
+  "requires": { "notes": ["A bookings table with a start time and a ref to a person who has an email field."] },
+  "fragment": "fragment.json",
+  "includes": ["Confirmation email on every new booking", "Hourly reminder for bookings in the next 24 hours", "A reminder_sent_at field so nobody gets two"],
+  "highlights": ["Times shown in your time zone", "Skips cancelled and declined bookings"],
+  "order": 32
+}

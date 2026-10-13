@@ -133,3 +133,62 @@ export function formatRows(rows) {
   const line = (/** @type {string[]} */ vals) => vals.map((v, i) => v.padEnd(widths[i] ?? 0)).join("  ");
   return [line(cols), line(widths.map((w) => "-".repeat(w))), ...rows.map((r) => line(cols.map((c) => cell(r[c]))))].join("\n");
 }
+
+/**
+ * Search results, one template per line.
+ * @param {Array<Record<string, any>>} list
+ * @returns {string}
+ */
+export function formatTemplateList(list) {
+  if (list.length === 0) return "(no templates match: try fewer words or no filters)";
+  const w = Math.max(...list.map((t) => String(t.slug).length));
+  return [
+    ...list.map((t) => `${String(t.slug).padEnd(w)}  ${String(t.kind).padEnd(9)}  ${t.summary}`),
+    "",
+    "appbricx templates show <slug> for what it adds and its params",
+  ].join("\n");
+}
+
+/**
+ * One template: what it adds, params, setup, how to use it.
+ * @param {Record<string, any>} t
+ * @returns {string}
+ */
+export function formatTemplate(t) {
+  const out = [`${t.title} (${t.kind}, ${t.category_label})`, t.description ?? t.summary, ""];
+  const a = t.adds ?? {};
+  if (a.tables?.length) out.push(`tables:     ${a.tables.map((/** @type {any} */ x) => x.name).join(", ")}`);
+  if (a.extends?.length) out.push(`fields:     ${a.extends.map((/** @type {any} */ x) => `${x.entity}.${x.fields.join(`, ${x.entity}.`)}`).join(", ")}`);
+  if (a.roles?.length) out.push(`roles:      ${a.roles.map((/** @type {any} */ x) => x.id).join(", ")}`);
+  if (a.pages?.length) out.push(`pages:      ${a.pages.map((/** @type {any} */ x) => x.route).join(", ")}`);
+  if (a.workflows?.length) out.push(`workflows:  ${a.workflows.map((/** @type {any} */ x) => x.id).join(", ")}`);
+  if (a.components?.length) out.push(`components: ${a.components.map((/** @type {any} */ x) => x.name).join(", ")}`);
+  if (t.params?.length) {
+    out.push("", "params:");
+    for (const p of t.params) out.push(`  ${p.name} (${p.type}${p.required === false || p.default !== undefined ? ", optional" : ""}): ${p.description}`);
+  }
+  const req = t.requires ?? {};
+  if (req.secrets?.length || req.integrations?.length) out.push("", `needs: ${[...(req.secrets ?? []), ...(req.integrations ?? []).map((/** @type {string} */ i) => `${i} integration`)].join(", ")}`);
+  if (t.demo_url) out.push("", `live demo: ${t.demo_url}`);
+  if (t.use?.cli) out.push("", `use it: ${t.use.cli}`);
+  return out.join("\n");
+}
+
+/**
+ * The answer of templates use (applied or dry run).
+ * @param {Record<string, any>} r
+ * @returns {string}
+ */
+export function formatTemplateUse(r) {
+  const out = [];
+  if (r.dry_run) out.push(`dry run: ${r.template}${r.project_id ? ` → project ${r.project_id}` : " → a new project"} (nothing changed)`);
+  else if (r.created) out.push(`✓ created ${r.project?.name} (${r.project?.id}) from ${r.template} and linked this directory`);
+  else out.push(`✓ added ${r.template} to ${r.project_id} (dev)`);
+  if (r.params && Object.keys(r.params).length) out.push(`params: ${Object.entries(r.params).filter(([, v]) => v !== "").map(([k, v]) => `${k}=${v}`).join(" ")}`);
+  if (Array.isArray(r.diff)) out.push(...r.diff);
+  if (r.report) out.push("", formatContractReport(r.report));
+  if (r.summary) out.push("", r.summary);
+  for (const w of r.warnings ?? []) out.push(`⚠ ${w}`);
+  if (r.setup?.length) out.push("", `set up: ${r.setup.join(", ")}`);
+  return out.join("\n");
+}

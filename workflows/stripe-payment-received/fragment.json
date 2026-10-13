@@ -1,0 +1,167 @@
+{
+  "entities": [
+    {
+      "name": "stripe_payment",
+      "label_field": "payer_name",
+      "fields": [
+        {
+          "name": "session_id",
+          "type": "text"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "currency",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "optional": true
+        },
+        {
+          "name": "payer_name",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp"
+        }
+      ],
+      "unique": [
+        [
+          "session_id"
+        ]
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        }
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "id": "stripe-checkout-events",
+      "title": "Record each paid Stripe Checkout session",
+      "on": {
+        "webhook": "stripe-checkout-events",
+        "verify": {
+          "provider": "stripe",
+          "secret": "STRIPE_WEBHOOK_SECRET",
+          "events": [
+            "checkout.session.completed",
+            "checkout.session.async_payment_succeeded"
+          ]
+        }
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "type Obj = Record<string, unknown>;\nconst obj = ((row[\"data\"] as { object?: Obj } | undefined)?.object ?? {}) as Obj;\nconst sessionId = typeof obj[\"id\"] === \"string\" ? obj[\"id\"] : \"\";\nif (!sessionId || obj[\"payment_status\"] !== \"paid\") { ctx.log(`stripe: checkout ${sessionId || \"(no id)\"} not paid yet — nothing recorded`); return; }\nconst known = await ctx.db.list(\"stripe_payment\", { filter: { session_id: sessionId }, limit: 1 });\nif (known.length > 0) { ctx.log(`stripe: checkout ${sessionId} already recorded`); return; }\nconst details = (obj[\"customer_details\"] ?? {}) as { email?: string | null; name?: string | null };\nconst meta = (obj[\"metadata\"] ?? {}) as Record<string, string>;\nawait ctx.db.create(\"stripe_payment\", {\n  session_id: sessionId,\n  amount: Number(obj[\"amount_total\"] ?? 0) / 100,\n  currency: String(obj[\"currency\"] ?? \"usd\").toUpperCase(),\n  email: details.email ?? null,\n  payer_name: details.name ?? \"\",\n  description: meta[\"description\"] ?? \"\",\n  paid_at: new Date((Number(obj[\"created\"] ?? 0) || Math.floor(ctx.now().getTime() / 1000)) * 1000).toISOString(),\n});\nctx.log(`stripe: checkout ${sessionId} recorded`);"
+        }
+      ]
+    },
+    {
+      "id": "stripe-sync-payments",
+      "title": "Check Stripe for paid Checkout sessions (fallback)",
+      "on": {
+        "call": true,
+        "roles": [
+          "{{param.staff_role}}"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = await ctx.secrets.get(\"STRIPE_SECRET_KEY\");\nif (!key) throw new Error(\"Stripe isn't connected yet. Connect Stripe in the builder or add STRIPE_SECRET_KEY in the project settings.\");\nconst res = await ctx.http.fetch(\"https://api.stripe.com/v1/checkout/sessions?limit=50&status=complete\", { headers: { authorization: `Bearer ${key}` } });\nif (!res.ok) throw new Error(`Stripe answered ${res.status}. Check the key in the project settings.`);\ntype Session = { id: string; payment_status?: string; amount_total?: number | null; currency?: string | null; created?: number; customer_details?: { email?: string | null; name?: string | null } | null; metadata?: Record<string, string> | null };\nconst sessions = (res.json<{ data?: Session[] }>()?.data ?? []).filter((s) => s.payment_status === \"paid\");\nconst known = new Set((await ctx.db.list(\"stripe_payment\", { limit: 1000 })).map((r) => String(r[\"session_id\"])));\nlet added = 0;\nfor (const s of sessions) {\n  if (known.has(s.id)) continue;\n  await ctx.db.create(\"stripe_payment\", {\n    session_id: s.id,\n    amount: (s.amount_total ?? 0) / 100,\n    currency: (s.currency ?? \"usd\").toUpperCase(),\n    email: s.customer_details?.email ?? null,\n    payer_name: s.customer_details?.name ?? \"\",\n    description: s.metadata?.[\"description\"] ?? \"\",\n    paid_at: new Date((s.created ?? 0) * 1000).toISOString(),\n  });\n  added++;\n}\nctx.log(`stripe: ${sessions.length} paid sessions checked, ${added} new`);\nreturn { checked: sessions.length, added };"
+        }
+      ]
+    },
+    {
+      "id": "stripe-payment-received",
+      "title": "Tell staff and email a receipt for each new payment",
+      "on": {
+        "entity": "stripe_payment",
+        "event": "created"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const to = String(row[\"email\"] ?? \"\");\nconst amount = Number(row[\"amount\"] ?? 0).toFixed(2);\nconst currency = String(row[\"currency\"] ?? \"USD\");\nconst who = String(row[\"payer_name\"] ?? \"\") || to || \"a customer\";\nawait ctx.notify({ title: `Payment received: ${amount} ${currency}`, body: `From ${who}${row[\"description\"] ? ` for ${String(row[\"description\"])}` : \"\"}.`, role: \"{{param.staff_role}}\" });\nif (to) await ctx.email({ to, subject: `Receipt: ${amount} ${currency}`, body: `Thanks for your payment of ${amount} ${currency}${row[\"description\"] ? ` for ${String(row[\"description\"])}` : \"\"}.\\n\\nKeep this email as your receipt. Stripe reference: ${String(row[\"session_id\"])}.` });"
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "StripePayments",
+      "kind": "code",
+      "purpose": "Staff payments list, filled by Stripe's webhook, with a Check Stripe now fallback",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Payments"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Payments will be back in a moment",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "StripePayments.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "stripe-payments",
+      "route": "/stripe-payments",
+      "title": "Payments",
+      "icon": "CreditCard",
+      "personas": [
+        "{{param.staff_role}}"
+      ],
+      "layout": {
+        "kind": "custom",
+        "custom": "StripePayments",
+        "props": {
+          "title": "Payments"
+        }
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "stripe_payment",
+          "mode": "create",
+          "layout": "dialog",
+          "fields": [
+            "payer_name",
+            "email",
+            "amount",
+            "currency",
+            "description",
+            "paid_at",
+            "session_id"
+          ],
+          "submitLabel": "Record payment",
+          "successCopy": "Payment recorded."
+        }
+      }
+    }
+  ]
+}

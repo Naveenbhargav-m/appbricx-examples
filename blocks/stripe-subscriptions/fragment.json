@@ -1,0 +1,435 @@
+{
+  "entities": [
+    {
+      "name": "plan",
+      "label_field": "name",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "name": "currency",
+          "type": "enum",
+          "enum_values": [
+            "usd",
+            "eur",
+            "gbp"
+          ]
+        },
+        {
+          "name": "interval",
+          "type": "enum",
+          "enum_values": [
+            "month",
+            "year"
+          ]
+        },
+        {
+          "name": "stripe_price_id",
+          "type": "text"
+        },
+        {
+          "name": "features",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        },
+        {
+          "name": "sort",
+          "type": "number",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "name": "subscription",
+      "label_field": "status",
+      "fields": [
+        {
+          "name": "subscriber_id",
+          "type": "ref",
+          "ref": "{{param.subscriber_role}}"
+        },
+        {
+          "name": "plan_id",
+          "type": "ref",
+          "ref": "plan"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "enum_values": [
+            "pending",
+            "active",
+            "past_due",
+            "canceled"
+          ]
+        },
+        {
+          "name": "sync",
+          "type": "enum",
+          "enum_values": [
+            "idle",
+            "requested"
+          ],
+          "optional": true
+        },
+        {
+          "name": "stripe_session_id",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "stripe_subscription_id",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "stripe_customer_id",
+          "type": "text",
+          "optional": true
+        },
+        {
+          "name": "current_period_end",
+          "type": "timestamp",
+          "optional": true
+        }
+      ],
+      "actor_ref": "subscriber_id",
+      "owner_refs": [
+        "subscriber_id"
+      ],
+      "access": {
+        "@consumers": {
+          "read": "none",
+          "create": false,
+          "update": "none",
+          "delete": "none"
+        },
+        "{{param.subscriber_role}}": {
+          "read": "own",
+          "create": true,
+          "update": "own",
+          "delete": "none"
+        }
+      },
+      "rules": [
+        {
+          "id": "subscription-starts-pending",
+          "on": "create",
+          "message": "A new subscription starts as pending until Stripe confirms it.",
+          "check": "const rows = (r: unknown): Array<Record<string, unknown>> => (Array.isArray(r) ? r : (r as { rows?: Array<Record<string, unknown>> }).rows ?? []);\nif (!ctx.user || ctx.user.role !== \"{{param.subscriber_role}}\") return true;\nif (String(row.status ?? \"pending\") !== \"pending\") return \"A new subscription starts as pending until Stripe confirms it.\";\nif (row.stripe_subscription_id || row.stripe_customer_id || row.current_period_end) return \"Only Stripe can confirm a subscription.\";\nconst plan = rows(await ctx.db.query(\"select active from plan where id = $1\", [row.plan_id]))[0];\nreturn (plan && plan.active !== false) || \"That plan isn't available.\";"
+        },
+        {
+          "id": "subscription-stripe-only",
+          "on": "update",
+          "message": "Only Stripe can change a subscription.",
+          "check": "if (!ctx.old || !ctx.user || ctx.user.role !== \"{{param.subscriber_role}}\") return true;\nfor (const f of [\"subscriber_id\", \"plan_id\", \"status\", \"stripe_session_id\", \"stripe_subscription_id\", \"stripe_customer_id\", \"current_period_end\"]) {\n  if (String(ctx.old[f] ?? \"\") !== String(row[f] ?? \"\")) return \"Only Stripe can change a subscription. Use Manage billing.\";\n}\nreturn String(row.sync ?? \"idle\") === \"requested\" || String(row.sync ?? \"\") === String(ctx.old.sync ?? \"\") || \"Only Stripe can change a subscription.\";"
+        }
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "subscription-checkout",
+      "title": "Start a Stripe Checkout for a plan",
+      "on": {
+        "call": true,
+        "roles": [
+          "{{param.subscriber_role}}"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = await ctx.secrets.get(\"STRIPE_SECRET_KEY\");\nif (!key) throw new Error(\"Payments aren't set up yet: connect Stripe or add STRIPE_SECRET_KEY in the project settings.\");\nif (!ctx.app.url.startsWith(\"http\")) throw new Error(\"This app's address isn't known yet. Open it from the preview or publish it, then try again.\");\nconst done = ctx.app.url + \"/billing?checkout=done\";\nconst back = ctx.app.url + \"/billing\";\nconst form = (pairs: Array<[string, string]>) => pairs.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join(\"&\");\nif (!user) throw new Error(\"Sign in to choose a plan.\");\nconst plan = await ctx.db.get(\"plan\", String(input[\"plan_id\"] ?? \"\"));\nif (!plan || plan[\"active\"] === false) throw new Error(\"That plan isn't available.\");\nconst priceId = String(plan[\"stripe_price_id\"] ?? \"\");\nif (!/^price_[A-Za-z0-9]+$/.test(priceId) || priceId.includes(\"REPLACE\")) throw new Error(\"That plan isn't linked to a Stripe price yet.\");\nconst me = (await ctx.db.list(\"{{param.subscriber_role}}\", { filter: { user_id: user.id }, limit: 1 }))[0];\nif (!me) throw new Error(\"Your account isn't set up yet. Try again in a moment.\");\nconst res = await ctx.http.fetch(\"https://api.stripe.com/v1/checkout/sessions\", {\n  method: \"POST\",\n  headers: { authorization: `Bearer ${key}`, \"content-type\": \"application/x-www-form-urlencoded\" },\n  body: form([[\"mode\", \"subscription\"], [\"line_items[0][price]\", priceId], [\"line_items[0][quantity]\", \"1\"], [\"success_url\", done], [\"cancel_url\", back], [\"client_reference_id\", String(me[\"id\"])], [\"customer_email\", user.email], [\"subscription_data[metadata][plan_id]\", String(plan[\"id\"])]]),\n});\nconst session = res.json<{ id?: string; url?: string; error?: { message?: string } }>();\nif (!res.ok || !session?.id || !session.url) throw new Error(`Stripe couldn't start checkout: ${session?.error?.message ?? res.status}`);\nconst sub = await ctx.db.create(\"subscription\", { subscriber_id: String(me[\"id\"]), plan_id: String(plan[\"id\"]), status: \"pending\", sync: \"idle\", stripe_session_id: session.id });\nreturn { url: session.url, subscription_id: String(sub[\"id\"]) };"
+        }
+      ]
+    },
+    {
+      "id": "stripe-subscription-events",
+      "title": "Apply Stripe's subscription events",
+      "on": {
+        "webhook": "stripe-subscription-events",
+        "verify": {
+          "provider": "stripe",
+          "secret": "STRIPE_WEBHOOK_SECRET",
+          "events": [
+            "checkout.session.completed",
+            "invoice.paid",
+            "invoice.payment_failed",
+            "customer.subscription.updated",
+            "customer.subscription.deleted"
+          ]
+        }
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "type Obj = Record<string, unknown>;\nconst type = String(row[\"type\"] ?? \"\");\nconst obj = ((row[\"data\"] as { object?: Obj } | undefined)?.object ?? {}) as Obj;\nconst idOf = (v: unknown): string => (typeof v === \"string\" ? v : v && typeof v === \"object\" && typeof (v as Obj)[\"id\"] === \"string\" ? String((v as Obj)[\"id\"]) : \"\");\nconst when = (sec: unknown): string | null => (typeof sec === \"number\" && sec > 0 ? new Date(sec * 1000).toISOString() : null);\nconst statusOf = (s: string) => (s === \"active\" || s === \"trialing\" ? \"active\" : s === \"past_due\" || s === \"unpaid\" ? \"past_due\" : s === \"canceled\" || s === \"incomplete_expired\" ? \"canceled\" : \"pending\");\nconst findBy = async (field: string, value: string): Promise<Obj | null> => (value ? (await ctx.db.list(\"subscription\", { filter: { [field]: value }, limit: 1 }))[0] ?? null : null);\nif (type === \"checkout.session.completed\") {\n  if (obj[\"mode\"] !== \"subscription\") return;\n  const sub = await findBy(\"stripe_session_id\", idOf(obj[\"id\"]));\n  if (!sub) { ctx.log(`stripe: no subscription for checkout ${idOf(obj[\"id\"])}`); return; }\n  const paid = obj[\"payment_status\"] === \"paid\" || obj[\"payment_status\"] === \"no_payment_required\";\n  await ctx.db.update(\"subscription\", String(sub[\"id\"]), { stripe_subscription_id: idOf(obj[\"subscription\"]), stripe_customer_id: idOf(obj[\"customer\"]), ...(paid ? { status: \"active\" } : {}) });\n  ctx.log(`stripe: checkout ${idOf(obj[\"id\"])} completed${paid ? \", subscription active\" : \"\"}`);\n  return;\n}\n// Invoices and subscription changes name the Stripe subscription.\nconst parent = (obj[\"parent\"] as { subscription_details?: { subscription?: unknown } } | undefined)?.subscription_details?.subscription;\nconst subId = type.startsWith(\"invoice.\") ? idOf(obj[\"subscription\"]) || idOf(parent) : idOf(obj[\"id\"]);\nif (!subId) return;\nconst sub = await findBy(\"stripe_subscription_id\", subId);\n// Not linked yet (Stripe can send these before checkout.session.completed):\n// fail the run so it is retried shortly.\nif (!sub) throw new Error(`stripe: subscription ${subId} isn't linked to a checkout yet — retrying`);\nconst id = String(sub[\"id\"]);\nif (type === \"invoice.paid\") {\n  const line = ((obj[\"lines\"] as { data?: Array<{ period?: { end?: number } }> } | undefined)?.data ?? [])[0];\n  await ctx.db.update(\"subscription\", id, { status: \"active\", ...(when(line?.period?.end) ? { current_period_end: when(line?.period?.end) } : {}) });\n} else if (type === \"invoice.payment_failed\") {\n  await ctx.db.update(\"subscription\", id, { status: \"past_due\" });\n} else if (type === \"customer.subscription.updated\" || type === \"customer.subscription.deleted\") {\n  const items = (obj[\"items\"] as { data?: Array<{ current_period_end?: number }> } | undefined)?.data ?? [];\n  const end = when(obj[\"current_period_end\"]) ?? when(items[0]?.current_period_end);\n  await ctx.db.update(\"subscription\", id, { status: type.endsWith(\"deleted\") ? \"canceled\" : statusOf(String(obj[\"status\"] ?? \"\")), ...(end ? { current_period_end: end } : {}) });\n}\nctx.log(`stripe: ${type} applied to subscription ${id}`);"
+        }
+      ]
+    },
+    {
+      "id": "subscription-sync",
+      "title": "Check a subscription with Stripe (fallback)",
+      "on": {
+        "call": true,
+        "roles": [
+          "{{param.subscriber_role}}",
+          "@staff"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = await ctx.secrets.get(\"STRIPE_SECRET_KEY\");\nif (!key) throw new Error(\"Payments aren't set up yet.\");\nconst id = String(input[\"subscription_id\"] ?? \"\");\nconst sub = await ctx.db.get(\"subscription\", id);\nif (!sub) throw new Error(\"That subscription isn't yours or doesn't exist.\");\nconst get = async <T,>(path: string): Promise<T | null> => {\n  const res = await ctx.http.fetch(`https://api.stripe.com/v1/${path}`, { headers: { authorization: `Bearer ${key}` } });\n  return res.ok ? res.json<T>() : null;\n};\nlet subId = String(sub[\"stripe_subscription_id\"] ?? \"\");\nlet customer = String(sub[\"stripe_customer_id\"] ?? \"\");\nif (!subId) {\n  const session = await get<{ subscription?: string | null; customer?: string | null }>(`checkout/sessions/${encodeURIComponent(String(sub[\"stripe_session_id\"] ?? \"\"))}`);\n  if (!session?.subscription) return { status: String(sub[\"status\"]) };\n  subId = session.subscription;\n  customer = session.customer ?? \"\";\n}\nconst s = await get<{ status?: string; current_period_end?: number; items?: { data?: Array<{ current_period_end?: number }> } }>(`subscriptions/${encodeURIComponent(subId)}`);\nif (!s?.status) return { status: String(sub[\"status\"]) };\nconst status = s.status === \"active\" || s.status === \"trialing\" ? \"active\" : s.status === \"past_due\" || s.status === \"unpaid\" ? \"past_due\" : s.status === \"canceled\" || s.status === \"incomplete_expired\" ? \"canceled\" : \"pending\";\nconst end = s.current_period_end ?? s.items?.data?.[0]?.current_period_end;\nawait ctx.vars.set(`stripe-subscription:${id}`, { status, subId, customer, periodEnd: end ? new Date(end * 1000).toISOString() : null });\nawait ctx.db.update(\"subscription\", id, { sync: \"requested\" });\nreturn { status };"
+        }
+      ]
+    },
+    {
+      "id": "subscription-apply-sync",
+      "title": "Apply what Stripe said about a subscription",
+      "on": {
+        "entity": "subscription",
+        "event": "updated"
+      },
+      "when": {
+        "field": "sync",
+        "equals": "requested"
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = `stripe-subscription:${String(row[\"id\"])}`;\nconst v = await ctx.vars.get(key);\nconst s = (v && typeof v === \"object\" ? v : {}) as Record<string, unknown>;\nconst patch: Record<string, unknown> = { sync: \"idle\" };\nif (typeof s[\"status\"] === \"string\") {\n  patch[\"status\"] = s[\"status\"];\n  patch[\"stripe_subscription_id\"] = String(s[\"subId\"] ?? \"\");\n  patch[\"stripe_customer_id\"] = String(s[\"customer\"] ?? \"\");\n  patch[\"current_period_end\"] = s[\"periodEnd\"] ?? null;\n}\nawait ctx.db.update(\"subscription\", String(row[\"id\"]), patch);\nawait ctx.vars.set(key, null);"
+        }
+      ]
+    },
+    {
+      "id": "billing-portal",
+      "title": "Open Stripe's billing settings for a subscriber",
+      "on": {
+        "call": true,
+        "roles": [
+          "{{param.subscriber_role}}"
+        ]
+      },
+      "do": [
+        {
+          "action": "custom",
+          "code": "const key = await ctx.secrets.get(\"STRIPE_SECRET_KEY\");\nif (!key) throw new Error(\"Payments aren't set up yet: connect Stripe or add STRIPE_SECRET_KEY in the project settings.\");\nif (!ctx.app.url.startsWith(\"http\")) throw new Error(\"This app's address isn't known yet. Open it from the preview or publish it, then try again.\");\nconst back = ctx.app.url + \"/billing\";\nconst form = (pairs: Array<[string, string]>) => pairs.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join(\"&\");\nconst sub = await ctx.db.get(\"subscription\", String(input[\"subscription_id\"] ?? \"\"));\nconst customer = sub ? String(sub[\"stripe_customer_id\"] ?? \"\") : \"\";\nif (!customer) throw new Error(\"There's no billing account for this subscription yet.\");\nconst res = await ctx.http.fetch(\"https://api.stripe.com/v1/billing_portal/sessions\", {\n  method: \"POST\",\n  headers: { authorization: `Bearer ${key}`, \"content-type\": \"application/x-www-form-urlencoded\" },\n  body: form([[\"customer\", customer], [\"return_url\", back]]),\n});\nconst portal = res.json<{ url?: string; error?: { message?: string } }>();\nif (!res.ok || !portal?.url) throw new Error(`Stripe couldn't open billing settings: ${portal?.error?.message ?? res.status}`);\nreturn { url: portal.url };"
+        }
+      ]
+    },
+    {
+      "id": "subscription-active-notify",
+      "title": "Tell the subscriber their plan is active",
+      "on": {
+        "entity": "subscription",
+        "event": "updated"
+      },
+      "when": {
+        "field": "status",
+        "equals": "active"
+      },
+      "do": [
+        {
+          "action": "notify",
+          "to": "subscriber_id",
+          "title": "Your plan is active",
+          "body": "Thanks for subscribing. Manage it any time from Plans and billing."
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "name": "BillingPanel",
+      "kind": "code",
+      "purpose": "Plans to choose from, the current subscription and Stripe billing settings",
+      "props": {
+        "title": {
+          "type": "text"
+        }
+      },
+      "sample": {
+        "title": "Plans and billing"
+      },
+      "fallback": {
+        "EmptyState": {
+          "title": "Billing is loading",
+          "description": "Refresh the page to try again."
+        }
+      },
+      "source_file": "BillingPanel.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "billing",
+      "route": "/billing",
+      "title": "Plans and billing",
+      "icon": "CreditCard",
+      "personas": [
+        "{{param.subscriber_role}}"
+      ],
+      "capabilities": {
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "layout": {
+        "kind": "custom",
+        "custom": "BillingPanel",
+        "props": {
+          "title": "Plans and billing"
+        }
+      }
+    },
+    {
+      "name": "subscriptions-admin",
+      "route": "/subscriptions-admin",
+      "title": "Subscriptions",
+      "icon": "Wallet",
+      "personas": [
+        "@staff"
+      ],
+      "layout": {
+        "kind": "stack",
+        "children": [
+          {
+            "kind": "header",
+            "title": "Subscriptions",
+            "subtitle": "Your plans and who is on them. Link each plan to its Stripe price id."
+          },
+          {
+            "kind": "tabs",
+            "tabs": [
+              {
+                "label": "Plans",
+                "child": {
+                  "kind": "block",
+                  "block": "EntityList",
+                  "props": {
+                    "entity": "plan",
+                    "presentation": "table",
+                    "columns": [
+                      "name",
+                      "price",
+                      "currency",
+                      "interval",
+                      "stripe_price_id",
+                      "active"
+                    ],
+                    "emptyCopy": "No plans yet. Add one and link it to a Stripe price."
+                  }
+                }
+              },
+              {
+                "label": "Subscribers",
+                "child": {
+                  "kind": "stack",
+                  "children": [
+                    {
+                      "kind": "block",
+                      "block": "EntityList",
+                      "props": {
+                        "entity": "subscription",
+                        "presentation": "grouped",
+                        "groupBy": "status",
+                        "columns": [
+                          "subscriber_id",
+                          "plan_id",
+                          "status",
+                          "current_period_end"
+                        ],
+                        "emptyCopy": "Nobody has subscribed yet."
+                      }
+                    },
+                    {
+                      "kind": "block",
+                      "block": "EntityForm",
+                      "props": {
+                        "entity": "subscription",
+                        "mode": "create",
+                        "layout": "page",
+                        "fields": [
+                          "subscriber_id",
+                          "plan_id"
+                        ],
+                        "submitLabel": "Give this plan",
+                        "successCopy": "Added. Move it to active when it's agreed."
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "form": {
+        "kind": "block",
+        "block": "EntityForm",
+        "props": {
+          "entity": "plan",
+          "mode": "both",
+          "layout": "dialog",
+          "fields": [
+            "name",
+            "description",
+            "price",
+            "currency",
+            "interval",
+            "stripe_price_id",
+            "features",
+            "active",
+            "sort"
+          ],
+          "submitLabel": "Save plan"
+        }
+      }
+    }
+  ],
+  "seeds": {
+    "plan": [
+      {
+        "id": "plan-starter",
+        "name": "Starter",
+        "description": "For getting going on your own.",
+        "price": 9,
+        "currency": "usd",
+        "interval": "month",
+        "stripe_price_id": "price_REPLACEWITHSTARTER",
+        "features": "Everything you need to start; Email support",
+        "active": true,
+        "sort": 1
+      },
+      {
+        "id": "plan-pro",
+        "name": "Pro",
+        "description": "For people who use it every day.",
+        "price": 29,
+        "currency": "usd",
+        "interval": "month",
+        "stripe_price_id": "price_REPLACEWITHPRO",
+        "features": "Everything in Starter; Priority support; Early access to new features",
+        "active": true,
+        "sort": 2
+      }
+    ]
+  }
+}

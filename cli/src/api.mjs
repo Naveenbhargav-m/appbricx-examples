@@ -120,6 +120,13 @@ export function client(cfg) {
     secrets: (id) => call("GET", `${proj(id)}/secrets`),
     /** @param {string} id @param {string} name @param {string} value @param {string | undefined} env */
     setSecret: (id, name, value, env) => call("PUT", `${proj(id)}/secrets/${encodeURIComponent(name)}`, { value, ...(env ? { env } : {}) }),
+    // Templates (dev-api/templates.ts).
+    /** @param {{ query?: string, kind?: string, category?: string, limit?: number }} q */
+    searchTemplates: (q) => call("GET", `/dev/v1/templates${qs(q)}`),
+    /** @param {string} slug */
+    template: (slug) => call("GET", `/dev/v1/templates/${encodeURIComponent(slug)}`),
+    /** @param {string} slug @param {Record<string, unknown>} body */
+    useTemplate: (slug, body) => call("POST", `/dev/v1/templates/${encodeURIComponent(slug)}/use`, body),
     /** @param {string} id @param {string} name @param {string | undefined} env */
     deleteSecret: (id, name, env) => call("DELETE", `${proj(id)}/secrets/${encodeURIComponent(name)}${qs({ env })}`),
   };

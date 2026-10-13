@@ -1,0 +1,30 @@
+{
+  "components": [
+    {
+      "name": "TrendChart",
+      "kind": "code",
+      "purpose": "A bar chart of how many rows of a table were added each day, with the change against the period before",
+      "props": { "title": { "type": "text" }, "entity": { "type": "text" }, "dateField": { "type": "text" }, "days": { "type": "number" } },
+      "sample": { "title": "Activity", "entity": "", "dateField": "created_at", "days": 30 },
+      "fallback": { "EmptyState": { "title": "The chart is loading", "description": "Refresh the page to try again." } },
+      "source_file": "TrendChart.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "name": "trends",
+      "route": "/trends",
+      "title": "Trends",
+      "icon": "BarChart3",
+      "personas": ["{{param.page_role}}"],
+      "capabilities": { "create": false, "edit": false, "delete": false },
+      "layout": {
+        "kind": "stack",
+        "children": [
+          { "kind": "header", "title": "Trends", "subtitle": "How much is coming in, day by day." },
+          { "kind": "custom", "custom": "TrendChart", "props": { "title": "New {{param.entity|title}} rows", "entity": "{{param.entity}}", "dateField": "created_at", "days": 30 } }
+        ]
+      }
+    }
+  ]
+}
