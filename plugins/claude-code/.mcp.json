@@ -2,7 +2,7 @@
   "mcpServers": {
     "appbricx": {
       "type": "http",
-      "url": "${APPBRICX_API:-https://appbricx.com/api}/mcp?project=${APPBRICX_PROJECT:-}"
+      "url": "https://www.appbricx.com/api/mcp"
     }
   }
 }

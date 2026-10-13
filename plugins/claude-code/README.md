@@ -22,13 +22,12 @@ Coding agents, Authorized agents**.
 Without the plugin, the same server is one command:
 
 ```sh
-claude mcp add --transport http appbricx https://appbricx.com/api/mcp
+claude mcp add --transport http appbricx https://www.appbricx.com/api/mcp
 ```
 
-Options, as environment variables read by `.mcp.json`:
-
-- `APPBRICX_API`: your API base when self-hosting (default `https://appbricx.com/api`).
-- `APPBRICX_PROJECT`: pin one project, so tools default to it.
+To pin one project, so tools default to it, add the server yourself with
+`?project=<id>` on the URL instead of using the plugin's entry. When
+self-hosting, use your own API base in place of `https://www.appbricx.com/api`.
 
 ## CI and headless machines: a token instead
 
@@ -36,7 +35,7 @@ Where no browser can open, use a personal access token from **Workspace
 settings, Coding agents, Access tokens for CI**, and send it as a header:
 
 ```sh
-claude mcp add --transport http appbricx https://appbricx.com/api/mcp \
+claude mcp add --transport http appbricx https://www.appbricx.com/api/mcp \
   --header "Authorization: Bearer $APPBRICX_TOKEN"
 ```
 
@@ -47,7 +46,7 @@ or in a project `.mcp.json`:
   "mcpServers": {
     "appbricx": {
       "type": "http",
-      "url": "${APPBRICX_API:-https://appbricx.com/api}/mcp",
+      "url": "https://www.appbricx.com/api/mcp",
       "headers": { "Authorization": "Bearer ${APPBRICX_TOKEN}" }
     }
   }

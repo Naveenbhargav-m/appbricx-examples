@@ -1,6 +1,10 @@
 {
   "name": "appbricx",
-  "owner": { "name": "Appbricx" },
+  "owner": {
+    "name": "Appbricx",
+    "email": "contact@appbricx.com"
+  },
+  "description": "Official Appbricx plugin: build, verify and deploy full-stack apps on Appbricx from Claude Code.",
   "plugins": [
     {
       "name": "appbricx",

@@ -1,10 +1,11 @@
 {
   "name": "appbricx",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Build full-stack apps on the appbricx runtime: write the app contract (tables, roles, row-level access, workflows), apply it, verify it, deploy it — over MCP.",
-  "author": { "name": "appbricx" },
-  "homepage": "https://github.com/Naveenbhargav-m/appbricx-examples",
+  "author": { "name": "Appbricx", "email": "contact@appbricx.com", "url": "https://www.appbricx.com" },
+  "homepage": "https://www.appbricx.com/docs/quickstart/agent",
   "repository": "https://github.com/Naveenbhargav-m/appbricx-examples",
+  "privacyPolicyUrl": "https://www.appbricx.com/privacy",
   "license": "MIT",
   "keywords": ["appbricx", "backend", "postgres", "rls", "workflows", "mcp"]
 }
