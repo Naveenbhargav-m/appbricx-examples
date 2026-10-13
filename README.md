@@ -29,6 +29,8 @@ claude mcp add --transport http appbricx https://www.appbricx.com/api/mcp
 /plugin install appbricx@appbricx
 ```
 
+**Claude.ai and Claude Desktop:** Appbricx is in Claude's connectors directory: https://claude.ai/directory/appbricx (choose Connect, then sign in).
+
 Then ask your agent to build something. Agents can also find these templates themselves with the `search_templates`, `get_template` and `use_template` tools, or browse them at https://www.appbricx.com/templates. The format is in [`TEMPLATE_FORMAT.md`](TEMPLATE_FORMAT.md).
 
 ## Use the CLI
